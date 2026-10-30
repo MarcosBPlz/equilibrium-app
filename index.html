@@ -109,6 +109,8 @@ main{padding:28px 24px 110px;max-width:808px;width:100%;margin:0 auto;display:fl
 .row{display:flex;gap:10px;align-items:center}
 .wrap{flex-wrap:wrap}
 .grow{flex:1}
+.tag{display:inline-block;vertical-align:1px;white-space:nowrap;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.tag.ok{background:var(--accent-soft);color:var(--accent)}
 
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .btn svg{width:20px;height:20px;flex:none}
@@ -349,7 +351,7 @@ button.mrow:hover{background:var(--sunk)}
   .topbar .save-state{display:flex;margin:0;padding:0}
   .topbar .save-state span{display:none}
   .side{position:fixed;bottom:0;top:auto;left:0;right:0;height:auto;flex-direction:row;padding:4px max(6px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));border-right:0;border-top:1px solid var(--line);z-index:30}
-  .side > .brand,.side > .save-state,.side > [data-tema-open],.side > [data-nav="ajustes"]{display:none}
+  .side > .brand,.side > .save-state,.side > [data-tema-open],.side > [data-disp-open],.side > [data-nav="ajustes"]{display:none}
   .nav{display:flex;flex:1;justify-content:space-around;align-items:center}
   .nav a{flex-direction:column;gap:2px;font-size:.7rem;padding:7px 4px;min-width:62px;border-radius:12px}
   .nav a svg{width:22px;height:22px}
@@ -471,8 +473,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .nav a{flex-direction:column;font-size:.62rem !important;padding:6px 2px !important;min-width:0 !important;gap:2px;text-align:center}
   .nav a svg{width:20px !important;height:20px !important}
   .fab{margin:6px auto !important;width:48px !important;height:48px !important;border-width:3px !important}
-  .side > [data-tema-open]{display:flex !important;justify-content:center;margin:auto 0 0 !important;padding:6px !important}
-  .side > [data-tema-open] span{display:none}
+  .side > [data-disp-open]{display:flex !important;justify-content:center;margin:auto 0 0 !important;padding:6px !important}
+  .side > [data-tema-open]{display:flex !important;justify-content:center;margin:0 !important;padding:6px !important}
+  .side > [data-tema-open] span,.side > [data-disp-open] span{display:none}
+  .topbar [data-disp-open][aria-current],.side > [data-disp-open][aria-current]{color:var(--accent)}
   main{padding:10px max(14px, env(safe-area-inset-right)) 14px 14px !important;max-width:none !important}
   .page:not(#p-diario){max-width:900px;margin:0 auto;width:100%}
   #p-diario.on{display:grid;grid-template-columns:minmax(300px,42%) minmax(0,1fr);column-gap:14px;row-gap:10px;align-items:start}
@@ -521,7 +525,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
 </div>
 <script>(function(){var s=document.getElementById("splash"),rm=matchMedia("(prefers-reduced-motion: reduce)").matches;function sair(){if(!s||s.classList.contains("out"))return;s.classList.add("out");setTimeout(function(){s.remove()},500)}setTimeout(sair,rm?400:2300);s.addEventListener("click",sair)})();</script>
-<header class="topbar"><img class="logo-img" alt="" width="30" height="30"><b>Equilibrium</b><div class="save-state" id="saveState2"><b></b><span></span></div><button class="icon-btn" data-tema-open aria-label="Trocar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg></button></header>
+<header class="topbar"><img class="logo-img" alt="" width="30" height="30"><b>Equilibrium</b><div class="save-state" id="saveState2"><b></b><span></span></div><a class="icon-btn" href="#dispositivos" data-disp-open aria-label="Dispositivos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2l1.5 1"/></svg></a><button class="icon-btn" data-tema-open aria-label="Trocar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg></button></header>
 <div class="app">
   <nav class="side" aria-label="Seções">
     <div class="brand"><img class="logo-img" alt="" width="34" height="34"><span>Equilibrium<small>Controle de calorias e macros</small></span></div>
@@ -532,6 +536,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <a href="#progresso" data-nav="progresso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M6 16l4-5 3 3 5-7"/></svg>Progresso</a>
       <a href="#perfil" data-nav="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Perfil</a>
     </div>
+    <a class="btn ghost sm" href="#dispositivos" data-disp-open style="margin:auto 6px 4px;justify-content:flex-start;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2l1.5 1"/></svg><span>Dispositivos</span></a>
     <button class="btn ghost sm" data-tema-open style="margin:0 6px 8px;justify-content:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg><span>Tema</span></button>
     <div class="save-state" id="saveState"><b></b><span>Salvo neste navegador</span></div>
   </nav>
@@ -605,6 +610,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <div id="progContent"></div>
     </section>
 
+    <!-- DISPOSITIVOS -->
+    <section class="page" id="p-disp" aria-labelledby="h-disp">
+      <div class="head"><h1 id="h-disp">Dispositivos</h1></div>
+      <div id="perfDisp"></div>
+    </section>
+
     <!-- PERFIL -->
     <section class="page" id="p-perfil" aria-labelledby="h-perfil">
       <div class="head"><h1 id="h-perfil">Perfil</h1></div>
@@ -644,7 +655,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <h2>Divisão de macros</h2>
         <p class="small muted" style="margin:0 0 12px">Percentual das calorias da meta. Proteína e carboidrato têm 4 kcal/g; gordura, 9 kcal/g.</p>
         <div class="grid4" id="macroInputs"></div>
-        <p class="small" id="macroCheck" style="margin:10px 0 0"></p>
+        <div class="row" style="margin-top:10px;gap:10px;align-items:center;flex-wrap:wrap"><p class="small" id="macroCheck" style="margin:0;flex:1"></p><button class="btn ghost sm" id="macroPadrao" type="button">Usar padrão 40/40/20</button></div>
       </div>
 
       </div>
@@ -655,7 +666,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         <div id="temaCard"></div>
         <label class="switch-row" for="letraMaior" style="margin-top:14px"><span><b>Letra maior</b><br><span class="small muted">Aumenta o tamanho do texto em todo o app.</span></span><input type="checkbox" id="letraMaior"></label>
       </div>
-      <div class="card" id="saudeCard"></div>
       <div class="card" id="listasCard"></div>
       <div class="card" id="dataCard"></div>
       <div class="card"><h2>Configuração inicial</h2><p class="hint" style="margin:0 0 10px">Refaz as três telas de boas-vindas e recalcula a meta.</p><button class="btn" id="redoOnb" style="margin-top:12px">Rever a configuração inicial</button></div>
@@ -734,7 +744,7 @@ const CATS = [...new Set(TACO.map(f => f.cat))].sort((a,b) => a.localeCompare(b,
 /* ---------- estado ---------- */
 const defaults = () => ({
   perfil: { sexo: null, idade: null, peso: null, altura: null, ativ: "leve", obj: "manter", intens: 0,
-            meta: null, metaTipo: null, metaBase: null, macros: { p: 25, c: 50, g: 25 }, fibra: 25 },
+            meta: null, metaTipo: null, metaBase: null, macros: { p: 40, c: 40, g: 20 }, macrosPadrao: 2, fibra: 25 },
   biblioteca: { proprios: [], correcoes: {}, receitas: [], refeicoes: [], favoritos: [], recentes: [], medidas: {} },
   peso: { entradas: [] },
   meses: {} // "2026-10": { dias: { "2026-10-28": { cafe:[...], ... } } }
@@ -755,6 +765,11 @@ const Store = {
     if (!val) return;
     if (key.startsWith("diario-")) S.meses[key.slice(7)] = val;
     else if (key in S) S[key] = Object.assign(defaults()[key], val);
+    if (key === "perfil") { // padrão antigo 25/50/25 passa para o novo 40/40/20; quem já alterou mantém
+      const m = S.perfil.macros || {};
+      if (!val.macrosPadrao && m.p === 25 && m.c === 50 && m.g === 25) S.perfil.macros = { p: 40, c: 40, g: 20 };
+      S.perfil.macrosPadrao = 2;
+    }
   },
   loadLocal(){
     try { // dados salvos com o nome antigo do app passam para a chave nova
@@ -1246,7 +1261,7 @@ function dateLabel(d){
 function renderGoalNotice(target){
   const c = calc(), el = target;
   const p = S.perfil;
-  if (!c) { el.innerHTML = `<div class="notice"><p>Preencha idade, peso, altura e atividade em <b>Metas</b> para calcular uma meta sugerida. Você também pode definir uma meta manual.</p><a class="btn sm" href="#metas" style="text-decoration:none">Ir para Metas</a></div>`; return; }
+  if (!c) { el.innerHTML = `<div class="notice"><p>Preencha idade, peso, altura e atividade em <b>Perfil</b> para calcular uma meta sugerida. Você também pode definir uma meta manual.</p><a class="btn sm" href="#perfil" style="text-decoration:none">Ir para Perfil</a></div>`; return; }
   if (!p.meta) { el.innerHTML = `<div class="notice"><p>Meta sugerida pronta: <b class="num">${fmt(c.sugerida)} kcal</b> (${c.pick.nome.toLowerCase()}). Ela só passa a valer quando você aplicar.</p><button class="btn sm primary" data-act="apply">Aplicar ${fmt(c.sugerida)} kcal</button></div>`; }
   else if (p.metaTipo === "sugerida" && p.metaBase !== c.sugerida) {
     el.innerHTML = `<div class="notice"><p>Seu perfil mudou e a meta sugerida agora é <b class="num">${fmt(c.sugerida)} kcal</b>. A meta em uso continua <b class="num">${fmt(p.meta)} kcal</b> até você decidir.</p><button class="btn sm primary" data-act="apply">Usar ${fmt(c.sugerida)}</button><button class="btn sm" data-act="keep">Manter ${fmt(p.meta)}</button></div>`;
@@ -1816,6 +1831,8 @@ function renderProfile(){
 
   $("#macroInputs").innerHTML = [["p","Proteína %"],["c","Carboidrato %"],["g","Gordura %"]].map(([k, l]) => `<label for="mi-${k}">${l}<input class="field num" id="mi-${k}" type="number" min="0" max="100" value="${p.macros[k]}"></label>`).join("") + `<label for="mi-fib">Fibra (g/dia)<input class="field num" id="mi-fib" type="number" min="0" max="80" value="${p.fibra}"></label><label for="mi-agua">Água (L/dia)<input class="field num" id="mi-agua" type="number" min="0.5" max="6" step="0.1" value="${(aguaMeta() / 1000).toFixed(1)}"></label>`;
   const chk = () => { const s = p.macros.p + p.macros.c + p.macros.g; $("#macroCheck").innerHTML = s === 100 ? `<span class="muted">Soma 100%.</span>` : `<b style="color:var(--warn-ink)">A soma está em ${s}%. Ajuste para 100%.</b>`; };
+  $("#macroPadrao").hidden = p.macros.p === 40 && p.macros.c === 40 && p.macros.g === 20;
+  $("#macroPadrao").onclick = () => { p.macros = { p: 40, c: 40, g: 20 }; Store.save("perfil"); renderProfile(); renderDiary(); toast("Macros em 40% proteína, 40% carboidrato, 20% gordura"); };
   ["p","c","g"].forEach(k => $("#mi-" + k).onchange = e => { p.macros[k] = Math.max(0, Math.min(100, Math.round(+e.target.value || 0))); Store.save("perfil"); renderProfile(); renderDiary(); });
   $("#mi-agua").onchange = e => { const v = Math.round(+e.target.value * 1000); S.perfil.aguaMeta = v > 0 ? v : null; Store.save("perfil"); renderProfile(); renderDiary(); };
   $("#temaCard").innerHTML = temaOpts(); wireTemaOpts($("#temaCard"));
@@ -2310,7 +2327,7 @@ function renderPerfTabs(){
   document.querySelectorAll("#perfSeg [data-perf]").forEach(b => b.setAttribute("aria-pressed", b.dataset.perf === perfTab));
   $("#perfMetas").hidden = perfTab !== "metas"; $("#perfRef").hidden = perfTab !== "refeicoes"; $("#perfPref").hidden = perfTab !== "pref";
   if (perfTab === "refeicoes") renderRefEditor();
-  if (perfTab === "pref") { $("#letraMaior").checked = document.documentElement.classList.contains("letra-maior"); renderSaudeCard(); renderListasCard(); }
+  if (perfTab === "pref") { $("#letraMaior").checked = document.documentElement.classList.contains("letra-maior"); renderListasCard(); }
 }
 document.querySelectorAll("#perfSeg [data-perf]").forEach(b => b.onclick = () => { perfTab = b.dataset.perf; renderPerfTabs(); });
 
@@ -2355,7 +2372,7 @@ async function saudeConectar(){
     catch(e1){ st = await H.requestAuthorization({ read: ["weight"], write: [] }); } // aparelhos que só liberam o peso
     S.perfil.saude = { ligado: true, liberados: st.readAuthorized || [] }; Store.save("perfil");
     await saudeSincronizarPeso(true);
-    renderSaudeCard(); if ((location.hash || "") === "#progresso") renderProgress();
+    await saudeDetectar(); renderDispositivos(); if ((location.hash || "") === "#progresso") renderProgress();
   } catch(e){
     const msg = String((e && (e.message || e.code)) || e || "").slice(0, 140);
     sheet("Health Connect", `<p style="margin:0">Não foi possível conectar.</p>${msg ? `<p class="hint">Detalhe técnico: ${esc(msg)}</p>` : ""}
@@ -2391,20 +2408,113 @@ async function saudeResumo(){ // últimos 7 dias
   try { sono = (await H.readSamples({ dataType: "sleep", startDate: ini.toISOString(), endDate: fim.toISOString(), limit: 200 })).samples || []; } catch(e){}
   return { passos, cal, fc, fcr, sono };
 }
-function renderSaudeCard(){
-  const el = $("#saudeCard"); if (!el) return;
-  const s = S.perfil.saude || {};
-  el.innerHTML = `<h2>Balança e relógio</h2>
-    <p style="margin:6px 0 0">No app Android, o Equilibrium lê o <b>Health Connect</b>, a central de saúde do Android. Balanças e relógios que enviam dados para ele (direto ou pelo Samsung Health, Fitbit, Google Fit, Zepp, Mi Fitness…) aparecem aqui: o peso entra sozinho no Progresso, e passos, calorias gastas, batimentos e sono ficam em Progresso › Atividade.</p>
-    <p class="hint" style="margin-top:8px">Na balança: no app dela (por exemplo, o Fitdays), procure em Configurações uma opção de sincronizar com Health Connect, Google Fit ou Samsung Health e ative.</p>
-    ${HEALTH() ? `<div class="row wrap" style="margin-top:10px"><button class="btn ${s.ligado ? "" : "primary"}" id="hcBtn">${s.ligado ? "Atualizar agora" : "Conectar ao Health Connect"}</button>${s.ultima ? `<span class="small muted">Última leitura: ${new Date(s.ultima).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span>` : ""}</div>`
-      : `<p class="notice" style="margin-top:10px"><span>Disponível só no app Android (APK). No navegador e dentro do Claude não há acesso aos dados de saúde do celular.</span></p>`}`;
-  const b = $("#hcBtn"); if (b) b.onclick = () => s.ligado ? saudeSincronizarPeso(true).then(() => renderSaudeCard()) : saudeConectar();
+/* ---------- dispositivos: relógios, pulseiras, anéis e balanças ---------- */
+const DISP_TIPOS = {
+  relogio: ["Relógio inteligente", '<rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3M12 10v2l1.5 1"/>'],
+  pulseira: ["Pulseira (band)", '<rect x="8" y="3" width="8" height="18" rx="4"/><rect x="9.5" y="8.5" width="5" height="7" rx="1.5"/>'],
+  anel: ["Anel inteligente", '<ellipse cx="12" cy="13" rx="7" ry="6"/><ellipse cx="12" cy="13" rx="4.5" ry="3.6"/><path d="M10 6.5h4"/>'],
+  balanca: ["Balança corporal", '<rect x="3.5" y="4" width="17" height="16" rx="4"/><path d="M8.5 9a4.5 4.5 0 0 1 7 0M12 9.5l1.2-1.6"/>'],
+  cozinha: ["Balança de alimentos", '<path d="M3 15h18l-1.5 5h-15z"/><path d="M6 15c0-3 2.7-5 6-5s6 2 6 5M12 7v3M9.5 7h5"/>'],
+  celular: ["Celular / app de passos", '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>'],
+  outro: ["Outro aparelho", '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>']
+};
+const DISP_APPS = [[/shealth|samsung/i, "Samsung Health"], [/fitdays/i, "Fitdays"], [/apps\.fitness/i, "Google Fit"], [/fitbit/i, "Fitbit"], [/xiaomi\.wearable|mi\.health|mifit/i, "Mi Fitness"], [/huami|zepp/i, "Zepp"],
+  [/garmin/i, "Garmin Connect"], [/oura/i, "Oura"], [/ultrahuman/i, "Ultrahuman"], [/ringconn/i, "RingConn"], [/huawei/i, "Huawei Saúde"], [/withings/i, "Withings"], [/renpho/i, "Renpho"], [/eufy/i, "eufyLife"], [/polar/i, "Polar Flow"], [/whoop/i, "Whoop"], [/healthdata/i, "Health Connect"]];
+const dispApp = id => { const a = DISP_APPS.find(([re]) => re.test(id || "")); return a ? a[1] : (id || "").split(".").slice(-1)[0] || "app"; };
+function dispTipo(d){
+  const t = (d.nome + " " + d.app).toLowerCase(), k = d.dados || [];
+  if (/oura|ultrahuman|ringconn|circular|\bring\b|anel/.test(t)) return "anel";
+  if (/band|charge|smart ?band|inspire|luxe/.test(t)) return "pulseira";
+  if (k.includes("heartRate")) return "relogio";
+  if (k.includes("weight") && !k.includes("steps")) return "balanca";
+  if (k.includes("steps")) return "celular";
+  return "outro";
+}
+async function saudeDetectar(){ // lê quem gravou dados no Health Connect nos últimos 30 dias
+  const H = HEALTH(); if (!H || !(S.perfil.saude && S.perfil.saude.ligado)) return [];
+  const ini = new Date(Date.now() - 30 * 864e5).toISOString(), fim = new Date().toISOString(), mapa = {};
+  for (const tipo of SAUDE_TIPOS) {
+    let am = []; try { am = (await H.readSamples({ dataType: tipo, startDate: ini, endDate: fim, limit: 1000 })).samples || []; } catch(e){}
+    am.forEach(x => {
+      const app = x.sourceId || "", nome = x.sourceName && x.sourceName !== app ? x.sourceName : dispApp(app), id = (app + "|" + nome).toLowerCase();
+      const d = mapa[id] || (mapa[id] = { id, nome, app: dispApp(app), pacote: app, dados: [], ultima: "" });
+      if (!d.dados.includes(tipo)) d.dados.push(tipo);
+      if ((x.endDate || x.startDate) > d.ultima) d.ultima = x.endDate || x.startDate;
+    });
+  }
+  const lista = Object.values(mapa).filter(d => !/^com\.equilibrium/i.test(d.pacote));
+  S.perfil.saude.detectados = lista; S.perfil.saude.ultima = new Date().toISOString(); Store.save("perfil");
+  return lista;
+}
+function dispLista(){
+  const cfg = S.perfil.dispositivos || (S.perfil.dispositivos = { manuais: [], ajustes: {} });
+  const det = ((S.perfil.saude && S.perfil.saude.detectados) || []).map(d => Object.assign({ auto: true }, d, { tipo: dispTipo(d) }, cfg.ajustes[d.id] || {}));
+  return det.filter(d => !d.oculto).concat(cfg.manuais.map(d => Object.assign({ auto: false }, d)));
+}
+const DADO_NOME = { weight: "peso", steps: "passos", calories: "calorias", heartRate: "batimentos" };
+function renderDispositivos(){
+  const el = $("#perfDisp"); if (!el) return;
+  const s = S.perfil.saude || {}, lista = dispLista(), H = HEALTH();
+  const ico = t => `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(DISP_TIPOS[t] || DISP_TIPOS.outro)[1]}</svg>`;
+  const quando = d => d ? new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "";
+  const grupos = Object.keys(DISP_TIPOS).map(t => [t, lista.filter(d => d.tipo === t)]).filter(([, l]) => l.length);
+  el.innerHTML = `<div class="card">
+      <h2>Conexão</h2>
+      <p style="margin:6px 0 0">Relógios, pulseiras, anéis e balanças conversam com o Equilibrium pelo <b>Health Connect</b>, a central de saúde do Android. O app do aparelho (Samsung Health, Mi Fitness, Zepp, Fitdays, Oura…) envia os dados para lá e o Equilibrium lê: o peso entra sozinho no Progresso, e passos, calorias gastas e batimentos ficam em Progresso › Atividade.</p>
+      ${H ? `<div class="row wrap" style="margin-top:12px"><button class="btn ${s.ligado ? "" : "primary"}" id="hcBtn">${s.ligado ? "Procurar e atualizar" : "Conectar ao Health Connect"}</button>${s.ligado ? `<button class="btn ghost" id="hcCfg">Permissões</button>` : ""}${s.ultima ? `<span class="small muted">Última leitura: ${quando(s.ultima)}</span>` : ""}</div>`
+        : `<p class="notice" style="margin-top:10px"><span>A leitura automática funciona só no app Android (APK). Aqui você ainda pode cadastrar seus aparelhos à mão.</span></p>`}
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;flex-wrap:wrap"><h2 style="margin:0">Meus dispositivos</h2><button class="btn sm" id="dispAdd">+ Adicionar</button></div>
+      ${grupos.length ? grupos.map(([t, l]) => `<h3 class="small muted" style="margin:16px 0 6px;text-transform:uppercase;letter-spacing:.04em">${DISP_TIPOS[t][0]}</h3>
+        <ul class="list">${l.map(d => `<li class="fi" style="gap:12px;align-items:center"><span style="color:var(--accent);display:flex">${ico(d.tipo)}</span>
+          <div class="grow" style="min-width:0"><b>${esc(d.nome)}</b> <span class="tag ${d.auto ? "ok" : ""}">${d.auto ? "Vinculado" : "Manual"}</span><div class="small muted">${d.auto ? `Pelo ${esc(d.app)} · ${(d.dados || []).map(x => DADO_NOME[x] || x).join(", ")}${d.ultima ? ` · último dado ${quando(d.ultima)}` : ""}` : `Cadastrado à mão${d.obs ? " · " + esc(d.obs) : ""}`}</div></div>
+          <button class="icon-btn" data-dedit="${esc(d.id)}" aria-label="Editar ${esc(d.nome)}">✎</button></li>`).join("")}</ul>`).join("")
+        : `<p class="muted" style="margin:10px 0 0">${s.ligado ? "Nenhum aparelho enviou dados ao Health Connect nos últimos 30 dias. Confira no app do aparelho se a sincronização com o Health Connect está ligada e toque em “Procurar e atualizar”." : "Nenhum dispositivo ainda. Conecte ao Health Connect para encontrar os aparelhos automaticamente, ou adicione à mão."}</p>`}
+    </div>
+    <div class="card">
+      <h2>Como vincular cada tipo</h2>
+      <ul class="list small" style="margin-top:6px">
+        <li class="fi" style="display:block"><b>Relógios e pulseiras</b> · no app do aparelho (Samsung Health, Mi Fitness, Zepp, Fitbit, Garmin Connect, Huawei Saúde), ative a sincronização com o Health Connect.</li>
+        <li class="fi" style="display:block"><b>Anéis</b> · Oura, Ultrahuman e RingConn têm a opção Health Connect nas configurações do app.</li>
+        <li class="fi" style="display:block"><b>Balança corporal</b> · no Fitdays (ou Renpho, eufyLife, Withings), ligue a integração com Health Connect, Google Fit ou Samsung Health. O peso de cada pesagem entra sozinho no Progresso.</li>
+        <li class="fi" style="display:block"><b>Balança de alimentos</b> · ainda não existe um padrão do Android para elas enviarem o peso dos alimentos. Cadastre a sua aqui e digite os gramas que ela mostrar ao registrar a refeição.</li>
+      </ul>
+    </div>`;
+  const b = $("#hcBtn"); if (b) b.onclick = async () => {
+    if (!s.ligado) return saudeConectar();
+    b.disabled = true; b.textContent = "Procurando…";
+    await saudeSincronizarPeso(false); const l = await saudeDetectar();
+    toast(l.length ? `${l.length} ${l.length > 1 ? "aparelhos encontrados" : "aparelho encontrado"}` : "Nenhum aparelho com dados recentes"); renderDispositivos();
+  };
+  const c = $("#hcCfg"); if (c) c.onclick = () => { try { H.openHealthConnectSettings(); } catch(e){ toast("Abra o Health Connect nas configurações do Android"); } };
+  $("#dispAdd").onclick = () => dispEditar(null);
+  el.querySelectorAll("[data-dedit]").forEach(x => x.onclick = () => dispEditar(lista.find(d => d.id === x.dataset.dedit)));
+}
+function dispEditar(d){
+  const cfg = S.perfil.dispositivos || (S.perfil.dispositivos = { manuais: [], ajustes: {} }), novo = !d;
+  d = d || { id: "m" + uid(), nome: "", tipo: "cozinha", obs: "", auto: false };
+  sheet(novo ? "Adicionar dispositivo" : "Editar dispositivo", `
+    <label for="dvTipo">Tipo<select class="field" id="dvTipo">${Object.entries(DISP_TIPOS).map(([k, [n]]) => `<option value="${k}" ${d.tipo === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+    <label for="dvNome">Nome ou modelo<input class="field" id="dvNome" maxlength="40" value="${esc(d.nome)}" placeholder="Ex.: Galaxy Watch 6, Mi Band 8, balança Fitdays"></label>
+    ${d.auto ? `<p class="hint" style="margin:0">Encontrado pelo Health Connect (app ${esc(d.app)}). Os dados continuam vindo de lá.</p>` : `<label for="dvObs">Observação<input class="field" id="dvObs" maxlength="60" value="${esc(d.obs || "")}" placeholder="Opcional"></label>`}`,
+    [[d.auto ? "Ocultar" : (novo ? "Cancelar" : "Remover"), () => {
+      if (d.auto) cfg.ajustes[d.id] = Object.assign(cfg.ajustes[d.id] || {}, { oculto: true });
+      else if (!novo) cfg.manuais = cfg.manuais.filter(x => x.id !== d.id);
+      else return closeSheet();
+      Store.save("perfil"); closeSheet(); renderDispositivos();
+    }], ["Salvar", () => {
+      const nome = $("#dvNome").value.trim(), tipo = $("#dvTipo").value;
+      if (!nome) return toast("Dê um nome ao dispositivo");
+      if (d.auto) cfg.ajustes[d.id] = { nome, tipo };
+      else { const v = { id: d.id, nome, tipo, obs: $("#dvObs").value.trim() }; const i = cfg.manuais.findIndex(x => x.id === d.id); if (i >= 0) cfg.manuais[i] = v; else cfg.manuais.push(v); }
+      Store.save("perfil"); closeSheet(); renderDispositivos(); toast(novo ? "Dispositivo adicionado" : "Dispositivo atualizado");
+    }, "primary"]]);
 }
 let progTab = "peso";
 async function renderAtividade(){
   const el = $("#progContent");
-  if (!HEALTH()) { el.innerHTML = `<div class="card"><h2>Atividade</h2><p style="margin:6px 0 0">Passos, calorias gastas, batimentos e sono do seu relógio aparecem aqui no app Android, pelo Health Connect.</p><p class="hint" style="margin-top:8px">Instale o APK e conecte em Perfil › Preferências › Balança e relógio.</p></div>`; return; }
+  if (!HEALTH()) { el.innerHTML = `<div class="card"><h2>Atividade</h2><p style="margin:6px 0 0">Passos, calorias gastas, batimentos e sono do seu relógio aparecem aqui no app Android, pelo Health Connect.</p><p class="hint" style="margin-top:8px">Instale o APK e conecte em Dispositivos (ícone do relógio no topo).</p></div>`; return; }
   if (!(S.perfil.saude && S.perfil.saude.ligado)) { el.innerHTML = `<div class="card"><h2>Atividade</h2><p style="margin:6px 0 12px">Conecte ao Health Connect para ver os dados do seu relógio e da balança.</p><button class="btn primary" id="hcBtn2">Conectar ao Health Connect</button></div>`; $("#hcBtn2").onclick = saudeConectar; return; }
   el.innerHTML = `<div class="card"><p class="muted" style="margin:0">Lendo dados do Health Connect…</p></div>`;
   const r = await saudeResumo(); if (!r || progTab !== "atividade") return;
@@ -2480,7 +2590,7 @@ async function renderListasCard(){
 }
 
 /* ---------- navegação ---------- */
-const PAGES = { diario: "p-diario", biblioteca: "p-alimentos", progresso: "p-progresso", perfil: "p-perfil" };
+const PAGES = { diario: "p-diario", biblioteca: "p-alimentos", progresso: "p-progresso", perfil: "p-perfil", dispositivos: "p-disp" };
 const ALIAS = { alimentos: "biblioteca", metas: "perfil", ajustes: "perfil", extras: "biblioteca" };
 function route(){
   let h = location.hash.slice(1); h = ALIAS[h] || h; const pg = PAGES[h] ? h : "diario";
@@ -2490,6 +2600,8 @@ function route(){
   if (pg === "progresso") renderProgress();
   if (pg === "perfil") { if (h === "ajustes") perfTab = "pref"; renderProfile(); renderPerfTabs(); }
   if (pg === "diario") renderDiary();
+  if (pg === "dispositivos") renderDispositivos();
+  document.querySelectorAll("[data-disp-open]").forEach(a => { if (pg === "dispositivos") a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
 }
 window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
 $("#todayBtn").onclick = () => { day = iso(new Date()); renderDiary(); };
