@@ -543,7 +543,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="sp-load"><i style="background:#c9824b"></i><i style="background:#e6a257"></i><i style="background:#b97878"></i></div>
   </div>
 </div>
-<script>(function(){var s=document.getElementById("splash"),rm=matchMedia("(prefers-reduced-motion: reduce)").matches;function sair(){if(!s||s.classList.contains("out"))return;s.classList.add("out");setTimeout(function(){s.remove()},500)}setTimeout(sair,rm?400:2300);s.addEventListener("click",sair)})();</script>
+<script>(function(){var s=document.getElementById("splash");window.__abertura=s?s.outerHTML:"";var rm=matchMedia("(prefers-reduced-motion: reduce)").matches;function sair(){if(!s||s.classList.contains("out"))return;s.classList.add("out");setTimeout(function(){s.remove()},500)}setTimeout(sair,rm?400:2300);s.addEventListener("click",sair)})();</script>
 <header class="topbar"><img class="logo-img" alt="" width="30" height="30"><b>Equilibrium</b><div class="save-state" id="saveState2"><b></b><span></span></div><button class="icon-btn" type="button" data-hoje aria-label="Ir para hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4"/><text x="12" y="18" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif" data-hoje-num>1</text></svg></button><a class="icon-btn" href="#dispositivos" data-disp-open aria-label="Dispositivos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2l1.5 1"/></svg></a><button class="icon-btn" data-tema-open aria-label="Trocar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg></button></header>
 <div class="app">
   <nav class="side" aria-label="Seções">
@@ -983,7 +983,23 @@ function aplicarTema(t, salvar){
 function temaOpts(){
   return `<div class="temas">${Object.entries(TEMAS).map(([k, v]) => `<button class="tema-opt" data-tema-pick="${k}" aria-pressed="${temaAtual() === k}"><img src="${v.icon}" alt=""><span>${v.nome}</span><span class="sw">${v.sw.map(c => `<i style="background:${c}"></i>`).join("")}</span></button>`).join("")}</div>`;
 }
-function wireTemaOpts(root){ root.querySelectorAll("[data-tema-pick]").forEach(b => b.onclick = () => aplicarTema(b.dataset.temaPick, true)); }
+function wireTemaOpts(root, comAbertura = true){ root.querySelectorAll("[data-tema-pick]").forEach(b => b.onclick = () => {
+  const novo = b.dataset.temaPick, mudou = novo !== temaAtual();
+  aplicarTema(novo, true);
+  if (!mudou || !comAbertura) return;
+  if (root.id === "sheetBody") closeSheet();
+  tocarAbertura(anuncioAposTema);
+}); }
+// toca de novo a animação de abertura (a do tema atual) e chama "depois" quando ela some
+function tocarAbertura(depois){
+  if (!window.__abertura || document.getElementById("splash")) return depois && depois();
+  const t = document.createElement("div"); t.innerHTML = window.__abertura;
+  const sp = t.firstElementChild; document.body.appendChild(sp);
+  const rm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let feito = false;
+  const sair = () => { if (feito) return; feito = true; sp.classList.add("out"); setTimeout(() => { sp.remove(); depois && depois(); }, 480); };
+  sp.addEventListener("click", sair); setTimeout(sair, rm ? 400 : 2300);
+}
 document.querySelectorAll("[data-tema-open]").forEach(b => b.onclick = () => { sheet("Tema", temaOpts() + `<p class="small muted" style="margin:0">Dá para trocar quando quiser. A escolha fica salva.</p>`, []); wireTemaOpts($("#sheetBody")); });
 
 /* ---------- água ---------- */
@@ -1281,7 +1297,7 @@ function openOnboarding(passo = 1){
         const c = calc(); if (c) { p.meta = c.sugerida; p.metaTipo = "sugerida"; p.metaBase = c.sugerida; }
         p.onboarded = true; Store.save("perfil"); closeSheet(); renderAll(); toast(c ? `Meta de ${fmt(c.sugerida)} kcal aplicada` : "Tudo pronto");
       }, "primary"]]);
-    wireTemaOpts($("#sheetBody"));
+    wireTemaOpts($("#sheetBody"), false); // na configuração inicial só troca o visual
   }
 }
 
@@ -2615,6 +2631,12 @@ function anuncioPrepararTelaCheia(){
   const A = ADMOB(); if (!A || !ANUNCIO.ativo || ANUNCIO.telaCheiaPronta || ANUNCIO.carregando) return;
   ANUNCIO.carregando = true;
   A.prepareInterstitial({ adId: ANUNCIO.telaCheia, isTesting: ANUNCIO.teste }).catch(() => { ANUNCIO.carregando = false; });
+}
+function anuncioAposTema(){ // depois da animação do novo tema; evita emendar com um anúncio recém-fechado
+  const A = ADMOB(); if (!A || !ANUNCIO.ativo || !ANUNCIO.telaCheiaPronta) return;
+  if (Date.now() - ANUNCIO.ultimo < 60 * 1000) return;
+  ANUNCIO.telaCheiaPronta = false; ANUNCIO.ultimo = Date.now();
+  A.showInterstitial().catch(() => anuncioPrepararTelaCheia());
 }
 function anuncioNaTrocaDeTela(){ // chamado ao mudar de tela; respeita o intervalo e não interrompe tarefas
   const A = ADMOB(); if (!A || !ANUNCIO.ativo || !ANUNCIO.telaCheiaPronta) return;
