@@ -2490,7 +2490,7 @@ const DISP_TIPOS = {
 };
 const DISP_APPS = [[/shealth|samsung/i, "Samsung Health"], [/fitdays/i, "Fitdays"], [/apps\.fitness/i, "Google Fit"], [/fitbit/i, "Fitbit"], [/xiaomi\.wearable|mi\.health|mifit/i, "Mi Fitness"], [/huami|zepp/i, "Zepp"],
   [/garmin/i, "Garmin Connect"], [/oura/i, "Oura"], [/ultrahuman/i, "Ultrahuman"], [/ringconn/i, "RingConn"], [/huawei/i, "Huawei Saúde"], [/withings/i, "Withings"], [/renpho/i, "Renpho"], [/eufy/i, "eufyLife"], [/polar/i, "Polar Flow"], [/whoop/i, "Whoop"], [/healthdata/i, "Health Connect"]];
-const dispApp = id => { const a = DISP_APPS.find(([re]) => re.test(id || "")); return a ? a[1] : (id || "").split(".").slice(-1)[0] || "app"; };
+const dispApp = id => { const a = DISP_APPS.find(([re]) => re.test(id || "")); if (a) return a[1]; return /^[a-z][\w]*(\.[\w]+)+$/i.test(id || "") ? id.split(".").slice(-1)[0] : "Health Connect"; };
 function dispTipo(d){
   const t = (d.nome + " " + d.app).toLowerCase(), k = d.dados || [];
   if (/oura|ultrahuman|ringconn|circular|\bring\b|anel/.test(t)) return "anel";
@@ -2537,7 +2537,7 @@ function renderDispositivos(){
     <div class="card">
       <div class="row" style="justify-content:space-between;flex-wrap:wrap"><h2 style="margin:0">Meus dispositivos</h2><button class="btn sm" id="dispAdd">+ Adicionar</button></div>
       ${grupos.length ? grupos.map(([t, l]) => `<h3 class="small muted" style="margin:16px 0 6px;text-transform:uppercase;letter-spacing:.04em">${DISP_TIPOS[t][0]}</h3>
-        <ul class="list">${l.map(d => `<li class="fi" style="gap:12px;align-items:center"><span style="color:var(--accent);display:flex">${ico(d.tipo)}</span>
+        <ul class="list">${l.map(d => `<li class="fi" data-dver="${esc(d.id)}" role="button" tabindex="0" style="gap:12px;align-items:center;cursor:pointer"><span style="color:var(--accent);display:flex">${ico(d.tipo)}</span>
           <div class="grow" style="min-width:0"><b>${esc(d.nome)}</b> <span class="tag ${d.auto ? "ok" : ""}">${d.auto ? "Vinculado" : "Manual"}</span><div class="small muted">${d.auto ? `Pelo ${esc(d.app)} · ${(d.dados || []).map(x => DADO_NOME[x] || x).join(", ")}${d.ultima ? ` · último dado ${quando(d.ultima)}` : ""}` : `Cadastrado à mão${d.obs ? " · " + esc(d.obs) : ""}`}</div></div>
           <button class="icon-btn" data-dedit="${esc(d.id)}" aria-label="Editar ${esc(d.nome)}">✎</button></li>`).join("")}</ul>`).join("")
         : `<p class="muted" style="margin:10px 0 0">${s.ligado ? "Nenhum aparelho enviou dados ao Health Connect nos últimos 30 dias. Confira no app do aparelho se a sincronização com o Health Connect está ligada e toque em “Procurar e atualizar”." : "Nenhum dispositivo ainda. Conecte ao Health Connect para encontrar os aparelhos automaticamente, ou adicione à mão."}</p>`}
@@ -2559,7 +2559,31 @@ function renderDispositivos(){
   };
   const c = $("#hcCfg"); if (c) c.onclick = () => { try { H.openHealthConnectSettings(); } catch(e){ toast("Abra o Health Connect nas configurações do Android"); } };
   $("#dispAdd").onclick = () => dispEditar(null);
-  el.querySelectorAll("[data-dedit]").forEach(x => x.onclick = () => dispEditar(lista.find(d => d.id === x.dataset.dedit)));
+  el.querySelectorAll("[data-dedit]").forEach(x => x.onclick = ev => { ev.stopPropagation(); dispEditar(lista.find(d => d.id === x.dataset.dedit)); });
+  el.querySelectorAll("[data-dver]").forEach(x => { x.onclick = () => dispDetalhe(lista.find(d => d.id === x.dataset.dver)); x.onkeydown = ev => { if (ev.key === "Enter") x.onclick(); }; });
+}
+async function dispDetalhe(d){ // o que este aparelho mandou: passos de hoje, batimento mais recente, calorias, peso
+  if (!d) return;
+  const quando = t => t ? new Date(t).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "";
+  const tit = d.nome, botoes = [["Editar", () => { closeSheet(); dispEditar(d); }], ["Fechar", closeSheet, "primary"]];
+  const bateria = `<p class="hint" style="margin:10px 0 0">Bateria: o Android não repassa a bateria de relógios e pulseiras pelo Health Connect. Veja no app do aparelho${d.auto ? ` (${esc(d.app)})` : ""}.</p>`;
+  if (!d.auto) return sheet(tit, `<p style="margin:0">${esc((DISP_TIPOS[d.tipo] || DISP_TIPOS.outro)[0])} cadastrado à mão${d.obs ? " · " + esc(d.obs) : ""}.</p><p class="hint">Ele ainda não mandou dados pelo Health Connect. Quando o app dele sincronizar com o Health Connect, o aparelho aparece como Vinculado e os dados ficam aqui.</p>${bateria}`, botoes);
+  sheet(tit, `<p class="muted" style="margin:0">Lendo os dados deste aparelho…</p>`, botoes);
+  const H = HEALTH(); if (!H) return;
+  const doAparelho = x => { const app = x.sourceId || "", nome = x.sourceName && x.sourceName !== app ? x.sourceName : dispApp(app); return (app + "|" + nome).toLowerCase() === d.id; };
+  const ler = async (dataType, desde) => { try { return ((await H.readSamples({ dataType, startDate: desde.toISOString(), endDate: new Date().toISOString(), limit: 1000 })).samples || []).filter(doAparelho); } catch(e){ return []; } };
+  const zero = new Date(); zero.setHours(0, 0, 0, 0);
+  const [passos, cal, fc, peso] = await Promise.all([ler("steps", zero), ler("calories", zero), ler("heartRate", new Date(Date.now() - 864e5)), ler("weight", new Date(Date.now() - 30 * 864e5))]);
+  const soma = a => a.reduce((t, x) => t + (+x.value || 0), 0), ultimo = a => a.slice().sort((x, y) => (x.endDate || x.startDate) < (y.endDate || y.startDate) ? 1 : -1)[0];
+  const fcU = ultimo(fc), pU = ultimo(peso);
+  const tiles = [];
+  if ((d.dados || []).includes("steps")) tiles.push(["Passos hoje", fmt(soma(passos)), "passos"]);
+  if ((d.dados || []).includes("heartRate")) tiles.push(["Batimento mais recente", fcU ? fmt(fcU.value) : "–", fcU ? "bpm · " + new Date(fcU.endDate || fcU.startDate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "sem leitura nas últimas 24 h"]);
+  if ((d.dados || []).includes("calories")) tiles.push(["Calorias gastas hoje", fmt(soma(cal)), "kcal em atividade"]);
+  if ((d.dados || []).includes("weight")) tiles.push(["Última pesagem", pU ? fmt(pU.value, 1) : "–", pU ? "kg · " + quando(pU.endDate || pU.startDate) : "kg"]);
+  if (!$("#overlay").classList.contains("on") || $("#sheetTitle").textContent !== tit) return;
+  sheet(tit, `${tiles.length ? `<div class="nutri num">${tiles.map(([l, v, u]) => `<div><b>${v}</b><span>${l} · ${u}</span></div>`).join("")}</div>` : `<p style="margin:0">Sem dados de hoje deste aparelho.</p>`}
+    <p class="small muted" style="margin:12px 0 0">Pelo ${esc(d.app)} · último dado ${quando(d.ultima)}</p>${bateria}`, botoes);
 }
 function dispEditar(d){
   const cfg = S.perfil.dispositivos || (S.perfil.dispositivos = { manuais: [], ajustes: {} }), novo = !d;
