@@ -449,6 +449,19 @@ button.mrow:hover{background:var(--sunk)}
 .app{grid-template-columns:220px minmax(0,1fr)}
 main,.page,.card,.page > *{min-width:0;max-width:100%}
 main{overflow-x:clip}
+:root{--ad-h:0px}
+main{padding-bottom:calc(110px + var(--ad-h))}
+.overlay{bottom:var(--ad-h)}
+.toast{margin-bottom:var(--ad-h)}
+@media (max-width:860px){
+  .side{bottom:var(--ad-h) !important}
+  main{padding-bottom:calc(96px + env(safe-area-inset-bottom) + var(--ad-h))}
+}
+:root.com-anuncio body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:var(--ad-h);background:var(--bg);border-top:1px solid var(--line);z-index:29}
+@media (orientation:landscape) and (max-height:560px){
+  .side{height:calc(100vh - var(--ad-h)) !important}
+  main{padding-bottom:calc(14px + var(--ad-h)) !important}
+}
 @media (max-width:860px){ .app{grid-template-columns:minmax(0,1fr)} }
 /* ===== Layout adaptável: PC/tablet largo, celular deitado ===== */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -2535,6 +2548,61 @@ async function renderAtividade(){
     <p class="hint" style="margin-top:8px">Sua meta já considera o nível de atividade escolhido no Perfil, então essas calorias não são somadas de novo à meta.</p></div>`;
 }
 
+
+/* ---------- anúncios (só no app Android): banner fixo no rodapé + tela cheia na troca de tela ---------- */
+const ANUNCIO = {
+  // IDs de teste do Google. Trocar pelos IDs reais do AdMob antes de publicar na loja.
+  teste: true,
+  banner: "ca-app-pub-3940256099942544/9214589741",
+  telaCheia: "ca-app-pub-3940256099942544/1033173712",
+  intervalo: 3 * 60 * 1000, // pelo menos 3 minutos entre anúncios de tela cheia
+  folga: 6,                 // espaço (px) entre o banner e a barra de navegação
+  ativo: false, bannerOk: false, telaCheiaPronta: false, carregando: false, ultimo: Date.now(), escondido: false
+};
+const ADMOB = () => NATIVO && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+function anuncioAltura(h){
+  const px = h > 0 ? h + ANUNCIO.folga : 0;
+  document.documentElement.style.setProperty("--ad-h", px + "px");
+  document.documentElement.classList.toggle("com-anuncio", px > 0);
+}
+async function anunciosIniciar(){
+  const A = ADMOB(); if (!A || ANUNCIO.ativo) return;
+  try {
+    await A.initialize({ initializeForTesting: ANUNCIO.teste });
+    let c = await A.requestConsentInfo();
+    if (c && c.isConsentFormAvailable && c.status === "REQUIRED") c = await A.showConsentForm();
+    if (c && c.canRequestAds === false) return;
+    ANUNCIO.ativo = true;
+    A.addListener("bannerAdSizeChanged", info => { if (!ANUNCIO.escondido) anuncioAltura(info && info.height || 0); });
+    A.addListener("interstitialAdLoaded", () => { ANUNCIO.telaCheiaPronta = true; ANUNCIO.carregando = false; });
+    A.addListener("interstitialAdFailedToLoad", () => { ANUNCIO.telaCheiaPronta = false; ANUNCIO.carregando = false; setTimeout(anuncioPrepararTelaCheia, 60000); });
+    A.addListener("interstitialAdDismissed", () => { ANUNCIO.ultimo = Date.now(); ANUNCIO.telaCheiaPronta = false; anuncioPrepararTelaCheia(); });
+    A.addListener("interstitialAdFailedToShow", () => { ANUNCIO.telaCheiaPronta = false; anuncioPrepararTelaCheia(); });
+    await A.showBanner({ adId: ANUNCIO.banner, adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", margin: 0, isTesting: ANUNCIO.teste });
+    ANUNCIO.bannerOk = true;
+    anuncioPrepararTelaCheia();
+  } catch(e){ /* sem anúncio, o app segue normal */ }
+}
+function anuncioPrepararTelaCheia(){
+  const A = ADMOB(); if (!A || !ANUNCIO.ativo || ANUNCIO.telaCheiaPronta || ANUNCIO.carregando) return;
+  ANUNCIO.carregando = true;
+  A.prepareInterstitial({ adId: ANUNCIO.telaCheia, isTesting: ANUNCIO.teste }).catch(() => { ANUNCIO.carregando = false; });
+}
+function anuncioNaTrocaDeTela(){ // chamado ao mudar de tela; respeita o intervalo e não interrompe tarefas
+  const A = ADMOB(); if (!A || !ANUNCIO.ativo || !ANUNCIO.telaCheiaPronta) return;
+  if (Date.now() - ANUNCIO.ultimo < ANUNCIO.intervalo) return;
+  if ($("#overlay").classList.contains("on")) return;
+  ANUNCIO.telaCheiaPronta = false; ANUNCIO.ultimo = Date.now();
+  A.showInterstitial().catch(() => anuncioPrepararTelaCheia());
+}
+// teclado aberto: o banner sai do caminho para não cobrir o campo de texto
+if (window.visualViewport) visualViewport.addEventListener("resize", () => {
+  const A = ADMOB(); if (!A || !ANUNCIO.bannerOk) return;
+  const teclado = visualViewport.height < window.innerHeight * 0.75;
+  if (teclado && !ANUNCIO.escondido) { ANUNCIO.escondido = true; anuncioAltura(0); A.hideBanner().catch(() => {}); }
+  else if (!teclado && ANUNCIO.escondido) { ANUNCIO.escondido = false; A.resumeBanner().catch(() => {}); }
+});
+
 /* ---------- outras listas de produtos (código de barras) ---------- */
 const IDB = {
   db: null,
@@ -2592,8 +2660,11 @@ async function renderListasCard(){
 /* ---------- navegação ---------- */
 const PAGES = { diario: "p-diario", biblioteca: "p-alimentos", progresso: "p-progresso", perfil: "p-perfil", dispositivos: "p-disp" };
 const ALIAS = { alimentos: "biblioteca", metas: "perfil", ajustes: "perfil", extras: "biblioteca" };
+let paginaAtual = null;
 function route(){
   let h = location.hash.slice(1); h = ALIAS[h] || h; const pg = PAGES[h] ? h : "diario";
+  if (paginaAtual && paginaAtual !== pg) anuncioNaTrocaDeTela();
+  paginaAtual = pg;
   Object.entries(PAGES).forEach(([k, id]) => $("#" + id).classList.toggle("on", k === pg));
   document.querySelectorAll("[data-nav]").forEach(a => { if (a.dataset.nav === pg) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   if (pg === "biblioteca") renderBib();
@@ -2620,6 +2691,7 @@ aplicarTema(S.perfil.tema || temaAtual(), false);
 aplicarLetra(S.perfil.letra != null ? S.perfil.letra : pref.get("letra", false));
 renderAll();
 setTimeout(() => { if (precisaOnboarding()) openOnboarding(1); }, 2500);
+(function esperarParaAnunciar(){ setTimeout(() => { if (precisaOnboarding() || $("#overlay").classList.contains("on")) return esperarParaAnunciar(); anunciosIniciar(); }, 4000); })();
 setTimeout(() => saudeSincronizarPeso(false).then(n => { if (n && (location.hash || "#diario") !== "#perfil") { toast(`Peso atualizado pela balança`); renderAll(); } }), 3500);
 Store.connect();
 </script>
