@@ -109,6 +109,9 @@ main{padding:28px 24px 110px;max-width:808px;width:100%;margin:0 auto;display:fl
 .row{display:flex;gap:10px;align-items:center}
 .wrap{flex-wrap:wrap}
 .grow{flex:1}
+[data-hoje]{position:relative}
+[data-hoje].fora-de-hoje::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.side > [data-hoje].fora-de-hoje::after{top:4px;right:auto;left:22px}
 .tag{display:inline-block;vertical-align:1px;white-space:nowrap;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted)}
 .tag.ok{background:var(--accent-soft);color:var(--accent)}
 
@@ -351,7 +354,7 @@ button.mrow:hover{background:var(--sunk)}
   .topbar .save-state{display:flex;margin:0;padding:0}
   .topbar .save-state span{display:none}
   .side{position:fixed;bottom:0;top:auto;left:0;right:0;height:auto;flex-direction:row;padding:4px max(6px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));border-right:0;border-top:1px solid var(--line);z-index:30}
-  .side > .brand,.side > .save-state,.side > [data-tema-open],.side > [data-disp-open],.side > [data-nav="ajustes"]{display:none}
+  .side > .brand,.side > .save-state,.side > [data-tema-open],.side > [data-disp-open],.side > [data-hoje],.side > [data-nav="ajustes"]{display:none}
   .nav{display:flex;flex:1;justify-content:space-around;align-items:center}
   .nav a{flex-direction:column;gap:2px;font-size:.7rem;padding:7px 4px;min-width:62px;border-radius:12px}
   .nav a svg{width:22px;height:22px}
@@ -363,7 +366,7 @@ button.mrow:hover{background:var(--sunk)}
   .toast{bottom:calc(92px + env(safe-area-inset-bottom))}
   /* Diário compacto */
   #p-diario > .head h1{display:none}
-  #p-diario > .head{display:flex;justify-content:flex-end;margin-bottom:-6px}
+  #p-diario > .head{display:none}
   .week{grid-template-columns:24px repeat(7,1fr) 24px;gap:2px}
   .wk-day b{font-size:1rem}
   .datebar{width:100%;justify-content:space-between}
@@ -488,16 +491,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .nav a{flex-direction:column;font-size:.62rem !important;padding:6px 2px !important;min-width:0 !important;gap:2px;text-align:center}
   .nav a svg{width:20px !important;height:20px !important}
   .fab{margin:6px auto !important;width:48px !important;height:48px !important;border-width:3px !important}
-  .side > [data-disp-open]{display:flex !important;justify-content:center;margin:auto 0 0 !important;padding:6px !important}
+  .side > [data-hoje]{display:flex !important;justify-content:center;margin:auto 0 0 !important;padding:6px !important}
+  .side > [data-disp-open]{display:flex !important;justify-content:center;margin:0 !important;padding:6px !important}
   .side > [data-tema-open]{display:flex !important;justify-content:center;margin:0 !important;padding:6px !important}
-  .side > [data-tema-open] span,.side > [data-disp-open] span{display:none}
+  .side > [data-tema-open] span,.side > [data-disp-open] span,.side > [data-hoje] span{display:none}
   .topbar [data-disp-open][aria-current],.side > [data-disp-open][aria-current]{color:var(--accent)}
   main{padding:10px max(14px, env(safe-area-inset-right)) 14px 14px !important;max-width:none !important}
   .page:not(#p-diario){max-width:900px;margin:0 auto;width:100%}
   #p-diario.on{display:grid;grid-template-columns:minmax(300px,42%) minmax(0,1fr);column-gap:14px;row-gap:10px;align-items:start}
   #p-diario > *{grid-column:1;min-width:0}
   #p-diario > .head,#p-diario > .week{grid-column:1 / -1}
-  #p-diario > .head{display:flex !important;justify-content:flex-end;margin:0}
+  #p-diario > .head{display:none !important}
   #meals{grid-column:2 !important;grid-row:3 / span 8}
   .ring{width:112px !important;height:112px !important}
   .ring .big{font-size:1.7rem !important}
@@ -540,7 +544,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </div>
 </div>
 <script>(function(){var s=document.getElementById("splash"),rm=matchMedia("(prefers-reduced-motion: reduce)").matches;function sair(){if(!s||s.classList.contains("out"))return;s.classList.add("out");setTimeout(function(){s.remove()},500)}setTimeout(sair,rm?400:2300);s.addEventListener("click",sair)})();</script>
-<header class="topbar"><img class="logo-img" alt="" width="30" height="30"><b>Equilibrium</b><div class="save-state" id="saveState2"><b></b><span></span></div><a class="icon-btn" href="#dispositivos" data-disp-open aria-label="Dispositivos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2l1.5 1"/></svg></a><button class="icon-btn" data-tema-open aria-label="Trocar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg></button></header>
+<header class="topbar"><img class="logo-img" alt="" width="30" height="30"><b>Equilibrium</b><div class="save-state" id="saveState2"><b></b><span></span></div><button class="icon-btn" type="button" data-hoje aria-label="Ir para hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4"/><text x="12" y="18" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif" data-hoje-num>1</text></svg></button><a class="icon-btn" href="#dispositivos" data-disp-open aria-label="Dispositivos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2l1.5 1"/></svg></a><button class="icon-btn" data-tema-open aria-label="Trocar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg></button></header>
 <div class="app">
   <nav class="side" aria-label="Seções">
     <div class="brand"><img class="logo-img" alt="" width="34" height="34"><span>Equilibrium<small>Controle de calorias e macros</small></span></div>
@@ -551,7 +555,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <a href="#progresso" data-nav="progresso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M6 16l4-5 3 3 5-7"/></svg>Progresso</a>
       <a href="#perfil" data-nav="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Perfil</a>
     </div>
-    <a class="btn ghost sm" href="#dispositivos" data-disp-open style="margin:auto 6px 4px;justify-content:flex-start;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2l1.5 1"/></svg><span>Dispositivos</span></a>
+    <button class="btn ghost sm" type="button" data-hoje style="margin:auto 6px 4px;justify-content:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4"/><text x="12" y="18" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif" data-hoje-num>1</text></svg><span>Hoje</span></button>
+    <a class="btn ghost sm" href="#dispositivos" data-disp-open style="margin:0 6px 4px;justify-content:flex-start;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l1-3h4l1 3M9 18l1 3h4l1-3"/><path d="M12 10v2l1.5 1"/></svg><span>Dispositivos</span></a>
     <button class="btn ghost sm" data-tema-open style="margin:0 6px 8px;justify-content:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg><span>Tema</span></button>
     <div class="save-state" id="saveState"><b></b><span>Salvo neste navegador</span></div>
   </nav>
@@ -561,11 +566,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <section class="page" id="p-diario" aria-labelledby="h-diario">
       <div class="head">
         <h1 id="h-diario">Diário</h1>
-        <div class="row" style="gap:6px">
-          <button class="btn ghost sm" id="todayBtn">Hoje</button>
-          <button class="icon-btn" id="calBtn" aria-label="Escolher data"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></button>
-          <input type="date" id="datePick" aria-label="Escolher data" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0">
-        </div>
       </div>
       <div class="week" id="weekStrip"></div>
       <p class="greet" id="greet"></p>
@@ -1312,7 +1312,7 @@ function renderGoalNotice(target){
   });
 }
 function renderDiary(){
-  $("#datePick").value = day;
+  atualizarHoje();
   renderWeek(); renderWeightCard();
   $("#qsMeal").textContent = "no " + nomeRef(mealByHour()).toLowerCase();
   renderGoalNotice($("#goalNotice"));
@@ -2703,9 +2703,17 @@ function route(){
   document.querySelectorAll("[data-disp-open]").forEach(a => { if (pg === "dispositivos") a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
 }
 window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
-$("#todayBtn").onclick = () => { day = iso(new Date()); renderDiary(); };
-$("#calBtn").onclick = () => { const d = $("#datePick"); try { d.showPicker(); } catch(e){ d.click(); } };
-$("#datePick").onchange = e => { if (e.target.value) { day = e.target.value; renderDiary(); } };
+// botão Hoje (barra do topo e barra lateral): volta o Diário para o dia de hoje
+function atualizarHoje(){
+  const hoje = iso(new Date()), n = String(new Date().getDate());
+  document.querySelectorAll("[data-hoje-num]").forEach(t => t.textContent = n);
+  document.querySelectorAll("[data-hoje]").forEach(b => b.classList.toggle("fora-de-hoje", day !== hoje));
+}
+document.querySelectorAll("[data-hoje]").forEach(b => b.onclick = () => {
+  day = iso(new Date());
+  if ((location.hash || "#diario") !== "#diario") location.hash = "#diario"; else renderDiary();
+  atualizarHoje(); vibrar(8);
+});
 $("#quickSearch").onclick = () => openAdd(mealByHour());
 $("#ringBtn").onclick = () => { pref.set("anel", pref.get("anel", "consumido") === "restante" ? "consumido" : "restante"); vibrar(8); renderDiary(); };
 $("#ringBtn").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#ringBtn").click(); } };
