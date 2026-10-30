@@ -342,6 +342,14 @@ button.mrow:hover{background:var(--sunk)}
 .semana .linha{position:absolute;left:0;right:0;border-top:1.5px dashed var(--muted);opacity:.6}
 .semana .ins{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
 .seq{display:flex;gap:3px;margin-top:8px}.seq i{flex:1;height:8px;border-radius:3px;background:var(--accent)}.seq i.x{background:var(--track)}
+details > summary:has(.share-dia){list-style:none}details > summary:has(.share-dia)::-webkit-details-marker{display:none}
+details > summary:has(.share-dia)::before{content:"";width:0;height:0;border-left:6px solid currentColor;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;transition:transform .15s}
+details[open] > summary:has(.share-dia)::before{transform:rotate(90deg)}
+.share-dia{width:34px;height:34px;color:var(--muted);margin:-6px -4px -6px 0}
+.shr-lay{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.shr-lay button{border:1.5px solid var(--line);background:var(--sunk);border-radius:12px;padding:8px 4px;color:var(--ink);font:inherit;font-size:.82rem;cursor:pointer}
+.shr-lay button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:700}
+.shr-prev{display:flex;justify-content:center}.shr-prev canvas{width:min(62vw,260px);height:auto;border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
 .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-direction:row;color:var(--ink);font-weight:500}
 .switch-row input{width:22px;height:22px;accent-color:var(--accent)}
 /* Medidas */
@@ -607,7 +615,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
           <div class="macros" id="macroBars"></div>
         </div>
         <details style="margin-top:14px">
-          <summary class="small muted" style="cursor:pointer;font-weight:600">Outros nutrientes do dia</summary>
+          <summary class="small muted" style="cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px"><span style="flex:1">Outros nutrientes do dia</span><button class="icon-btn share-dia" id="shareDay" type="button" aria-label="Compartilhar o dia" title="Compartilhar o dia"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"/></svg></button></summary>
           <div class="extra num" id="extraNutri"></div>
         </details>
       </div>
@@ -2983,6 +2991,167 @@ function renderNotifCard(){
   document.addEventListener("visibilitychange", () => { if (!document.hidden) notifAgendarDepois(); });
   notifAgendarDepois();
 })();
+
+
+/* ---------- compartilhar o dia (imagem para stories) ---------- */
+const SHR = { layout: "anel", cor: "", formato: "story" };
+const SHR_TEMAS = {
+  dark: { bg: "#191817", card: "#2A2725", ink: "#F4EFE6", muted: "#A99F93", acc: "#C9824B", prot: "#F4EFE6", carb: "#E6A257", fat: "#B97878", agua: "#CFC6B8", track: "#34302C", fD: '"DM Serif Display", Georgia, serif' },
+  light: { bg: "#F8F7F2", card: "#FFFFFF", ink: "#123D2A", muted: "#5F6E63", acc: "#C96D48", prot: "#123D2A", carb: "#C9A06E", fat: "#8BA66A", agua: "#6F9BB0", track: "#ECEAE1", fD: '"DM Serif Display", Georgia, serif' },
+  rose: { bg: "#FFF9F8", card: "#FFFFFF", ink: "#5B2E40", muted: "#957180", acc: "#B86A89", prot: "#A797D2", carb: "#C77B98", fat: "#D2A86E", agua: "#9E93D6", track: "#F6E4EA", fD: '"Cormorant Garamond", Georgia, serif' },
+  espacial: { bg: "#0B1220", card: "#111A2C", ink: "#F4EBD7", muted: "#94A1B6", acc: "#F97316", prot: "#D4A017", carb: "#FB923C", fat: "#8BC34A", agua: "#22D3EE", track: "#1C263A", fD: '"DM Serif Display", Georgia, serif' }
+};
+const SHR_ICON = {};
+Object.keys(SHR_TEMAS).forEach(k => { try { const im = new Image(); im.src = TEMAS[k].icon; SHR_ICON[k] = im; } catch(e){} });
+function shrTema(){ return SHR_TEMAS[SHR.cor] ? SHR.cor : temaAtual(); }
+function shrPaleta(){ return SHR_TEMAS[shrTema()] || SHR_TEMAS.dark; }
+function shrLogo(){ const im = SHR_ICON[shrTema()]; return im && im.complete && im.naturalWidth ? im : null; }
+function shrDados(){
+  const t = dayTotals(day), mg = macroGoals() || {}, dd = dayData(day) || {}, agua = dd.agua || 0, am = aguaMeta();
+  const meta = mg.kcal || null, bateu = meta && Math.abs(t.kcal - meta) <= meta * .1 && (!mg.p || t.p >= mg.p * .9);
+  return { t, mg, agua, am, meta, bateu, data: dateLabel(day) };
+}
+function desenharStory(cv){
+  if (SHR.formato === "quadrado") return desenharQuadrado(cv);
+  const W = 1080, H = 1920, c = cv.getContext("2d"), P = shrPaleta(), D = shrDados(), cs = getComputedStyle(document.documentElement);
+  const fD = P.fD || "Georgia, serif", fB = cs.getPropertyValue("--body").trim() || "system-ui, sans-serif";
+  cv.width = W; cv.height = H;
+  const rr = (x, y, w, h, r) => { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); };
+  const txt = (s, x, y, size, color, opt = {}) => { c.font = `${opt.w || 600} ${size}px ${opt.f || fB}`; c.fillStyle = color; c.textAlign = opt.a || "left"; c.textBaseline = opt.b || "alphabetic"; c.fillText(s, x, y); };
+  const n0 = v => fmt(v), pct = (v, g) => g ? Math.min(v / g, 1) : 0;
+  c.fillStyle = P.bg; c.fillRect(0, 0, W, H);
+  const g = c.createRadialGradient(W * .85, 120, 40, W * .85, 120, 900); g.addColorStop(0, P.acc + "33"); g.addColorStop(1, P.acc + "00"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  // área segura dos stories: o Instagram cobre o topo (nome) e a base (campo de mensagem)
+  // margem de segurança: tudo entre y 250 e 1670 (o Instagram cobre ~250 px no topo e na base) e a 120 px das laterais
+  const SZ = .78; c.save(); c.setTransform(SZ, 0, 0, SZ, (W - W * SZ) / 2, 250 - 100 * SZ + 20);
+  // cabeçalho
+  const logo = shrLogo();
+  try { if (logo) c.drawImage(logo, 90, 110, 84, 84); } catch(e){}
+  txt("Equilibrium", 196, 172, 56, P.ink, { f: fD, w: 400 });
+  txt(D.data, W - 90, 166, 38, P.muted, { a: "right", w: 600 });
+  const titulo = D.bateu ? "Meta do dia batida ✓" : "Meu dia em números";
+  const barras = [["Proteína", D.t.p, D.mg.p, P.prot, "g"], ["Carboidratos", D.t.c, D.mg.c, P.carb, "g"], ["Gorduras", D.t.g, D.mg.g, P.fat, "g"], ["Água", D.agua / 1000, D.am / 1000, P.agua, "L"]];
+  const barra = (y, [nm, v, gl, col, u]) => {
+    txt(nm, 90, y, 42, P.ink, { w: 700 });
+    txt(`${u === "L" ? fmt(v, 1) : n0(v)}${gl ? " / " + (u === "L" ? fmt(gl, 1) : n0(gl)) : ""} ${u}`, W - 90, y, 40, P.muted, { a: "right" });
+    rr(90, y + 26, W - 180, 26, 13); c.fillStyle = P.track; c.fill();
+    if (gl) { rr(90, y + 26, Math.max(26, (W - 180) * pct(v, gl)), 26, 13); c.fillStyle = col; c.fill(); }
+  };
+  if (SHR.layout === "anel") {
+    txt(titulo, W / 2, 420, 88, P.ink, { f: fD, w: 400, a: "center" });
+    const cx = W / 2, cy = 820, R = 270;
+    c.lineWidth = 46; c.lineCap = "round"; c.strokeStyle = P.track; c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.stroke();
+    c.strokeStyle = P.acc; c.beginPath(); c.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(.005, pct(D.t.kcal, D.meta))); c.stroke();
+    txt(n0(D.t.kcal), cx, cy + 30, 150, P.ink, { a: "center", w: 800 });
+    txt(D.meta ? `de ${n0(D.meta)} kcal` : "kcal", cx, cy + 100, 44, P.muted, { a: "center" });
+    barras.forEach((b, i) => barra(1240 + i * 140, b));
+  } else if (SHR.layout === "cartoes") {
+    txt(titulo, 90, 360, 84, P.ink, { f: fD, w: 400 });
+    const tiles = [["Calorias", D.t.kcal, D.meta, P.acc, "kcal"], ...barras, ["Fibras", D.t.fib, D.mg.fib, P.ink, "g"]];
+    const tw = (W - 180 - 40) / 2, th = 360;
+    tiles.forEach(([nm, v, gl, col, u], i) => {
+      const x = 90 + (i % 2) * (tw + 40), y = 470 + Math.floor(i / 2) * (th + 40);
+      rr(x, y, tw, th, 40); c.fillStyle = P.card; c.fill();
+      txt(nm, x + 44, y + 84, 40, P.muted, { w: 700 });
+      txt(u === "L" ? fmt(v, 1) : n0(v), x + 44, y + 210, 104, P.ink, { w: 800 });
+      txt(gl ? `de ${u === "L" ? fmt(gl, 1) : n0(gl)} ${u}` : u, x + 44, y + 262, 36, P.muted);
+      rr(x + 44, y + 296, tw - 88, 18, 9); c.fillStyle = P.track; c.fill();
+      if (gl) { rr(x + 44, y + 296, Math.max(18, (tw - 88) * pct(v, gl)), 18, 9); c.fillStyle = col; c.fill(); }
+    });
+  } else {
+    txt(titulo, 90, 380, 72, P.muted, { f: fD, w: 400 });
+    txt(n0(D.t.kcal), 80, 700, 300, P.ink, { w: 800 });
+    txt(D.meta ? `kcal de ${n0(D.meta)}` : "kcal", 96, 790, 56, P.acc, { w: 700 });
+    const linhas = [["Proteína", D.t.p, D.mg.p, "g"], ["Carboidratos", D.t.c, D.mg.c, "g"], ["Gorduras", D.t.g, D.mg.g, "g"], ["Fibras", D.t.fib, D.mg.fib, "g"], ["Água", D.agua / 1000, D.am / 1000, "L"]];
+    linhas.forEach(([nm, v, gl, u], i) => {
+      const y = 1000 + i * 130; c.fillStyle = P.track; c.fillRect(90, y - 92, W - 180, 3);
+      txt(nm, 90, y, 52, P.ink, { w: 600 });
+      txt(`${u === "L" ? fmt(v, 1) : n0(v)} ${u}`, W - 90, y, 60, P.ink, { a: "right", w: 800 });
+      if (gl) txt(`${fmt(pct(v, gl) * 100)}%`, W - 360, y, 40, P.muted, { a: "right" });
+    });
+  }
+  c.restore();
+  txt("Equilibrium · contador de calorias e macros", W / 2, 1640, 30, P.muted, { a: "center" });
+}
+function desenharQuadrado(cv){ // 1080 × 1080, bom para WhatsApp e feed
+  const W = 1080, H = 1080, c = cv.getContext("2d"), P = shrPaleta(), D = shrDados(), cs = getComputedStyle(document.documentElement);
+  const fD = P.fD || "Georgia, serif", fB = cs.getPropertyValue("--body").trim() || "system-ui, sans-serif";
+  cv.width = W; cv.height = H;
+  const rr = (x, y, w, h, r) => { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); };
+  const txt = (s, x, y, size, color, opt = {}) => { c.font = `${opt.w || 600} ${size}px ${opt.f || fB}`; c.fillStyle = color; c.textAlign = opt.a || "left"; c.textBaseline = "alphabetic"; c.fillText(s, x, y); };
+  const pct = (v, g) => g ? Math.min(v / g, 1) : 0, val = (v, u) => u === "L" ? fmt(v, 1) : fmt(v);
+  c.fillStyle = P.bg; c.fillRect(0, 0, W, H);
+  const g = c.createRadialGradient(W * .9, 60, 30, W * .9, 60, 700); g.addColorStop(0, P.acc + "33"); g.addColorStop(1, P.acc + "00"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const logo = shrLogo();
+  try { if (logo) c.drawImage(logo, 70, 64, 64, 64); } catch(e){}
+  txt("Equilibrium", 150, 112, 44, P.ink, { f: fD, w: 400 });
+  txt(D.data, W - 70, 108, 32, P.muted, { a: "right" });
+  txt(D.bateu ? "Meta do dia batida ✓" : "Meu dia em números", 70, 230, 64, P.ink, { f: fD, w: 400 });
+  const itens = [["Proteína", D.t.p, D.mg.p, P.prot, "g"], ["Carboidratos", D.t.c, D.mg.c, P.carb, "g"], ["Gorduras", D.t.g, D.mg.g, P.fat, "g"], ["Água", D.agua / 1000, D.am / 1000, P.agua, "L"]];
+  if (SHR.layout === "cartoes") {
+    const tiles = [["Calorias", D.t.kcal, D.meta, P.acc, "kcal"], ...itens, ["Fibras", D.t.fib, D.mg.fib, P.ink, "g"]];
+    const tw = (W - 140 - 40) / 3, th = 300;
+    tiles.forEach(([nm, v, gl, col, u], i) => { const x = 70 + (i % 3) * (tw + 20), y = 300 + Math.floor(i / 3) * (th + 24);
+      rr(x, y, tw, th, 30); c.fillStyle = P.card; c.fill();
+      txt(nm, x + 30, y + 64, 32, P.muted, { w: 700 }); txt(val(v, u), x + 30, y + 160, 80, P.ink, { w: 800 });
+      txt(gl ? `de ${val(gl, u)} ${u}` : u, x + 30, y + 206, 28, P.muted);
+      rr(x + 30, y + 236, tw - 60, 14, 7); c.fillStyle = P.track; c.fill(); if (gl) { rr(x + 30, y + 236, Math.max(14, (tw - 60) * pct(v, gl)), 14, 7); c.fillStyle = col; c.fill(); } });
+  } else if (SHR.layout === "minimal") {
+    txt(fmt(D.t.kcal), 64, 520, 230, P.ink, { w: 800 }); txt(D.meta ? `kcal de ${fmt(D.meta)}` : "kcal", 76, 590, 44, P.acc, { w: 700 });
+    itens.forEach(([nm, v, gl, , u], i) => { const x = 70 + (i % 2) * 480, y = 720 + Math.floor(i / 2) * 120;
+      txt(nm, x, y, 36, P.muted, { w: 600 }); txt(`${val(v, u)} ${u}`, x, y + 56, 52, P.ink, { w: 800 }); });
+  } else {
+    const cx = 290, cy = 640, R = 200;
+    c.lineWidth = 38; c.lineCap = "round"; c.strokeStyle = P.track; c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.stroke();
+    c.strokeStyle = P.acc; c.beginPath(); c.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(.005, pct(D.t.kcal, D.meta))); c.stroke();
+    txt(fmt(D.t.kcal), cx, cy + 22, 112, P.ink, { a: "center", w: 800 }); txt(D.meta ? `de ${fmt(D.meta)} kcal` : "kcal", cx, cy + 80, 34, P.muted, { a: "center" });
+    itens.forEach(([nm, v, gl, col, u], i) => { const x = 570, y = 430 + i * 130, w = W - 70 - x;
+      txt(nm, x, y, 34, P.ink, { w: 700 }); txt(`${val(v, u)}${gl ? " / " + val(gl, u) : ""} ${u}`, W - 70, y, 30, P.muted, { a: "right" });
+      rr(x, y + 22, w, 20, 10); c.fillStyle = P.track; c.fill(); if (gl) { rr(x, y + 22, Math.max(20, w * pct(v, gl)), 20, 10); c.fillStyle = col; c.fill(); } });
+  }
+  txt("Equilibrium · contador de calorias e macros", W / 2, H - 60, 28, P.muted, { a: "center" });
+}
+function textoWhats(){
+  const D = shrDados();
+  return D.bateu ? `Bati minha meta hoje: ${fmt(D.t.kcal)} de ${fmt(D.meta)} kcal, ${fmt(D.t.p)} g de proteína e ${fmt(D.agua / 1000, 1)} L de água 💪`
+    : `Meu dia até agora: ${fmt(D.t.kcal)} kcal, ${fmt(D.t.p)} g de proteína e ${fmt(D.agua / 1000, 1)} L de água.`;
+}
+function abrirCompartilhar(){
+  const lay = [["anel", "Anel"], ["cartoes", "Cartões"], ["minimal", "Minimalista"]], cores = Object.keys(SHR_TEMAS).map(k => [k, TEMAS[k].nome]);
+  const fmts = [["story", "Stories (Instagram)"], ["quadrado", "Quadrado (WhatsApp)"]];
+  sheet("Compartilhar o dia", `<div class="shr-lay" style="grid-template-columns:1fr 1fr">${fmts.map(([k, n]) => `<button data-shf="${k}" aria-pressed="${(SHR.formato || "story") === k}">${n}</button>`).join("")}</div>
+    <div class="shr-prev"><canvas id="shrCv"></canvas></div>
+    <div><p class="small muted" style="margin:0 0 6px">Layout</p><div class="shr-lay">${lay.map(([k, n]) => `<button data-shl="${k}" aria-pressed="${SHR.layout === k}">${n}</button>`).join("")}</div></div>
+    <div><p class="small muted" style="margin:0 0 6px">Tema</p><div class="shr-lay" style="grid-template-columns:repeat(4,1fr)">${cores.map(([k, n]) => `<button data-shc="${k}" aria-pressed="${shrTema() === k}">${n}</button>`).join("")}</div></div>
+    <p class="hint" style="margin:0">${SHR.formato === "quadrado" ? "Imagem quadrada (1080 × 1080) com uma mensagem pronta. Escolha o WhatsApp na lista que abrir." : "Imagem no tamanho dos stories (1080 × 1920). Escolha o Instagram na lista que abrir."}</p>`,
+    [["Fechar", closeSheet], [SHR.formato === "quadrado" ? "Enviar no WhatsApp" : "Postar no Instagram", compartilharStory, "primary"]]);
+  const cv = $("#shrCv"); desenharStory(cv);
+  Promise.all(Object.values(SHR_ICON).map(im => im.decode ? im.decode().catch(() => {}) : 0)).then(() => { if ($("#shrCv") === cv) desenharStory(cv); });
+  document.fonts && document.fonts.ready.then(() => { if ($("#shrCv") === cv) desenharStory(cv); });
+  document.querySelectorAll("[data-shl]").forEach(b => b.onclick = () => { SHR.layout = b.dataset.shl; pref.set("shr", SHR); abrirCompartilhar(); });
+  document.querySelectorAll("[data-shf]").forEach(b => b.onclick = () => { SHR.formato = b.dataset.shf; pref.set("shr", SHR); abrirCompartilhar(); });
+  document.querySelectorAll("[data-shc]").forEach(b => b.onclick = () => { SHR.cor = b.dataset.shc; pref.set("shr", SHR); abrirCompartilhar(); });
+}
+async function compartilharStory(){
+  const cv = $("#shrCv"); if (!cv) return;
+  const url = cv.toDataURL("image/png"), nome = `equilibrium-${day}.png`;
+  if (NATIVO) {
+    try {
+      const { Filesystem, Share } = window.Capacitor.Plugins;
+      const r = await Filesystem.writeFile({ path: nome, data: url.split(",")[1], directory: "CACHE" });
+      const zap = SHR.formato === "quadrado";
+      await Share.share(Object.assign({ title: "Meu dia no Equilibrium", files: [r.uri], dialogTitle: zap ? "Enviar no WhatsApp" : "Postar no Instagram" }, zap ? { text: textoWhats() } : {}));
+    } catch(e){ if (!/cancel/i.test(String(e && (e.message || e)))) toast("Não foi possível compartilhar a imagem"); }
+    return;
+  }
+  try {
+    const blob = await (await fetch(url)).blob(), file = new File([blob], nome, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share(Object.assign({ files: [file], title: "Meu dia no Equilibrium" }, SHR.formato === "quadrado" ? { text: textoWhats() } : {})); return; }
+  } catch(e){ if (e && e.name === "AbortError") return; }
+  const a = document.createElement("a"); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove(); toast("Imagem baixada");
+}
+Object.assign(SHR, pref.get("shr", {}));
+$("#shareDay").onclick = e => { e.preventDefault(); e.stopPropagation(); abrirCompartilhar(); };
 
 function route(){
   let h = location.hash.slice(1); h = ALIAS[h] || h; const pg = PAGES[h] ? h : "diario";
