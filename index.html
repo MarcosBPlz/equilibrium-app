@@ -320,6 +320,7 @@ button.mrow:hover{background:var(--sunk)}
 .sbars span{font-size:.72rem;color:var(--muted)}
 .sbars b{font-size:.72rem}
 .field.auto{border-color:var(--accent);background:var(--accent-soft)}
+.field.auto.conferir{border-color:#e05252;background:rgba(224,82,82,.12)}
 .dica{display:flex;gap:12px;align-items:center;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:16px;padding:12px 14px}
 .dica .t{flex:1;min-width:0;font-size:.92rem}.dica .t b{display:block;margin-bottom:2px}
 .meal.pendente{border-color:var(--accent)}
@@ -1772,12 +1773,134 @@ function lerTabela(texto){
   if (per100.na != null) per100.na = Math.round(per100.na);
   return { per100, porcao, porcaoTxt, formatoNovo, achados: Object.keys(per100).length };
 }
-async function fotografarRotulo(){ // devolve dataURL da foto, ou null
+// ===== Leitura geométrica da tabela nutricional =====
+// linhas: [{ slope, words:[{t,x0,y0,x1,y1}] }] em pixels da imagem.
+function lerTabelaGeo(linhas, textoTodo){
+  const normT = s => (typeof norm === "function" ? norm(s) : s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""));
+  const ehNum = t => /^[\dOoIl]*\d[\dOoIl]*(?:[.,][\dOoIl]+)?$/.test(t) || /^[Oo]$/.test(t);
+  const valNum = t => parseFloat(t.replace(/[Oo]/g, "0").replace(/[Il]/g, "1").replace(",", "."));
+  const med = a => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  // endireita a foto pela inclinação mediana das linhas compridas
+  const sl = linhas.filter(L => isFinite(L.slope) && Math.abs(L.slope) < .5 && L.words.length && (Math.max(...L.words.map(w => w.x1)) - Math.min(...L.words.map(w => w.x0))) > 120).map(L => L.slope);
+  const ang = sl.length ? Math.atan(med(sl)) : 0, co = Math.cos(-ang), si = Math.sin(-ang);
+  linhas = linhas.map(L => ({ slope: isFinite(L.slope) ? Math.tan(Math.atan(L.slope) - ang) : NaN, words: L.words.map(w => {
+    const cx = (w.x0 + w.x1) / 2, cy = (w.y0 + w.y1) / 2, hw = (w.x1 - w.x0) / 2, hh = (w.y1 - w.y0) / 2;
+    const nx = cx * co - cy * si, ny = cx * si + cy * co; return { t: w.t, x0: nx - hw, x1: nx + hw, y0: ny - hh, y1: ny + hh };
+  }) }));
+  const rotulos = [], numeros = [];
+  linhas.forEach(L => {
+    const ws = L.words.filter(w => w.t && w.t.trim());
+    if (!ws.length) return;
+    const textoLinha = normT(ws.map(w => w.t).join(" "));
+    const letras = ws.filter(w => /[a-zA-ZÀ-ÿ]{2,}/.test(w.t));
+    ws.forEach((w, i) => {
+      const t = w.t.replace(/[*()\[\]|]/g, "");
+      if (!ehNum(t)) return;
+      const prox = ws[i + 1] ? normT(ws[i + 1].t) : "";
+      numeros.push({ v: valNum(t), t, x: (w.x0 + w.x1) / 2, y: (w.y0 + w.y1) / 2, x0: w.x0, h: w.y1 - w.y0, kcal: /^kcal/.test(prox), unid: /^(g|ml|kj)$/.test(prox), linha: textoLinha });
+    });
+    if (letras.length) {
+      const x0 = Math.min(...letras.map(w => w.x0)), x1 = Math.max(...letras.map(w => w.x1));
+      const y0 = Math.min(...letras.map(w => w.y0)), y1 = Math.max(...letras.map(w => w.y1));
+      rotulos.push({ txt: normT(letras.map(w => w.t).join(" ")), x0, x1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, h: y1 - y0, slope: isFinite(L.slope) ? L.slope : null, larg: x1 - x0 });
+    }
+  });
+  if (rotulos.length < 3 || numeros.length < 3) return null;
+  // inclinação: a da própria linha se ela for comprida, senão a mediana das vizinhas
+  const boas = rotulos.filter(r => r.slope != null && r.larg > 120 && Math.abs(r.slope) < .4);
+  rotulos.forEach(r => {
+    const viz = boas.filter(b => Math.abs(b.cy - r.cy) < 300).map(b => b.slope);
+    const m = viz.length ? med(viz) : (boas.length ? med(boas.map(b => b.slope)) : 0);
+    r.s = r.slope != null && r.larg > 160 && Math.abs(r.slope) < .4 ? (r.slope + m) / 2 : m;
+  });
+  const regras = {
+    kcal: [/valor energetico|energia/, null],
+    c: [/carboidrato/, /acucar|acucares/],
+    p: [/proteina/, null],
+    g: [/gorduras?( totais)?|lipideos/, /saturad|trans|mono|poli/],
+    fib: [/fibra/, null],
+    na: [/sodio/, null]
+  };
+  const alvo = {};
+  Object.entries(regras).forEach(([k, [re, ex]]) => { const r = rotulos.find(r => re.test(r.txt) && !(ex && ex.test(r.txt)) && !(k === "g" && /fibra/.test(r.txt))); if (r) alvo[k] = r; });
+  if (!Object.keys(alvo).length) return null;
+  // área dos rótulos da tabela: do primeiro nutriente para baixo
+  const topo = Math.min(...Object.values(alvo).map(r => r.cy));
+  const hRow = med(rotulos.map(r => r.h)) || 30;
+  const xRot = med(Object.values(alvo).map(r => r.x1));
+  const linhaTab = rotulos.filter(r => r.cy > topo - hRow * .8 && r.x0 < xRot && !/^(porc|informac|%|vd|quantidade|\d)/.test(r.txt));
+  let porcao = null, porcaoTxt = "";
+  const tl = (textoTodo || "").toLowerCase().replace(/\s+/g, " ");
+  const mp = normT(tl).match(/porcao(?: de)?\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*(g|ml)\b\s*(\(([^)]{1,30})\))?/);
+  if (mp) { porcao = parseFloat(mp[1].replace(",", ".")); porcaoTxt = (mp[4] || "").trim(); }
+  // números à direita dos rótulos (fora o "30 g"/"100 g" do cabeçalho)
+  const cand = numeros.filter(n => n.x0 > xRot - hRow && !(n.unid && (n.v === porcao || n.v === 100) && n.y < topo));
+  if (!cand.length) return null;
+  // primeira coluna de valores: o número que não tem outro número à esquerda na mesma fileira
+  const hNum = med(cand.map(n => n.h)) || hRow;
+  const prim = cand.filter(n => !cand.some(m => m !== n && m.x < n.x - hNum && Math.abs(m.y - n.y) < hNum * .7));
+  const xsP = prim.filter(n => n.y > topo - hRow * 1.6).map(n => n.x);
+  const col = { min: Math.min(...xsP), max: Math.max(...xsP) };
+  const larg = Math.max(hRow * 2, col.max - col.min);
+  // cabeçalho da coluna (acima do primeiro nutriente)
+  const cab = numeros.filter(n => n.y < topo - hRow * .3 && Math.abs(n.x - (col.min + col.max) / 2) < larg && n.y > topo - hRow * 6);
+  let por100 = null;
+  if (cab.some(n => n.v === 100)) por100 = true;
+  else if (porcao && cab.some(n => n.v === porcao)) por100 = false;
+  if (por100 == null) por100 = !porcao && /\b100\s?(g|ml)\b/.test(tl) ? true : (porcao ? false : /\b100\s?(g|ml)\b/.test(tl));
+  const vals = prim.filter(n => n.y > topo - hRow * 1.6).sort((a, b) => a.y - b.y);
+  const rs = linhaTab.slice().sort((a, b) => a.cy - b.cy);
+  // pareamento monótono (programação dinâmica): cada rótulo com o número da mesma fileira inclinada
+  const pred = (r, n) => r.cy + r.s * (n.x - r.cx);
+  const espac = med(rs.slice(1).map((r, i) => r.cy - rs[i].cy).filter(d => d > 4)) || hRow * 1.6;
+  const PULO = espac * .5;
+  const I = rs.length, J = vals.length;
+  const D = Array.from({ length: I + 1 }, () => new Float64Array(J + 1).fill(Infinity));
+  const B = Array.from({ length: I + 1 }, () => new Int8Array(J + 1));
+  D[0][0] = 0;
+  for (let i = 0; i <= I; i++) for (let j = 0; j <= J; j++) {
+    if (!isFinite(D[i][j])) continue;
+    if (i < I && D[i][j] + PULO < D[i + 1][j]) { D[i + 1][j] = D[i][j] + PULO; B[i + 1][j] = 1; }
+    if (j < J && D[i][j] + PULO < D[i][j + 1]) { D[i][j + 1] = D[i][j] + PULO; B[i][j + 1] = 2; }
+    if (i < I && j < J) { const c = Math.abs(pred(rs[i], vals[j]) - vals[j].y); if (c < espac * .9 && D[i][j] + c < D[i + 1][j + 1]) { D[i + 1][j + 1] = D[i][j] + c; B[i + 1][j + 1] = 3; } }
+  }
+  const par = new Map();
+  for (let i = I, j = J; i > 0 || j > 0;) { const b = B[i][j]; if (b === 3) { par.set(rs[i - 1], vals[j - 1]); i--; j--; } else if (b === 1) i--; else j--; }
+  const brutos = {};
+  Object.entries(alvo).forEach(([k, r]) => {
+    const n = par.get(r); if (n) brutos[k] = n.v;
+    if (k === "kcal" && r) { // formato antigo: "124 kcal = 519 kJ" na mesma célula
+      const nk = numeros.filter(m => m.kcal && Math.abs(pred(r, m) - m.y) < espac * .6 && m.x > r.x1 - hRow);
+      if (nk.length) brutos.kcal = nk.sort((a, b) => a.x - b.x)[0].v;
+    }
+  });
+  return finalizarTabela(brutos, porcao, porcaoTxt, por100);
+}
+function finalizarTabela(brutos, porcao, porcaoTxt, por100){
+  const per100 = {};
+  Object.entries(brutos).forEach(([k, v]) => { per100[k] = por100 || !porcao ? v : Math.round(v / porcao * 1000) / 10; });
+  ["p","c","g","fib"].forEach(k => { if (per100[k] != null && (per100[k] < 0 || per100[k] > 100)) delete per100[k]; });
+  if (per100.kcal != null && (per100.kcal < 0 || per100.kcal > 950)) delete per100.kcal;
+  if (per100.na != null && per100.na > 40000) delete per100.na;
+  const conferir = [];
+  const temMacros = ["p","c","g"].every(k => per100[k] != null);
+  if (temMacros) {
+    const calc = 4 * per100.p + 4 * per100.c + 9 * per100.g;
+    if (per100.kcal == null && calc > 0) { per100.kcal = calc; conferir.push("kcal"); }
+    else if (per100.kcal != null && calc > 20 && Math.abs(per100.kcal - calc) / Math.max(per100.kcal, calc) > .25) conferir.push("kcal", "p", "c", "g");
+  }
+  if (per100.kcal != null) per100.kcal = Math.round(per100.kcal);
+  if (per100.na != null) per100.na = Math.round(per100.na);
+  return { per100, porcao, porcaoTxt, formatoNovo: !!por100, conferir, achados: Object.keys(per100).length };
+}
+async function fotografarRotulo(){ // devolve dataURL da foto, {path} no app com ML Kit, ou null
   if (NATIVO && window.Capacitor.Plugins.Camera) {
     const C = window.Capacitor.Plugins.Camera;
     try { await C.requestPermissions({ permissions: ["camera"] }); } catch(e){}
-    const ph = await C.getPhoto({ source: "CAMERA", resultType: "dataUrl", quality: 92, width: 2000, correctOrientation: true, saveToGallery: false });
-    return ph && ph.dataUrl;
+    const ML = window.Capacitor.Plugins.TextRecognition;
+    const ph = await C.getPhoto({ source: "CAMERA", resultType: ML ? "uri" : "dataUrl", quality: 92, width: 2000, correctOrientation: true, saveToGallery: false });
+    if (!ph) return null;
+    return ML && ph.path ? { path: ph.path } : (ph.dataUrl || null);
   }
   return new Promise(resolve => {
     const canLive = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && !(window.claude && window.claude.use);
@@ -1805,21 +1928,47 @@ async function lerRotuloParaForm(dadosAtuais, reabrir){
   let foto;
   try { foto = await fotografarRotulo(); } catch(e){ foto = null; }
   if (!foto) return reabrir(dadosAtuais, null);
-  sheet("Lendo a tabela…", `<p style="margin:0" id="ocrMsg">Preparando o leitor de texto…</p><div class="bar"><i id="ocrBar" style="width:5%;background:var(--accent)"></i></div>
-    <p class="hint">Na primeira vez o leitor baixa uns 5 MB. Depois fica guardado.</p>`, []);
+  const usaML = typeof foto === "object" && foto.path;
+  sheet("Lendo a tabela…", `<p style="margin:0" id="ocrMsg">${usaML ? "Lendo os números…" : "Preparando o leitor de texto…"}</p><div class="bar"><i id="ocrBar" style="width:${usaML ? 60 : 5}%;background:var(--accent)"></i></div>
+    ${usaML ? "" : `<p class="hint">Na primeira vez o leitor baixa uns 5 MB. Depois fica guardado.</p>`}`, []);
   try {
-    const T = await loadTesseract();
-    const cv = await prepararImagem(foto);
-    const worker = await T.createWorker("por", 1, { logger: m => { if (m.status === "recognizing text") { const b = $("#ocrBar"); if (b) b.style.width = Math.max(10, m.progress * 100) + "%"; const t = $("#ocrMsg"); if (t) t.textContent = `Lendo os números… ${Math.round(m.progress * 100)}%`; } } });
-    const { data } = await worker.recognize(cv);
-    await worker.terminate();
-    const r = lerTabela(data.text || "");
+    let texto = "", linhas = [];
+    if (usaML) {
+      const ML = window.Capacitor.Plugins.TextRecognition;
+      let res;
+      try { res = await ML.processImage({ path: foto.path }); }
+      catch(e){ res = await ML.processImage({ path: foto.path.replace(/^file:\/\//, "") }); }
+      texto = res.text || "";
+      (res.blocks || []).forEach(bl => (bl.lines || []).forEach(li => {
+        const cp = li.cornerPoints || [];
+        const slope = cp.length >= 2 && cp[1].x !== cp[0].x ? (cp[1].y - cp[0].y) / (cp[1].x - cp[0].x) : NaN;
+        const els = (li.elements && li.elements.length ? li.elements : [li]).filter(e => e.boundingBox);
+        linhas.push({ slope, words: els.map(e => ({ t: e.text, x0: e.boundingBox.left, y0: e.boundingBox.top, x1: e.boundingBox.right, y1: e.boundingBox.bottom })) });
+      }));
+    } else {
+      const T = await loadTesseract();
+      const cv = await prepararImagem(foto);
+      const worker = await T.createWorker("por", 1, { logger: m => { if (m.status === "recognizing text") { const b = $("#ocrBar"); if (b) b.style.width = Math.max(10, m.progress * 100) + "%"; const t = $("#ocrMsg"); if (t) t.textContent = `Lendo os números… ${Math.round(m.progress * 100)}%`; } } });
+      const { data } = await worker.recognize(cv, {}, { text: true, blocks: true });
+      await worker.terminate();
+      texto = data.text || "";
+      const ls = data.lines || [];
+      (ls.length ? ls : (data.blocks || []).flatMap(b => (b.paragraphs || []).flatMap(p => p.lines || []))).forEach(li => {
+        const bl = li.baseline || {};
+        const slope = bl.x1 !== bl.x0 && isFinite(bl.y1) ? (bl.y1 - bl.y0) / (bl.x1 - bl.x0) : NaN;
+        linhas.push({ slope, words: (li.words || []).map(w => ({ t: w.text, x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1 })) });
+      });
+    }
+    let r = null;
+    try { r = lerTabelaGeo(linhas, texto); } catch(e){ r = null; }
+    const rTxt = lerTabela(texto);
+    if (!r || r.achados < 2 && rTxt.achados > r.achados) r = Object.assign(rTxt, { conferir: Object.keys(rTxt.per100) });
     if (!r.achados) { toast("Não consegui ler a tabela. Tente outra foto, mais de perto e reta."); return reabrir(dadosAtuais, null); }
     const novo = Object.assign({}, dadosAtuais, { per100: Object.assign({}, dadosAtuais.per100, r.per100) });
     if (r.porcao && !(novo.porcoes && novo.porcoes[0])) novo.porcoes = [{ nome: r.porcaoTxt ? `1 porção (${r.porcaoTxt})` : "1 porção", g: r.porcao }];
     if (!novo.fonte) novo.fonte = "Rótulo (lido por foto)";
     vibrar(40);
-    reabrir(novo, { campos: Object.keys(r.per100), formatoNovo: r.formatoNovo, porcao: r.porcao });
+    reabrir(novo, { campos: Object.keys(r.per100), conferir: r.conferir || [], formatoNovo: r.formatoNovo, porcao: r.porcao });
   } catch(e){
     toast(window.claude && window.claude.use ? "A leitura por foto funciona no app Android e no site, não dentro do Claude." : "O leitor de texto não carregou. Confira a internet e tente de novo.");
     reabrir(dadosAtuais, null);
@@ -1831,11 +1980,11 @@ function openFoodForm(f, after, preset, ocr){
   const src = f || preset || null;
   const v = src ? src.per100 : {};
   const por = src && src.porcoes && src.porcoes[0];
-  const fld = (k, l, step = "0.1") => `<label for="ff-${k}">${l}<input class="field num ${ocr && ocr.campos.includes(k) ? "auto" : ""}" id="ff-${k}" type="number" min="0" step="${step}" inputmode="decimal" value="${v[k] ?? ""}"></label>`;
+  const fld = (k, l, step = "0.1") => `<label for="ff-${k}">${l}<input class="field num ${ocr && ocr.campos.includes(k) ? ((ocr.conferir || []).includes(k) ? "auto conferir" : "auto") : ""}" id="ff-${k}" type="number" min="0" step="${step}" inputmode="decimal" value="${v[k] ?? ""}"></label>`;
   sheet(isFix ? "Corrigir alimento da TACO" : f ? "Editar alimento" : "Novo alimento",
     `${isFix ? `<p class="small muted" style="margin:0">A correção vale só para você. O valor original da TACO nº ${f.taco} continua disponível em “Desfazer correção”. Registros antigos do diário não mudam.</p>` : ""}
     ${isFix ? "" : `<button class="btn ${ocr ? "" : "primary"}" id="ffOcr" type="button" style="justify-content:center;min-height:50px">${ocr ? "Ler outra foto da tabela" : "Ler tabela nutricional com a câmera"}</button>`}
-    ${ocr ? `<div class="notice" style="margin:0"><p>Preenchi ${ocr.campos.length} ${ocr.campos.length === 1 ? "campo" : "campos"} pela foto${ocr.formatoNovo ? " (coluna de 100 g)" : ocr.porcao ? `, convertendo da porção de ${fmt(ocr.porcao)} g para 100 g` : ""}. <b>Confira cada valor com o rótulo</b> antes de salvar.</p></div>` : ""}
+    ${ocr ? `<div class="notice" style="margin:0"><p>Preenchi ${ocr.campos.length} ${ocr.campos.length === 1 ? "campo" : "campos"} pela foto${ocr.formatoNovo ? " (coluna de 100 g)" : ocr.porcao ? `, convertendo da porção de ${fmt(ocr.porcao)} g para 100 g` : ""}. <b>Confira cada valor com o rótulo</b> antes de salvar.${(ocr.conferir || []).length ? ` Os campos em vermelho não bateram entre si (calorias × macros): olhe esses com atenção.` : ""}</p></div>` : ""}
     <label for="ff-nome">Nome<input class="field" id="ff-nome" value="${esc(src ? src.nome : "")}" ${isFix ? "disabled" : ""} placeholder="Ex.: Pão de forma integral marca X"></label>
     <p class="small muted" style="margin:0">Valores por 100 g (veja no rótulo a coluna “100 g”, ou converta a partir da porção).</p>
     <div class="grid2">${fld("kcal","Calorias (kcal)","1")}${fld("p","Proteína (g)")}${fld("c","Carboidrato (g)")}${fld("g","Gordura (g)")}${fld("fib","Fibra (g)")}${fld("na","Sódio (mg)","1")}</div>
