@@ -165,7 +165,7 @@ main{padding:28px 24px 110px;max-width:808px;width:100%;margin:0 auto;display:fl
 .item{display:flex;gap:12px;align-items:center;padding:10px 18px;border-top:1px solid var(--line);cursor:pointer}
 .item:hover{background:var(--sunk)}
 .item .nm{flex:1;min-width:0}
-.item .nm div:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+
 .item .sub{font-size:.8rem;color:var(--muted)}
 .item .kc{font-weight:700}
 .meal-f{border-top:1px solid var(--line);padding:6px 10px}
@@ -349,10 +349,34 @@ details[open] > summary:has(.share-dia)::before{transform:rotate(90deg)}
 .share-dia{width:34px;height:34px;color:var(--muted);margin:-6px -4px -6px 0}
 .resumo-bar{display:flex;align-items:center;gap:6px;margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
 .resumo-toggle{flex:1;display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--muted);font:inherit;font-size:.86rem;font-weight:600;cursor:pointer;text-align:left;padding:6px 0;min-width:0}
-.resumo-toggle span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resumo-toggle>span{min-width:0;flex:1;display:flex}
 .resumo-toggle .chev{flex:none;transition:transform .2s}
 .resumo-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
 #resumoCard.fechado #macroBars,#resumoCard.fechado #outrosNutri{display:none}
+.mini-mac{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;min-width:0}
+.mini-mac>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+.mini-mac small{font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:5px}
+.mini-mac small::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.mini-mac span{font-size:.86rem;font-weight:700;color:var(--ink);white-space:nowrap}
+.mini-mac span em{font-style:normal;font-weight:500;font-size:.7rem;color:var(--muted)}
+.mini-mac .mb{height:4px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.mini-mac .mb i{display:block;height:100%;border-radius:4px;background:var(--c)}
+.mini-mac .acima span{color:#E07A6A}
+.mini-mac .acima .mb i{background:#E07A6A}
+.resumo-toggle .rt-txt{font-size:.86rem}
+.mac{display:inline-flex;gap:10px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);font-weight:500}
+.mac i{font-style:normal;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.mac i::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.mac b{color:var(--ink);font-weight:700}
+.mac .p{--c:var(--prot)}.mac .c{--c:var(--carb)}.mac .g{--c:var(--fat)}
+.item .it-nome{font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25}
+.item .it-qt{font-size:.78rem;color:var(--muted);margin:2px 0 4px}
+.item .it-r{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+.item .it-r .kc{font-size:1.05rem;line-height:1;min-width:0}
+.item .it-r .kc small{font-size:.68rem;font-weight:600;color:var(--muted);margin-left:2px}
+.item .it-r .step button{width:28px;height:28px;font-size:.95rem}
+.meal-sum .mac{margin-top:2px}
+.meal-sum .kt{color:var(--ink);font-weight:700;margin-right:8px}
 .share-dia{width:34px;height:34px;color:var(--muted);flex:none}
 .shr-lay{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .shr-lay button{border:1.5px solid var(--line);background:var(--sunk);border-radius:12px;padding:8px 4px;color:var(--ink);font:inherit;font-size:.82rem;cursor:pointer}
@@ -1120,7 +1144,8 @@ function medidasDe(f){
   const suas = ((S.biblioteca.medidas || {})[f.id] || []).map(m => Object.assign({ tipo: "sua" }, m));
   const rot = (f.porcoes || []).map(p => ({ nome: p.nome, g: p.g, tipo: "rotulo" }));
   if (f.unid) return rot; // itens de rede: só por unidade
-  return [...suas, ...rot, ...medidasEstimadas(f)];
+  const nomes = new Set(suas.map(m => m.nome));
+  return [...suas, ...rot.filter(m => !nomes.has(m.nome)), ...medidasEstimadas(f).filter(m => !nomes.has(m.nome))];
 }
 function fmtQtd(q){ return q === .5 ? "½" : Number.isInteger(q) ? String(q) : fmt(q, 1); }
 function porcaoTexto(med){ if (!med) return null; if (med.ml) return `${fmt(med.qtd)} ml`; if (med.nome === "1 unidade") return med.qtd === 1 ? "1 unidade" : `${fmtQtd(med.qtd)} unidades`; const nome = med.nome.replace(/^1 /, ""); return med.qtd === 1 ? med.nome : `${fmtQtd(med.qtd)} × ${nome}`; }
@@ -1307,7 +1332,7 @@ function renderWeightCard(){
   $("#wcOk").onclick = () => {
     const kg = parseFloat(String($("#wcKg").value).replace(",", "."));
     if (!(kg >= 30 && kg <= 300)) return toast("Informe um peso entre 30 e 300 kg");
-    S.peso.entradas.push({ data: hoje, kg: Math.round(kg * 10) / 10 }); Store.save("peso"); vibrar(); renderWeightCard(); toast("Peso registrado");
+    S.peso.entradas.push({ data: hoje, kg: Math.round(kg * 10) / 10 }); Store.save("peso"); pesoPerfilAtual(); vibrar(); renderWeightCard(); toast("Peso registrado");
   };
   $("#wcNo").onclick = () => { pref.set("pesoPulado", hoje); renderWeightCard(); };
 }
@@ -1410,7 +1435,8 @@ function renderDiary(){
   }).join("") + `<button class="mrow" id="aguaRow" aria-label="Registrar água"><span class="mic" style="color:var(--agua)">${ICO.agua}</span><div><div class="mtop"><b>Água</b><span class="num">${fmt(agua / 1000, 1)} / ${fmt(aguaMeta() / 1000, 1)} L</span></div><div class="bar"><i style="width:${Math.min(agua / aguaMeta() * 100, 100)}%;background:var(--agua)"></i></div></div><span class="agua-mais" id="agua250" role="button" aria-label="Adicionar 250 ml de água">+250</span></button>`;
   const aberto = pref.get("resumoAberto", false), rc = $("#resumoCard");
   rc.classList.toggle("fechado", !aberto); $("#resumoToggle").setAttribute("aria-expanded", aberto);
-  $("#resumoMini").textContent = aberto ? "Recolher" : `P ${fmt(t.p)}/${mg && mg.p ? fmt(mg.p) : "–"} g · C ${fmt(t.c)}/${mg && mg.c ? fmt(mg.c) : "–"} g · G ${fmt(t.g)}/${mg && mg.g ? fmt(mg.g) : "–"} g · Água ${fmt(agua / 1000, 1)} L`;
+  const mini = (nm, cor, v, meta, u, casas) => { const pct = meta ? v / meta * 100 : 0; return `<div class="${meta && pct > 105 ? "acima" : ""}" style="--c:var(--${cor})"><small>${nm}</small><span>${fmt(v, casas)}<em>/${meta ? fmt(meta, casas) : "–"} ${u}</em></span><div class="mb"><i style="width:${Math.min(pct, 100)}%"></i></div></div>`; };
+  $("#resumoMini").innerHTML = aberto ? `<span class="rt-txt">Recolher</span>` : `<div class="mini-mac">${mini("Prot", "prot", t.p, mg && mg.p, "g")}${mini("Carb", "carb", t.c, mg && mg.c, "g")}${mini("Gord", "fat", t.g, mg && mg.g, "g")}${mini("Água", "agua", agua / 1000, aguaMeta() / 1000, "L", 1)}</div>`;
   $("#aguaRow").onclick = ev => { if (ev.target.closest("#agua250")) { const d2 = dayData(day, true); d2.agua = (d2.agua || 0) + 250; saveDay(day); vibrar(10); renderDiary(); toast(`+250 ml · ${fmt(d2.agua / 1000, 2)} L hoje`, { label: "Desfazer", fn: () => { d2.agua = Math.max(0, d2.agua - 250); saveDay(day); renderDiary(); } }); return; } openAgua(); };
   const nome = (S.perfil.nome || "").trim().split(" ")[0];
   $("#greet").innerHTML = day === iso(new Date()) ? `<b>Olá${nome ? ", " + esc(nome) : ""}!</b><span>Seu equilíbrio começa hoje.</span>` : `<b>${esc(dateLabel(day))}</b><span>Revendo outro dia.</span>`;
@@ -1426,7 +1452,7 @@ function renderDiary(){
     const items = dd[m] || [], tot = { kcal: 0, p: 0, c: 0, g: 0 }, ontemIt = ontemDD[m] || [];
     items.forEach(e => ["kcal","p","c","g"].forEach(k => tot[k] += e.n[k] || 0));
     return `<div class="card meal ${recolhidas.includes(m) ? "collapsed" : ""} ${m === pend ? "pendente" : ""}" data-meal="${m}">
-      <div class="meal-h"><button class="meal-toggle" data-toggle-meal="${m}" aria-expanded="${!recolhidas.includes(m)}"><svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg><span class="mh-wrap"><span class="mh">${nm}${items.length ? `<span class="feito" aria-label="registrado">✓</span>` : ""}</span><span class="meal-sum num">${items.length ? `${fmt(tot.kcal)} kcal · P ${fmt(tot.p)} · C ${fmt(tot.c)} · G ${fmt(tot.g)}` : "Nada registrado"}</span></span></button>
+      <div class="meal-h"><button class="meal-toggle" data-toggle-meal="${m}" aria-expanded="${!recolhidas.includes(m)}"><svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg><span class="mh-wrap"><span class="mh">${nm}${items.length ? `<span class="feito" aria-label="registrado">✓</span>` : ""}</span><span class="meal-sum num">${items.length ? `<span class="kt">${fmt(tot.kcal)} kcal</span>${macHtml(tot)}` : "Nada registrado"}</span></span></button>
         <div class="menu"><button class="icon-btn" data-menu="${m}" aria-label="Opções de ${nm}" aria-haspopup="true">⋯</button>
           <div class="pop" id="pop-${m}">
             <button data-mact="copy" data-m="${m}">Copiar ${nm.toLowerCase()} do dia anterior</button>
@@ -1434,12 +1460,19 @@ function renderDiary(){
             <button data-mact="clear" data-m="${m}" ${items.length ? "" : "disabled"}>Limpar esta refeição</button>
           </div></div></div>
       <ul class="items">${items.map(e => `<li class="item" data-entry="${e.id}" data-m="${m}" tabindex="0">
-          <div class="nm"><div>${esc(e.nome)}</div><div class="sub num">${e.porcao ? esc(e.porcao) + " · " : ""}${e.g && !e.un ? fmt(e.g) + " g · " : ""}P ${fmt(e.n.p)} · C ${fmt(e.n.c)} · G ${fmt(e.n.g)}</div></div>
-          ${e.g ? `<div class="step"><button data-step="-1" data-e="${e.id}" data-m="${m}" aria-label="Diminuir">−</button><button data-step="1" data-e="${e.id}" data-m="${m}" aria-label="Aumentar">+</button></div>` : ""}
-          <div class="kc num">${fmt(e.n.kcal)}</div></li>`).join("")}</ul>
+          <div class="nm"><div class="it-nome">${esc(e.nome)}</div><div class="it-qt num">${esc(qtdTexto(e))}</div>${macHtml(e.n)}</div>
+          <div class="it-r"><div class="kc num">${fmt(e.n.kcal)}<small>kcal</small></div>
+          ${e.g ? `<div class="step"><button data-step="-1" data-e="${e.id}" data-m="${m}" aria-label="Diminuir">−</button><button data-step="1" data-e="${e.id}" data-m="${m}" aria-label="Aumentar">+</button></div>` : ""}</div></li>`).join("")}</ul>
       <div class="meal-f"><button class="btn ghost sm" data-add="${m}">+ Adicionar</button>${!items.length && ontemIt.length ? `<button class="btn ${m === pend ? "primary" : "ghost"} sm" data-mact="copy" data-m="${m}">↻ Repetir ontem · ${fmt(mealTotal(ontemIt))} kcal</button>` : ""}</div>
     </div>`;
   }).join("");
+}
+function macHtml(n){ return `<span class="mac num"><i class="p">P <b>${fmt(n.p)}</b></i><i class="c">C <b>${fmt(n.c)}</b></i><i class="g">G <b>${fmt(n.g)}</b></i></span>`; }
+function qtdTexto(e){ // "1 porção · 30 g", "150 g", "2 unidades"
+  const por = e.porcao ? String(e.porcao).replace(/\s*\([^)]*\d+\s*(g|ml)[^)]*\)/i, "").trim() : "";
+  if (!e.g) return por || "Adição rápida";
+  if (e.un) return por || "1 unidade";
+  return por && !/^\d+([.,]\d+)?\s*g$/.test(por) ? `${por} · ${fmt(e.g)} g` : `${fmt(e.g)} g`;
 }
 function ajustarItem(m, id, dir){
   const dd = dayData(day), e = dd[m].find(x => x.id === id); if (!e || !e.g) return;
@@ -1574,9 +1607,10 @@ function fillAddList(){
 function qtyBody(f, grams, medNome, qtd){
   const ms = medidasDe(f);
   const sel = ms.findIndex(m => m.nome === medNome);
-  return `<div><div class="small">${sourceLabel(f)}<span class="muted">${esc(sourceText(f))}</span></div></div>
+  return `<div><div class="small">${sourceLabel(f)}<span class="muted">${esc(sourceText(f))}</span></div>${f.obs ? `<div class="small" style="margin-top:4px">📝 ${esc(f.obs)}</div>` : ""}</div>
     <label for="qP">Medida<select class="field" id="qP">${f.unid ? "" : `<option value="">Gramas</option><option value="ml" ${medNome === "ml" ? "selected" : ""}>Mililitros (ml)</option>`}${ms.map((m, i) => `<option value="${i}" ${i === sel ? "selected" : ""}>${esc(m.nome)}${f.unid ? "" : ` · ${m.tipo === "estimada" ? "≈ " : ""}${fmt(m.g)} g${m.tipo === "sua" ? " (sua)" : m.tipo === "rotulo" ? " (rótulo)" : ""}`}</option>`).join("")}</select></label>
     <div class="qty-row" id="qQtdRow" ${sel < 0 && medNome !== "ml" ? "hidden" : ""}><span class="small muted" style="flex:1" id="qQtdLbl">Quantas?</span><button type="button" id="qMenos" aria-label="Menos">−</button><input class="field num" id="qQtd" type="number" min="0.5" step="0.5" inputmode="decimal" value="${qtd || 1}" aria-label="Quantidade da medida"><button type="button" id="qMais" aria-label="Mais">+</button></div>
+    <label for="qPg" id="qPgRow" hidden>Peso da porção (g)<input class="field num" id="qPg" type="number" min="0" step="0.1" inputmode="decimal"></label>
     <p class="hint" id="qHint" hidden>Medida nivelada, valor aproximado. <a href="#biblioteca" id="qVerMed">Ver como medir</a></p>
     <label for="qG" ${f.unid ? "hidden" : ""}>Total em gramas<input class="field num" id="qG" type="number" min="0" step="1" inputmode="decimal" value="${grams}"></label>
     <div class="chips" id="qChips" ${f.unid ? "hidden" : ""}>${[-10, 10, 50].map(d => `<button class="tab" data-dg="${d}">${d > 0 ? "+" : "−"}${Math.abs(d)} g</button>`).join("")}${[50,100,150,200].map(g => `<button class="tab" data-g="${g}">${g} g</button>`).join("")}</div>
@@ -1585,22 +1619,25 @@ function qtyBody(f, grams, medNome, qtd){
     <details><summary class="small muted" style="cursor:pointer;font-weight:600">Todos os nutrientes</summary><table class="nt num" id="qT"></table></details>`;
 }
 function wireQty(f, reabrir){
-  const gi = $("#qG"), ps = $("#qP"), qi = $("#qQtd"), ms = medidasDe(f);
+  const gi = $("#qG"), ps = $("#qP"), qi = $("#qQtd"), pg = $("#qPg"), ms = medidasDe(f);
   const dML = (densidadeDe(f.nome) || [0, 1])[1];
   const med = () => ps.value === "" ? null : ps.value === "ml" ? { nome: "ml", g: dML, tipo: "ml", ml: true } : ms[+ps.value];
   const passo = () => ps.value === "ml" ? 50 : null;
   const upd = () => {
     const m = med();
-    $("#qQtdRow").hidden = !m; $("#qChips").hidden = !!m; $("#qHint").hidden = !(m && (m.tipo === "estimada" || m.ml));
+    $("#qQtdRow").hidden = !m; $("#qChips").hidden = !!m; $("#qPgRow").hidden = !m || !!m.ml || !!f.unid; $("#qHint").hidden = !(m && (m.tipo === "estimada" || m.ml));
     $("#qQtdLbl").textContent = m && m.ml ? "Quantos ml?" : "Quantas?";
     if (m && m.ml) $("#qHint").innerHTML = `1 ml ≈ ${fmt(dML, 2)} g${dML === 1 ? " (densidade da água; para outros alimentos é aproximado)" : " (aproximado)"}.`;
     const n = scaled(f.per100, Number(gi.value) || 0);
     $("#qN").innerHTML = [["kcal","kcal"],["p","proteína g"],["c","carbo g"],["g","gordura g"]].map(([k, l]) => `<div><b>${fmt(n[k], k === "kcal" ? 0 : 1)}</b><span>${l}</span></div>`).join("");
     $("#qT").innerHTML = NUTRI.map(([k, nm, u]) => `<tr><td>${nm}</td><td>${fmt(n[k], u === "kcal" ? 0 : 1)} ${n[k] == null ? "" : u}</td></tr>`).join("");
   };
-  const porMedida = () => { const m = med(); if (m) gi.value = Math.round(m.g * (Number(qi.value) || 1) * 10) / 10; upd(); };
+  const pesoMed = () => { const m = med(); return m && !m.ml && Number(pg.value) > 0 ? Number(pg.value) : m ? m.g : 0; };
+  const porMedida = () => { const m = med(); if (m) gi.value = Math.round(pesoMed() * (Number(qi.value) || 1) * 10) / 10; upd(); };
+  const mI = med(); if (mI && !mI.ml) pg.value = mI.g;
+  pg.oninput = porMedida;
   gi.oninput = () => { ps.value = ""; upd(); };
-  ps.onchange = () => { qi.value = ps.value === "ml" ? 200 : 1; qi.step = ps.value === "ml" ? 10 : .5; porMedida(); };
+  ps.onchange = () => { const m = med(); pg.value = m && !m.ml ? m.g : ""; qi.value = ps.value === "ml" ? 200 : 1; qi.step = ps.value === "ml" ? 10 : .5; porMedida(); };
   qi.oninput = porMedida;
   $("#qMenos").onclick = () => { const v = Number(qi.value) || 1; qi.value = passo() ? Math.max(10, v - passo()) : Math.max(.5, v - (v <= 1 ? .5 : 1)); porMedida(); };
   $("#qMais").onclick = () => { const v = Number(qi.value) || 1; qi.value = passo() ? v + passo() : v + (v < 1 ? .5 : 1); porMedida(); };
@@ -1621,7 +1658,14 @@ function wireQty(f, reabrir){
       }, "primary"]]);
   };
   upd();
-  return () => { const m = med(); const q = Number(qi.value) || 1; const md = m ? Object.assign({ nome: m.nome, g: m.g, qtd: q }, m.ml ? { ml: true } : {}) : null; return { g: Number(gi.value) || 0, porcao: porcaoTexto(md), med: md }; };
+  return () => {
+    let m = med(); const q = Number(qi.value) || 1;
+    if (m && !m.ml && !f.unid && f.id && pesoMed() !== m.g) { // peso da porção alterado: vira a sua medida
+      const M = S.biblioteca.medidas || (S.biblioteca.medidas = {}), L = (M[f.id] = (M[f.id] || []).filter(x => x.nome !== m.nome));
+      L.unshift({ nome: m.nome, g: pesoMed() }); Store.save("biblioteca");
+      m = Object.assign({}, m, { g: pesoMed(), tipo: "sua" });
+    }
+    const md = m ? Object.assign({ nome: m.nome, g: m.g, qtd: q }, m.ml ? { ml: true } : {}) : null; return { g: Number(gi.value) || 0, porcao: porcaoTexto(md), med: md }; };
 }
 function openQty(f, gForcado){
   const ms = medidasDe(f), ult = (S.biblioteca.ultimasG || {})[f.id];
@@ -1988,9 +2032,10 @@ function openFoodForm(f, after, preset, ocr){
     <label for="ff-nome">Nome<input class="field" id="ff-nome" value="${esc(src ? src.nome : "")}" ${isFix ? "disabled" : ""} placeholder="Ex.: Pão de forma integral marca X"></label>
     <p class="small muted" style="margin:0">Valores por 100 g (veja no rótulo a coluna “100 g”, ou converta a partir da porção).</p>
     <div class="grid2">${fld("kcal","Calorias (kcal)","1")}${fld("p","Proteína (g)")}${fld("c","Carboidrato (g)")}${fld("g","Gordura (g)")}${fld("fib","Fibra (g)")}${fld("na","Sódio (mg)","1")}</div>
-    <div class="grid2"><label for="ff-pn">Medida caseira (opcional)<input class="field" id="ff-pn" value="${esc(por ? por.nome : "")}" placeholder="Ex.: 1 fatia"></label>
-      <label for="ff-pg">Peso da medida (g)<input class="field num" id="ff-pg" type="number" min="0" step="0.1" value="${por ? por.g : ""}"></label></div>
+    <div class="grid2"><label for="ff-pn">Porção (opcional)<input class="field" id="ff-pn" value="${esc(por ? por.nome : "")}" placeholder="Ex.: 1 fatia, 1 scoop"></label>
+      <label for="ff-pg">Peso da porção (g)<input class="field num" id="ff-pg" type="number" min="0" step="0.1" inputmode="decimal" value="${por ? por.g : ""}"></label></div>
     ${isFix ? "" : `<label for="ff-ean">Código de barras (opcional)<input class="field num" id="ff-ean" inputmode="numeric" value="${esc(src && src.ean || "")}" placeholder="Ex.: 7891000100103"></label>`}
+    ${isFix ? "" : `<label for="ff-obs">Observações (opcional)<textarea class="field" id="ff-obs" rows="2" style="font:inherit;resize:vertical" placeholder="Ex.: sabor chocolate, comprar no mercado X, usar 2 dosadores">${esc(src && src.obs || "")}</textarea></label>`}
     <label for="ff-fonte">${isFix ? "Motivo da correção" : "Fonte dos dados"}<input class="field" id="ff-fonte" value="${esc(src ? (isFix ? (src.nota || "") : (src.fonte || "")) : "")}" placeholder="${isFix ? "Ex.: rótulo do produto que compro" : "Ex.: rótulo, site do fabricante"}"></label>`,
     [["Cancelar", closeSheet], ["Salvar", () => {
       const nome = isFix ? f.nome : $("#ff-nome").value.trim();
@@ -2000,16 +2045,26 @@ function openFoodForm(f, after, preset, ocr){
       const pn = $("#ff-pn").value.trim(), pg = +$("#ff-pg").value;
       const porcoes = pn && pg ? [{ nome: pn, g: pg }] : [];
       const ean = isFix ? null : ($("#ff-ean").value.replace(/\D/g, "") || null);
+      const obs = isFix ? "" : $("#ff-obs").value.trim();
+      if (!pn && pg) porcoes.push({ nome: "1 porção", g: pg });
       let saved;
       if (isFix) S.biblioteca.correcoes[f.id] = { per100, porcoes, nota: $("#ff-fonte").value.trim() };
-      else if (f) { saved = S.biblioteca.proprios.find(x => x.id === f.id); Object.assign(saved, { nome, per100, porcoes, ean, fonte: $("#ff-fonte").value.trim(), off: false }); }
-      else { saved = { id: "u" + uid(), nome, cat: "Meus alimentos", per100, porcoes, ean, fonte: $("#ff-fonte").value.trim() }; S.biblioteca.proprios.unshift(saved); }
+      else if (f) { saved = S.biblioteca.proprios.find(x => x.id === f.id); Object.assign(saved, { nome, per100, porcoes, ean, obs, fonte: $("#ff-fonte").value.trim(), off: false }); }
+      else { saved = { id: "u" + uid(), nome, cat: "Meus alimentos", per100, porcoes, ean, obs, fonte: $("#ff-fonte").value.trim() }; S.biblioteca.proprios.unshift(saved); }
       Store.save("biblioteca"); toast("Alimento salvo");
       if (after) after(saved && Object.assign({ tipo: "proprio" }, saved)); else { closeSheet(); renderLib(); }
     }, "primary"]], after || null);
+  // calorias calculadas pelos macros (4 kcal/g de proteína e carbo, 9 kcal/g de gordura), até a pessoa digitar outro valor
+  const kc = $("#ff-kcal"), mac = () => (+$("#ff-p").value || 0) * 4 + (+$("#ff-c").value || 0) * 4 + (+$("#ff-g").value || 0) * 9;
+  let kcAuto = kc.value === "" || Math.abs(+kc.value - mac()) <= 2;
+  const kcHint = () => { let h = $("#ffKcHint"); if (!h) { h = document.createElement("small"); h.id = "ffKcHint"; h.className = "muted"; h.style.fontWeight = "500"; kc.parentNode.appendChild(h); } h.textContent = kcAuto ? "calculado pelos macros" : "valor do rótulo"; };
+  kc.oninput = () => { kcAuto = kc.value === ""; if (kcAuto) kc.value = mac() ? Math.round(mac()) : ""; kcHint(); };
+  ["p", "c", "g"].forEach(k => $("#ff-" + k).addEventListener("input", () => { if (kcAuto) kc.value = mac() ? Math.round(mac()) : ""; kcHint(); }));
+  if (kcAuto && kc.value === "" && mac()) kc.value = Math.round(mac());
+  kcHint();
   const bo = $("#ffOcr");
   if (bo) bo.onclick = () => {
-    const atual = { nome: $("#ff-nome").value, ean: ($("#ff-ean") || {}).value || (src && src.ean) || "", fonte: $("#ff-fonte").value, per100: {}, porcoes: [] };
+    const atual = { nome: $("#ff-nome").value, obs: ($("#ff-obs") || {}).value || "", ean: ($("#ff-ean") || {}).value || (src && src.ean) || "", fonte: $("#ff-fonte").value, per100: {}, porcoes: [] };
     NUTRI.forEach(([k]) => { const el = $("#ff-" + k); atual.per100[k] = el ? (el.value === "" ? null : +el.value) : (v[k] ?? null); });
     const pn = $("#ff-pn").value.trim(), pg = +$("#ff-pg").value; if (pn && pg) atual.porcoes = [{ nome: pn, g: pg }];
     lerRotuloParaForm(atual, (dados, info) => openFoodForm(f && f.tipo !== "taco" ? Object.assign({}, f, dados) : null, after, dados, info));
@@ -2168,6 +2223,8 @@ async function fetchOffApi(code){
   } catch(e){ clearTimeout(t); return { status: "offline" }; }
 }
 async function lookupCode(code){
+  const vin = (S.biblioteca.vinculos || {})[code], fv = vin && findFood(vin);
+  if (fv) return { food: fv, origem: "seu" };
   const own = S.biblioteca.proprios.find(f => f.ean === code);
   if (own) return { food: Object.assign({ tipo: "proprio" }, own), origem: "seu" };
   const map = await loadOffLocal();
@@ -2344,8 +2401,9 @@ async function showScanResult(code){
   if (r.food) {
     const f = r.food, origem = { seu: "Já está na sua lista", base: "Base do Brasil embutida no app", lista: "Lista de produtos adicionada por você", api: "Open Food Facts on-line" }[r.origem];
     const acts = [];
-    acts.push(["Corrigir", () => openFoodForm(r.origem === "seu" ? f : null, saved => afterScanSave(saved), r.origem === "seu" ? null : Object.assign({}, f, { fonte: "Open Food Facts, corrigido com o rótulo" }))]);
-    if (scanCtx === "diario") acts.push(["Adicionar ao diário", () => openQty(cacheProduct(f)), "primary"]);
+    const meu = r.origem === "seu" && (f.tipo === "proprio" || f.tipo === "taco");
+    if (r.origem !== "seu" || meu) acts.push(["Corrigir", () => openFoodForm(meu ? f : null, saved => afterScanSave(saved), meu ? null : Object.assign({}, f, { fonte: "Open Food Facts, corrigido com o rótulo" }))]);
+    if (scanCtx === "diario") acts.push(["Adicionar ao diário", () => openQty(r.origem === "seu" ? f : cacheProduct(f)), "primary"]);
     else acts.push([r.origem === "seu" ? "Escanear outro" : "Salvar na minha lista", () => { if (r.origem !== "seu") { cacheProduct(f); toast("Produto salvo"); renderLib(); } openScanner(); }, "primary"]);
     sheet(f.nome, `<div class="small">${sourceLabel(Object.assign({ tipo: "proprio" }, f))}<span class="muted">${origem} · código <span class="num">${code}</span></span></div>
       <div class="nutri num">${[["kcal","kcal"],["p","proteína g"],["c","carbo g"],["g","gordura g"]].map(([k, l]) => `<div><b>${fmt(f.per100[k], k === "kcal" ? 0 : 1)}</b><span>${l} /100 g</span></div>`).join("")}</div>
@@ -2356,9 +2414,30 @@ async function showScanResult(code){
                 r.api === "sem-tabela" ? "O produto está no Open Food Facts, mas sem tabela nutricional." :
                 r.api === "ausente" ? "O Open Food Facts também não tem esse código." : "O Open Food Facts não respondeu agora.";
     const pre = Object.assign({ ean: code, per100: emptyPer100(), porcoes: [], fonte: "Rótulo" }, r.partial ? { nome: r.partial.nome, porcoes: r.partial.porcoes } : {});
-    sheet("Produto não encontrado", `<p style="margin:0">O código <b class="num">${code}</b> não foi encontrado. Cadastre o produto abaixo: fotografe a tabela nutricional ou digite os valores.</p>`,
+    sheet("Produto não encontrado", `<p style="margin:0">O código <b class="num">${code}</b> não foi encontrado. Cadastre o produto abaixo: fotografe a tabela nutricional, digite os valores ou ligue o código a um alimento que já está no app.</p>
+      <button class="btn" id="vincOk" type="button" style="justify-content:center;min-height:48px">🔗 Adicionar a alimento existente</button>`,
       [["Escanear outro", back], ["Digitar à mão", () => openFoodForm(null, saved => afterScanSave(saved), pre)], ["📷 Fotografar a tabela", () => lerRotuloParaForm(pre, (dados, info) => openFoodForm(null, saved => afterScanSave(saved), dados, info)), "primary"]], back);
+    $("#vincOk").onclick = () => vincularCodigo(code, () => showScanResult(code));
   }
+}
+function vincularCodigo(code, voltar){ // liga um código de barras a um alimento que já existe
+  let q = "";
+  sheet("Adicionar a alimento existente", `<p class="small muted" style="margin:0">Escolha o alimento. Das próximas vezes, o código <b class="num">${code}</b> já abre ele.</p>
+    <input class="search" id="vcQ" type="search" placeholder="Buscar alimento..." aria-label="Buscar alimento"><ul class="list" id="vcRes"></ul>`, [["Voltar", voltar]], voltar);
+  const lista = () => {
+    const todos = allFoods().filter(f => f.tipo !== "receita");
+    const res = q ? searchFoods(q, todos).slice(0, 40) : todos.filter(f => f.tipo === "proprio" || S.biblioteca.favoritos.includes(f.id)).slice(0, 40);
+    $("#vcRes").innerHTML = res.map(f => `<li class="fi"><button class="pick" data-vc="${f.id}"><div class="t">${esc(f.nome)}</div><div class="s num">${sourceLabel(f)}${fmt(f.per100.kcal)} kcal · P ${fmt(f.per100.p, 1)} · C ${fmt(f.per100.c, 1)} · G ${fmt(f.per100.g, 1)}</div></button></li>`).join("") || `<li class="empty">${q ? "Nada encontrado." : "Digite o nome do alimento."}</li>`;
+    document.querySelectorAll("[data-vc]").forEach(b => b.onclick = () => {
+      const f = findFood(b.dataset.vc); if (!f) return;
+      if (f.tipo === "proprio") { const o = S.biblioteca.proprios.find(x => x.id === f.id); if (o) o.ean = code; }
+      (S.biblioteca.vinculos || (S.biblioteca.vinculos = {}))[code] = f.id;
+      Store.save("biblioteca"); toast(`Código ligado a ${f.nome.split(",")[0]}`); vibrar(30);
+      afterScanSave(findFood(f.id) || f);
+    });
+  };
+  $("#vcQ").oninput = e => { q = e.target.value.trim(); lista(); };
+  lista(); setTimeout(() => { const i = $("#vcQ"); if (i) i.focus(); }, 60);
 }
 function afterScanSave(saved){
   if (scanCtx === "diario" && saved) openQty(saved);
@@ -2636,6 +2715,11 @@ async function saudeConectar(){
       [["Abrir Health Connect", () => { try { H.openHealthConnectSettings(); } catch(x){} }], ["Fechar", closeSheet, "primary"]]);
   }
 }
+function pesoPerfilAtual(){ // o peso do perfil passa a ser o da pesagem mais recente
+  const u = weightSeries().slice(-1)[0];
+  if (u && u.kg && u.kg !== S.perfil.peso) { S.perfil.peso = u.kg; Store.save("perfil"); return true; }
+  return false;
+}
 async function saudeSincronizarPeso(avisar){
   const H = HEALTH(); if (!H || !(S.perfil.saude && S.perfil.saude.ligado)) return 0;
   try {
@@ -2648,7 +2732,7 @@ async function saudeSincronizarPeso(avisar){
       if (!ex) { S.peso.entradas.push({ data: d, kg, fonte: "balança" }); novos++; }
       else if (ex.fonte === "balança" && ex.kg !== kg) { ex.kg = kg; novos++; }
     });
-    if (novos) Store.save("peso");
+    if (novos) { Store.save("peso"); pesoPerfilAtual(); }
     S.perfil.saude.ultima = new Date().toISOString(); Store.save("perfil");
     if (avisar) toast(novos ? `${novos} ${novos > 1 ? "pesagens importadas" : "pesagem importada"} da balança` : "Nenhuma pesagem nova da balança");
     return novos;
@@ -3147,6 +3231,11 @@ function renderNotifCard(){
   const LN = NOTIF(); if (!LN) return;
   try { LN.addListener("localNotificationActionPerformed", ev => { const r = ev && ev.notification && ev.notification.extra && ev.notification.extra.rota; day = iso(new Date()); location.hash = "#" + (r || "diario"); renderAll(); }); } catch(e){}
   document.addEventListener("visibilitychange", () => { if (!document.hidden) notifAgendarDepois(); });
+  let ultSincPeso = Date.now();
+  document.addEventListener("visibilitychange", () => { // ao voltar para o app, busca pesagens novas da balança
+    if (document.hidden || Date.now() - ultSincPeso < 5 * 60e3) return; ultSincPeso = Date.now();
+    saudeSincronizarPeso(false).then(n => { if (n) { toast("Peso atualizado pela balança"); renderAll(); } });
+  });
   notifAgendarDepois();
 })();
 
