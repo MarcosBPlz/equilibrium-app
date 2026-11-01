@@ -817,14 +817,18 @@ const OBJ = {
   manter: [["Manutenção",0]]
 };
 
+/* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
+const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
+const BIB_EMBUTIDA = "2026-11-01T19:50:00Z";
+const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
-const TACO = (() => {
-  const raw = JSON.parse($("#tacoData").textContent);
+function montarTaco(raw){
   return raw.rows.map(r => {
     const per100 = {}; raw.keys.forEach((k, i) => per100[k] = r[3 + i]);
     return { id: "t" + r[0], taco: r[0], nome: r[1], cat: raw.cats[r[2]], per100, tipo: "taco" };
   });
-})();
+}
+const TACO = montarTaco(BIB_BAIXADA ? BIB_BAIXADA.taco : JSON.parse($("#tacoData").textContent));
 const CATS = [...new Set(TACO.map(f => f.cat))].sort((a,b) => a.localeCompare(b, "pt-BR"));
 
 /* ---------- estado ---------- */
@@ -927,12 +931,43 @@ function allFoods(){
   return list;
 }
 // lanches das redes de fast food (tabelas oficiais de cada rede, valores por unidade/porção)
-const REDES = (() => { try { const t = $("#redesData").textContent.trim(); return t.startsWith("[") ? JSON.parse(t) : []; } catch(e){ return []; } })();
+const REDES = BIB_BAIXADA ? BIB_BAIXADA.redes : (() => { try { const t = $("#redesData").textContent.trim(); return t.startsWith("[") ? JSON.parse(t) : []; } catch(e){ return []; } })();
 // base "porção": valores por unidade (sem peso publicado); base "100g": valores por 100 g + peso da unidade
-const REDES_ALIM = REDES.flatMap(r => r.itens.map(([nome, cat, kcal, p, c, g, fib, na, gUn, nomeUn], i) => Object.assign({
+const montarRedes = redes => redes.flatMap(r => r.itens.map(([nome, cat, kcal, p, c, g, fib, na, gUn, nomeUn], i) => Object.assign({
   id: "rd-" + norm(r.rede).replace(/[^a-z0-9]+/g, "") + "-" + norm(nome).replace(/[^a-z0-9]+/g, "").slice(0, 40), nome: `${nome} (${r.rede})`, cat: "Fast food · " + r.rede, rede: r.rede, fonte: r.fonte, coletado: r.coletado,
   tipo: "rede", per100: { kcal, p, c, g, fib, na }, busca: normNome(`${nome} ${r.rede} ${(r.apelidos || "")}`).replace(/bib'?sfiha/g, "bibsfiha esfiha esfirra").replace(/mcdonald'?s/g, "mcdonalds mc donalds mequi")
 }, r.base === "100g" ? { porcoes: gUn ? [{ nome: nomeUn || "1 unidade", g: gUn }] : [] } : { unid: true, porcoes: [{ nome: "1 unidade", g: 100 }] })));
+const REDES_ALIM = montarRedes(REDES);
+async function bibAtualizar(){ // baixa a biblioteca publicada no site; aplica na hora se for mais nova
+  if (!NATIVO || !navigator.onLine) return;
+  try {
+    const r = await fetch(BIB_URL + "biblioteca.json", { cache: "no-store" }); if (!r.ok) return;
+    const b = await r.json(); const atual = BIB_BAIXADA ? BIB_BAIXADA.gerado : BIB_EMBUTIDA;
+    if (b.produtosGerado) bibProdutos(b.produtosGerado);
+    if (!(b.gerado > atual && b.taco && Array.isArray(b.redes))) return;
+    if ((localStorage.getItem("equilibrium.bibRemota") || "").includes(`"gerado":"${b.gerado}"`)) return;
+    localStorage.setItem("equilibrium.bibRemota", JSON.stringify(b));
+    TACO.splice(0, TACO.length, ...montarTaco(b.taco));
+    REDES.splice(0, REDES.length, ...b.redes);
+    REDES_ALIM.splice(0, REDES_ALIM.length, ...montarRedes(b.redes));
+    FOODS_CACHE = null; BIB_VER++;
+    if (typeof renderAll === "function") renderAll();
+  } catch(e){}
+}
+async function bibProdutos(gerado){ // base de produtos (código de barras) fica no cache do aparelho
+  try {
+    if (!window.caches) return;
+    const c = await caches.open("equilibrium-produtos"), url = BIB_URL + "produtos-br.json";
+    const salvo = await c.match(url); const g = salvo ? (salvo.headers.get("x-gerado") || "") : "";
+    if (!salvo) await loadOffLocal();
+    const local = (OFF_LOCAL.info && OFF_LOCAL.info.gerado) || "";
+    if (gerado <= g || (!salvo && gerado <= local)) return;
+    const r = await fetch(url, { cache: "no-store" }); if (!r.ok) return;
+    const txt = await r.text(); JSON.parse(txt);
+    await c.put(url, new Response(txt, { headers: { "content-type": "application/json", "x-gerado": gerado } }));
+    OFF_LOCAL.map = null; OFF_LOCAL.loading = null;
+  } catch(e){}
+}
 function montarAlimentos(){
   const fixes = S.biblioteca.correcoes;
   const taco = TACO.map(f => fixes[f.id] ? Object.assign({}, f, { per100: fixes[f.id].per100, porcoes: fixes[f.id].porcoes, corrigido: true, nota: fixes[f.id].nota }) : f);
@@ -2171,6 +2206,7 @@ function loadOffLocal(){
     const el = document.getElementById("offData");
     try { if (el && el.textContent.trim().startsWith("{")) raw = JSON.parse(el.textContent); } catch(e){}
     if (!raw) { try { const r = await fetch("produtos-br.json"); if (r.ok) raw = await r.json(); } catch(e){} }
+    try { if (NATIVO && window.caches) { const sv = await (await caches.open("equilibrium-produtos")).match(BIB_URL + "produtos-br.json"); if (sv && (!raw || (sv.headers.get("x-gerado") || "") > (raw.gerado || ""))) raw = await sv.json(); } } catch(e){}
     const map = new Map();
     if (raw && raw.rows) { raw.rows.forEach(r => map.set(String(r[0]), r)); OFF_LOCAL.info = { n: raw.rows.length, gerado: raw.gerado, keys: raw.keys }; }
     OFF_LOCAL.map = map; return map;
@@ -3231,6 +3267,9 @@ function renderNotifCard(){
   const LN = NOTIF(); if (!LN) return;
   try { LN.addListener("localNotificationActionPerformed", ev => { const r = ev && ev.notification && ev.notification.extra && ev.notification.extra.rota; day = iso(new Date()); location.hash = "#" + (r || "diario"); renderAll(); }); } catch(e){}
   document.addEventListener("visibilitychange", () => { if (!document.hidden) notifAgendarDepois(); });
+  setTimeout(bibAtualizar, 5000);
+  let ultBib = Date.now();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - ultBib > 6 * 3600e3) { ultBib = Date.now(); bibAtualizar(); } });
   let ultSincPeso = Date.now();
   document.addEventListener("visibilitychange", () => { // ao voltar para o app, busca pesagens novas da balança
     if (document.hidden || Date.now() - ultSincPeso < 5 * 60e3) return; ultSincPeso = Date.now();
