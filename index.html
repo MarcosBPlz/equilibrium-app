@@ -748,6 +748,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
       <div class="card" id="listasCard"></div>
       <div class="card" id="dataCard"></div>
+      <div class="card"><label class="switch-row" for="comunidadeSw"><span><b>Base colaborativa</b><br><span class="small muted">Busca produtos cadastrados por outros usuários e compartilha os que você cadastrar pelo código de barras. Só vão código, nome, marca e tabela nutricional; nada sobre você.</span></span><input type="checkbox" id="comunidadeSw"></label></div>
       <details class="card" id="notifBox"><summary style="cursor:pointer;font-weight:700">Notificações e lembretes</summary><div id="notifCard" style="margin-top:12px"></div></details>
       <div class="card"><h2>Sobre</h2><p class="hint" style="margin:0">Equilibrium · alimentos da Tabela TACO (NEPA/Unicamp) e produtos do Open Food Facts (ODbL). As metas são estimativas e não substituem a orientação de um nutricionista ou médico. <a href="https://marcosbplz.github.io/equilibrium-app/privacidade.html" target="_blank" rel="noopener">Política de privacidade</a></p></div>
       <div class="card"><h2>Configuração inicial</h2><p class="hint" style="margin:0 0 10px">Refaz as três telas de boas-vindas e recalcula a meta.</p><button class="btn" id="redoOnb" style="margin-top:12px">Rever a configuração inicial</button></div>
@@ -819,7 +820,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-02T02:10:26Z";
+const BIB_EMBUTIDA = "2026-11-02T13:26:59Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -2258,6 +2259,70 @@ async function fetchOffApi(code){
     return { status: per100.kcal == null ? "sem-tabela" : "ok", food };
   } catch(e){ clearTimeout(t); return { status: "offline" }; }
 }
+/* ---------- base colaborativa (Firebase, só produtos: código, nome, marca, porção e tabela) ---------- */
+const FB = { key: "AIzaSyDPcIgMh6byjWFTkB1fypO9GUHncdjxhLo", proj: "equilibrium-app-46441" };
+const FB_DOCS = `https://firestore.googleapis.com/v1/projects/${FB.proj}/databases/(default)/documents`;
+const comunidadeAtiva = () => pref.get("comunidade", true);
+async function fbFetch(url, opts, ms){
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms || 8000);
+  try { const r = await fetch(url, Object.assign({ signal: ctl.signal }, opts)); clearTimeout(t); return r; }
+  catch(e){ clearTimeout(t); return null; }
+}
+async function fbToken(){ // acesso anônimo automático; guardado no aparelho
+  let a = pref.get("fbAuth", null);
+  if (a && a.exp > Date.now() + 60000) return a;
+  const json = { headers: { "Content-Type": "application/json" }, method: "POST" };
+  let r;
+  if (a && a.refresh) {
+    r = await fbFetch(`https://securetoken.googleapis.com/v1/token?key=${FB.key}`, Object.assign({}, json, { body: JSON.stringify({ grant_type: "refresh_token", refresh_token: a.refresh }) }));
+    if (r && r.ok) { const j = await r.json(); a = { id: j.id_token, refresh: j.refresh_token, uid: j.user_id, exp: Date.now() + (+j.expires_in) * 1000 }; pref.set("fbAuth", a); return a; }
+  }
+  r = await fbFetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FB.key}`, Object.assign({}, json, { body: JSON.stringify({ returnSecureToken: true }) }));
+  if (!r || !r.ok) return null;
+  const j = await r.json();
+  a = { id: j.idToken, refresh: j.refreshToken, uid: j.localId, exp: Date.now() + (+j.expiresIn) * 1000 };
+  pref.set("fbAuth", a); return a;
+}
+const FB_NUM = ["kcal", "p", "c", "g", "fib", "na", "porcao"];
+function fbDocToObj(d){
+  const o = {}, f = d.fields || {};
+  for (const k in f) { const v = f[k]; o[k] = v.stringValue ?? (v.doubleValue != null ? +v.doubleValue : v.integerValue != null ? +v.integerValue : null); }
+  return o;
+}
+async function comunidadeBuscar(code){
+  if (!comunidadeAtiva()) return null;
+  const a = await fbToken(); if (!a) return null;
+  const r = await fbFetch(`${FB_DOCS}:runQuery`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${a.id}` },
+    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "envios" }], where: { fieldFilter: { field: { fieldPath: "ean" }, op: "EQUAL", value: { stringValue: code } } }, limit: 30 } }) });
+  if (!r || !r.ok) return null;
+  const envios = (await r.json()).filter(x => x.document).map(x => fbDocToObj(x.document)).filter(e => e.kcal != null);
+  if (!envios.length) return null;
+  envios.sort((x, y) => (y.ts || 0) - (x.ts || 0));
+  const perto = (x, y) => ["kcal", "p", "c", "g"].every(k => Math.abs(x[k] - y[k]) <= Math.max(k === "kcal" ? 10 : 1, 0.05 * Math.max(x[k], y[k])));
+  let melhor = [];
+  envios.forEach(e => { const grupo = envios.filter(o => perto(e, o)); if (grupo.length > melhor.length) melhor = grupo; });
+  const e = melhor[0], per100 = emptyPer100();
+  ["kcal", "p", "c", "g", "fib", "na"].forEach(k => per100[k] = e[k] ?? null);
+  const food = { nome: productName(e.nome, e.marca, ""), ean: code, per100, porcoes: e.porcao ? [{ nome: "1 porção", g: e.porcao }] : [], off: true, comunidade: true, fonte: "Comunidade Equilibrium" };
+  return { food, confirmacoes: melhor.length, envios: envios.length };
+}
+async function comunidadeEnviar(food){ // manda só os dados do produto; nada do usuário
+  try {
+    if (!comunidadeAtiva() || !food || !/^\d{8,14}$/.test(String(food.ean || ""))) return false;
+    const pc = food.per100 || {};
+    if ([pc.kcal, pc.p, pc.c, pc.g].some(v => v == null || isNaN(+v))) return false;
+    const a = await fbToken(); if (!a) return false;
+    const nome = String(food.nome || "").replace(/\s*\([^)]*\)\s*$/, "").trim().slice(0, 120);
+    if (nome.length < 2) return false;
+    const fields = { ean: { stringValue: String(food.ean) }, uid: { stringValue: a.uid }, nome: { stringValue: nome },
+      marca: { stringValue: String(food.marca || "").slice(0, 60) }, ts: { doubleValue: Date.now() } };
+    const porcao = food.porcoes && food.porcoes[0] ? +food.porcoes[0].g : null;
+    const vals = { kcal: +pc.kcal, p: +pc.p, c: +pc.c, g: +pc.g, fib: pc.fib == null ? null : +pc.fib, na: pc.na == null ? null : +pc.na, porcao };
+    for (const k of FB_NUM) if (vals[k] != null && !isNaN(vals[k])) fields[k] = { doubleValue: Math.round(vals[k] * 10) / 10 };
+    const r = await fbFetch(`${FB_DOCS}/envios/${food.ean}_${a.uid}`, { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${a.id}` }, body: JSON.stringify({ fields }) });
+    return !!(r && r.ok);
+  } catch(e){ return false; }
+}
 async function lookupCode(code){
   const vin = (S.biblioteca.vinculos || {})[code], fv = vin && findFood(vin);
   if (fv) return { food: fv, origem: "seu" };
@@ -2267,6 +2332,8 @@ async function lookupCode(code){
   if (map.has(code)) return { food: rowToFood(map.get(code)), origem: "base" };
   const ext = await listasExtras();
   if (ext.has(code)) return { food: rowToFood(ext.get(code)), origem: "lista" };
+  const com = await comunidadeBuscar(code);
+  if (com) return { food: com.food, origem: "comunidade", confirmacoes: com.confirmacoes };
   const api = await fetchOffApi(code);
   if (api.status === "ok") return { food: api.food, origem: "api" };
   return { food: null, api: api.status, partial: api.food || null, baseN: map.size };
@@ -2435,22 +2502,22 @@ async function showScanResult(code){
   const r = await lookupCode(code);
   const back = () => openScanner();
   if (r.food) {
-    const f = r.food, origem = { seu: "Já está na sua lista", base: "Base do Brasil embutida no app", lista: "Lista de produtos adicionada por você", api: "Open Food Facts on-line" }[r.origem];
+    const f = r.food, origem = { seu: "Já está na sua lista", base: "Base do Brasil embutida no app", lista: "Lista de produtos adicionada por você", api: "Open Food Facts on-line", comunidade: r.confirmacoes >= 2 ? `Comunidade Equilibrium · confirmado por ${r.confirmacoes} pessoas` : "Comunidade Equilibrium · ainda não confirmado" }[r.origem];
     const acts = [];
     const meu = r.origem === "seu" && (f.tipo === "proprio" || f.tipo === "taco");
-    if (r.origem !== "seu" || meu) acts.push(["Corrigir", () => openFoodForm(meu ? f : null, saved => afterScanSave(saved), meu ? null : Object.assign({}, f, { fonte: "Open Food Facts, corrigido com o rótulo" }))]);
+    if (r.origem !== "seu" || meu) acts.push(["Corrigir", () => openFoodForm(meu ? f : null, saved => afterScanSave(saved), meu ? null : Object.assign({}, f, { fonte: f.comunidade ? "Comunidade, corrigido com o rótulo" : "Open Food Facts, corrigido com o rótulo", corrigindo: true }))]);
     if (scanCtx === "diario") acts.push(["Adicionar ao diário", () => openQty(r.origem === "seu" ? f : cacheProduct(f)), "primary"]);
     else acts.push([r.origem === "seu" ? "Escanear outro" : "Salvar na minha lista", () => { if (r.origem !== "seu") { cacheProduct(f); toast("Produto salvo"); renderLib(); } openScanner(); }, "primary"]);
     sheet(f.nome, `<div class="small">${sourceLabel(Object.assign({ tipo: "proprio" }, f))}<span class="muted">${origem} · código <span class="num">${code}</span></span></div>
       <div class="nutri num">${[["kcal","kcal"],["p","proteína g"],["c","carbo g"],["g","gordura g"]].map(([k, l]) => `<div><b>${fmt(f.per100[k], k === "kcal" ? 0 : 1)}</b><span>${l} /100 g</span></div>`).join("")}</div>
       <table class="nt num">${[["fib","Fibra","g"],["na","Sódio","mg"]].map(([k, nm, u]) => `<tr><td>${nm}</td><td>${fmt(f.per100[k], 1)} ${f.per100[k] == null ? "" : u}</td></tr>`).join("")}${f.porcoes && f.porcoes[0] ? `<tr><td>Porção</td><td>${esc(f.porcoes[0].nome)} = ${fmt(f.porcoes[0].g)} g</td></tr>` : ""}</table>
-      ${f.off ? `<p class="small muted" style="margin:0">Dados colaborativos do Open Food Facts. Se algo não bater com o rótulo do seu pacote, use “Corrigir”: a correção fica só na sua lista.</p>` : ""}`, acts, back);
+      ${f.comunidade ? `<p class="small muted" style="margin:0">Cadastrado por usuários do Equilibrium. Se algo não bater com o rótulo do seu pacote, use “Corrigir”: a sua versão também vai para a comunidade e ajuda a confirmar os valores certos.</p>` : f.off ? `<p class="small muted" style="margin:0">Dados colaborativos do Open Food Facts. Se algo não bater com o rótulo do seu pacote, use “Corrigir”.</p>` : ""}`, acts, back);
   } else {
     const why = r.api === "offline" ? (window.claude && window.claude.use ? "A consulta on-line ao Open Food Facts não funciona dentro do Claude." : "Não consegui consultar o Open Food Facts on-line agora (sem internet?).") :
                 r.api === "sem-tabela" ? "O produto está no Open Food Facts, mas sem tabela nutricional." :
                 r.api === "ausente" ? "O Open Food Facts também não tem esse código." : "O Open Food Facts não respondeu agora.";
     const pre = Object.assign({ ean: code, per100: emptyPer100(), porcoes: [], fonte: "Rótulo" }, r.partial ? { nome: r.partial.nome, porcoes: r.partial.porcoes } : {});
-    sheet("Produto não encontrado", `<p style="margin:0">O código <b class="num">${code}</b> não foi encontrado. Cadastre o produto abaixo: fotografe a tabela nutricional, digite os valores ou ligue o código a um alimento que já está no app.</p>
+    sheet("Produto não encontrado", `<p style="margin:0">O código <b class="num">${code}</b> não foi encontrado. Cadastre o produto abaixo: fotografe a tabela nutricional, digite os valores ou ligue o código a um alimento que já está no app.</p>${comunidadeAtiva() ? `<p class="small muted" style="margin:0">O produto que você cadastrar (só código, nome, marca e tabela) fica disponível para os outros usuários.</p>` : ""}
       <button class="btn" id="vincOk" type="button" style="justify-content:center;min-height:48px">🔗 Adicionar a alimento existente</button>`,
       [["Escanear outro", back], ["Digitar à mão", () => openFoodForm(null, saved => afterScanSave(saved), pre)], ["📷 Fotografar a tabela", () => lerRotuloParaForm(pre, (dados, info) => openFoodForm(null, saved => afterScanSave(saved), dados, info)), "primary"]], back);
     $("#vincOk").onclick = () => vincularCodigo(code, () => showScanResult(code));
@@ -2476,6 +2543,7 @@ function vincularCodigo(code, voltar){ // liga um código de barras a um aliment
   lista(); setTimeout(() => { const i = $("#vcQ"); if (i) i.focus(); }, 60);
 }
 function afterScanSave(saved){
+  if (saved && saved.ean && saved.tipo !== "taco") comunidadeEnviar(saved).then(ok => { if (ok) toast("Produto compartilhado com a comunidade"); });
   if (scanCtx === "diario" && saved) openQty(saved);
   else { closeSheet(); renderLib(); }
 }
@@ -2698,7 +2766,7 @@ function renderPerfTabs(){
   document.querySelectorAll("#perfSeg [data-perf]").forEach(b => b.setAttribute("aria-pressed", b.dataset.perf === perfTab));
   $("#perfMetas").hidden = perfTab !== "metas"; $("#perfRef").hidden = perfTab !== "refeicoes"; $("#perfPref").hidden = perfTab !== "pref";
   if (perfTab === "refeicoes") renderRefEditor();
-  if (perfTab === "pref") { $("#letraMaior").checked = document.documentElement.classList.contains("letra-maior"); renderListasCard(); renderNotifCard(); }
+  if (perfTab === "pref") { $("#letraMaior").checked = document.documentElement.classList.contains("letra-maior"); renderListasCard(); renderNotifCard(); $("#comunidadeSw").checked = comunidadeAtiva(); }
 }
 document.querySelectorAll("#perfSeg [data-perf]").forEach(b => b.onclick = () => { perfTab = b.dataset.perf; renderPerfTabs(); });
 
@@ -3468,6 +3536,7 @@ document.querySelectorAll("[data-hoje]").forEach(b => b.onclick = () => {
 $("#quickSearch").onclick = () => openAdd(mealByHour());
 $("#ringBtn").onclick = () => { pref.set("anel", pref.get("anel", "restante") === "restante" ? "consumido" : "restante"); vibrar(8); renderDiary(); };
 $("#ringBtn").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#ringBtn").click(); } };
+$("#comunidadeSw").onchange = e => pref.set("comunidade", e.target.checked);
 $("#letraMaior").onchange = e => { aplicarLetra(e.target.checked); pref.set("letra", e.target.checked); S.perfil.letra = e.target.checked; Store.save("perfil"); };
 $("#redoOnb").onclick = () => openOnboarding(1);
 
