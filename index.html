@@ -289,6 +289,19 @@ button.mrow:hover{background:var(--sunk)}
 .wk-day[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
 .wk-day[aria-pressed="true"] b,.wk-day[aria-pressed="true"] small{color:var(--accent-ink)}
 .wk-day[aria-pressed="true"].has i{background:var(--accent-ink)}
+.qs-row{display:flex;gap:8px;align-items:stretch}.qs-row .quick-search{flex:1}
+.qs-cam{flex:0 0 52px;border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.agua-card{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,#2f8fe0 14%,var(--surface));border:1px solid color-mix(in srgb,#2f8fe0 40%,var(--line));cursor:pointer}
+.agua-card .gota{flex:0 0 42px;height:42px;border-radius:50%;background:#2f8fe0;color:#fff;display:flex;align-items:center;justify-content:center}
+.agua-card .info{flex:1;min-width:0}.agua-card .info b{font-size:1.05rem}.agua-card .bar{display:block;height:7px;border-radius:9px;background:color-mix(in srgb,var(--agua) 22%,transparent);margin-top:6px;overflow:hidden}
+.agua-card .bar i{display:block;height:100%;background:#2f8fe0;border-radius:9px}
+.agua-card .mais{flex:0 0 auto;border:0;border-radius:12px;background:#2f8fe0;color:#fff;font:inherit;font-weight:800;padding:10px 12px;cursor:pointer}
+.qgrid .destaque{grid-column:1/-1;flex-direction:row;justify-content:center;gap:10px;background:var(--accent);color:var(--on-accent,#fff);font-weight:800}
+.ia-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.ia-item select,.ia-item input[type=number]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;max-width:100%}
+.ia-item .g{width:84px}.ia-item .k{grid-column:2/-1;font-size:.85rem;color:var(--muted)}
+.comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.comp-grid div{border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.comp-grid b{display:block;font-size:1.25rem}.comp-grid span{font-size:.8rem;color:var(--muted)}
 .quick-search{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:14px;padding:13px 14px;font:inherit;font-size:1rem;cursor:pointer;text-align:left}
 .quick-search span{flex:1}
 .quick-search em{font-style:normal;font-size:.8rem;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px}
@@ -632,7 +645,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
       <div class="week" id="weekStrip"></div>
       <p class="greet" id="greet"></p>
-      <button class="quick-search" id="quickSearch"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>O que você comeu?</span><em id="qsMeal"></em></button>
+      <div class="qs-row"><button class="quick-search" id="quickSearch"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>O que você comeu?</span><em id="qsMeal"></em></button><button class="qs-cam" id="qsFoto" aria-label="Fotografar o prato"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button></div>
+      <div id="aguaCard"></div>
       <div id="goalNotice"></div>
       <div id="weightCard"></div>
       <div class="card" id="resumoCard">
@@ -820,7 +834,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-02T17:06:52Z";
+const BIB_EMBUTIDA = "2026-11-03T22:03:23Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -1064,15 +1078,24 @@ function makeEntry(f, grams, porcao, med){
   return { id: uid(), ref: f.id, nome: f.nome, g: grams, porcao: porcao || null, med: med || null, fonte: f.tipo === "taco" ? (f.corrigido ? "TACO corrigido" : "TACO") : (f.tipo === "receita" ? "Receita" : "Seu"), n: scaled(f.per100, grams) };
 }
 
+/* ---------- composição corporal (balança de bioimpedância) ---------- */
+function composicao(){ // média das últimas 3 leituras de % de gordura (bioimpedância oscila de um dia para outro)
+  const comG = weightSeries().filter(e => e.gord), ult = comG.slice(-3); if (!ult.length) return null;
+  const gord = ult.reduce((a, e) => a + e.gord, 0) / ult.length, peso = S.perfil.peso || ult[ult.length - 1].kg;
+  const magra = peso * (1 - gord / 100), alt = (S.perfil.altura || 0) / 100;
+  return { gord, peso, magra, gorda: peso - magra, imc: alt ? peso / (alt * alt) : null, n: comG.length, ultima: ult[ult.length - 1].data, serie: comG };
+}
 /* ---------- cálculo da meta ---------- */
 function calc(p = S.perfil){
   if (!p.sexo || !p.idade || !p.peso || !p.altura) return null;
-  const ger = 10 * p.peso + 6.25 * p.altura - 5 * p.idade + (p.sexo === "m" ? 5 : -161);
+  const mifflin = 10 * p.peso + 6.25 * p.altura - 5 * p.idade + (p.sexo === "m" ? 5 : -161), comp = composicao();
+  const katch = comp ? 370 + 21.6 * comp.magra : null, usaKatch = p.formula === "katch" && katch;
+  const ger = usaKatch ? katch : mifflin;
   const at = ATIV.find(a => a[0] === p.ativ) || ATIV[1];
   const get = ger * at[1];
   const opts = (OBJ[p.obj] || OBJ.manter).map(([nome, pct]) => ({ nome, pct, kcal: Math.round(get * (1 + pct) / 10) * 10 }));
   const pick = opts[Math.min(p.intens, opts.length - 1)];
-  return { ger, get, fator: at[1], ativNome: at[2], opts, sugerida: pick.kcal, pick };
+  return { ger, get, fator: at[1], ativNome: at[2], opts, sugerida: pick.kcal, pick, mifflin, katch, usaKatch, comp };
 }
 function goal(){ return S.perfil.meta; }
 function macroGoals(){
@@ -1129,6 +1152,17 @@ document.querySelectorAll("[data-tema-open]").forEach(b => b.onclick = () => { s
 
 /* ---------- água ---------- */
 function aguaMeta(){ const p = S.perfil; return p.aguaMeta || (p.peso ? Math.round(p.peso * 35 / 100) * 100 : 2000); }
+function renderAguaCard(){
+  const el = $("#aguaCard"); if (!el) return;
+  const dd = dayData(day) || {}, bebeu = dd.agua || 0, meta = aguaMeta(), pct = Math.min(100, Math.round(bebeu / meta * 100));
+  el.innerHTML = `<div class="agua-card" id="aguaAbrir" role="button" tabindex="0" aria-label="Água: abrir registro">
+    <span class="gota">${ICO.agua.replace('<svg', '<svg width="24" height="24"')}</span>
+    <span class="info"><b class="num">${fmt(bebeu / 1000, 2)} L</b> <span class="small muted num">de ${fmt(meta / 1000, 1)} L de água</span><span class="bar"><i style="width:${pct}%"></i></span></span>
+    <button class="mais" id="aguaMais" aria-label="Adicionar 250 ml de água">+250 ml</button></div>`;
+  $("#aguaAbrir").onclick = e => { if (e.target.closest("#aguaMais")) return; openAgua(); };
+  $("#aguaMais").onclick = () => { const d2 = dayData(day, true); d2.agua = (d2.agua || 0) + 250; saveDay(day); vibrar(20); renderDiary(); notifAgendarDepois();
+    toast("+250 ml de água", { label: "Desfazer", fn: () => { d2.agua = Math.max(0, d2.agua - 250); saveDay(day); renderDiary(); } }); };
+}
 function openAgua(){
   const dd = dayData(day, true); dd.agua = dd.agua || 0;
   const draw = () => {
@@ -1455,6 +1489,7 @@ function renderGoalNotice(target){
   });
 }
 function renderDiary(){
+  try { renderAguaCard(); } catch(e){}
   atualizarHoje();
   renderWeek(); renderWeightCard();
   $("#qsMeal").textContent = "no " + nomeRef(mealByHour()).toLowerCase();
@@ -1986,11 +2021,11 @@ function finalizarTabela(brutos, porcao, porcaoTxt, por100){
   if (per100.na != null) per100.na = Math.round(per100.na);
   return { per100, porcao, porcaoTxt, formatoNovo: !!por100, conferir, achados: Object.keys(per100).length };
 }
-async function fotografarRotulo(){ // devolve dataURL da foto, {path} no app com ML Kit, ou null
+async function fotografarRotulo(op = {}){ // devolve dataURL da foto, {path} no app com ML Kit, ou null
   if (NATIVO && window.Capacitor.Plugins.Camera) {
     const C = window.Capacitor.Plugins.Camera;
     try { await C.requestPermissions({ permissions: ["camera"] }); } catch(e){}
-    const ML = window.Capacitor.Plugins.TextRecognition;
+    const ML = op.dataUrl ? null : window.Capacitor.Plugins.TextRecognition;
     const ph = await C.getPhoto({ source: "CAMERA", resultType: ML ? "uri" : "dataUrl", quality: 92, width: 2000, correctOrientation: true, saveToGallery: false });
     if (!ph) return null;
     return ML && ph.path ? { path: ph.path } : (ph.dataUrl || null);
@@ -1999,8 +2034,8 @@ async function fotografarRotulo(){ // devolve dataURL da foto, {path} no app com
     const canLive = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && !(window.claude && window.claude.use);
     let stream = null;
     const fim = v => { if (stream) stream.getTracks().forEach(t => t.stop()); resolve(v); };
-    sheet("Fotografar a tabela nutricional", `${canLive ? `<div class="scan-box" style="aspect-ratio:3/4"><video id="rtVideo" playsinline muted autoplay></video></div>` : ""}
-      <p class="hint" style="margin:0">Enquadre só a tabela, reta, bem iluminada e sem reflexo. Chegue perto o bastante para os números ficarem nítidos.</p>
+    sheet(op.titulo || "Fotografar a tabela nutricional", `${canLive ? `<div class="scan-box" style="aspect-ratio:3/4"><video id="rtVideo" playsinline muted autoplay></video></div>` : ""}
+      <p class="hint" style="margin:0">${op.dica || "Enquadre só a tabela, reta, bem iluminada e sem reflexo. Chegue perto o bastante para os números ficarem nítidos."}</p>
       <div class="row wrap">${canLive ? `<button class="btn primary" id="rtShot" style="flex:1;justify-content:center;min-height:52px">Fotografar</button>` : ""}
       <label class="btn ${canLive ? "" : "primary"}" for="rtFile" style="flex-direction:row;font-size:1rem;color:inherit;justify-content:center">${canLive ? "Escolher foto" : "Fotografar ou escolher foto"}<input id="rtFile" type="file" accept="image/*" capture="environment" hidden></label></div>`,
       [["Cancelar", () => fim(null)]]);
@@ -2168,7 +2203,10 @@ function renderProfile(){
   const c = calc();
   $("#calcCard").innerHTML = `<h2>Como a meta é calculada</h2>` + (c ? `
     <div class="calc num">
-      <div class="eq"><span>Gasto em repouso (Mifflin–St Jeor)<br><span class="small muted">10 × ${fmt(p.peso, 1)} kg + 6,25 × ${fmt(p.altura)} cm − 5 × ${fmt(p.idade)} anos ${p.sexo === "m" ? "+ 5" : "− 161"}</span></span><b>${fmt(c.ger)} kcal</b></div>
+      ${c.usaKatch ? `<div class="eq"><span>Gasto em repouso (Katch-McArdle)<br><span class="small muted">370 + 21,6 × ${fmt(c.comp.magra, 1)} kg de massa magra (${fmt(c.comp.gord, 1)}% de gordura pela balança)</span></span><b>${fmt(c.ger)} kcal</b></div>` :
+      `<div class="eq"><span>Gasto em repouso (Mifflin–St Jeor)<br><span class="small muted">10 × ${fmt(p.peso, 1)} kg + 6,25 × ${fmt(p.altura)} cm − 5 × ${fmt(p.idade)} anos ${p.sexo === "m" ? "+ 5" : "− 161"}</span></span><b>${fmt(c.ger)} kcal</b></div>`}
+      ${c.katch ? `<div class="hint" style="margin:6px 0">${c.usaKatch ? `Pela fórmula padrão (Mifflin–St Jeor) daria ${fmt(c.mifflin)} kcal.` : `Com o % de gordura da sua balança, a fórmula Katch-McArdle dá ${fmt(c.katch)} kcal em repouso (${c.katch >= c.mifflin ? "+" : "−"}${fmt(Math.abs(c.katch - c.mifflin))}). Ela considera a massa magra e costuma acertar mais em quem é musculoso ou tem mais gordura que a média.`}
+        <button class="btn ghost sm" id="formulaTroca" type="button" style="margin-top:6px">${c.usaKatch ? "Voltar para Mifflin–St Jeor" : "Usar Katch-McArdle"}</button></div>` : ""}
       <div class="eq"><span>Gasto total do dia (GET)<br><span class="small muted">${fmt(c.ger)} × ${fmt(c.fator, 3).replace(/0$/, "")} (${c.ativNome.toLowerCase()})</span></span><b>${fmt(c.get)} kcal</b></div>
       <div class="eq"><span>Meta para ${p.obj === "manter" ? "manter o peso" : p.obj + " peso"}<br><span class="small muted">${p.obj === "manter" ? "igual ao GET" : `GET ${c.pick.pct < 0 ? "−" : "+"} ${Math.abs(c.pick.pct * 100)}% (${c.pick.nome.toLowerCase()}), arredondado a 10 kcal`}</span></span><b>${fmt(c.sugerida)} kcal</b></div>
     </div>
@@ -2588,6 +2626,23 @@ function niceTicks(min, max, n = 4){
   return t;
 }
 document.querySelectorAll("#progSeg [data-prog]").forEach(b => b.onclick = () => { progTab = b.dataset.prog; renderProgress(); });
+function cardComposicao(){
+  const c = composicao(), alt = S.perfil.altura, peso = S.perfil.peso;
+  const imc = alt && peso ? peso / Math.pow(alt / 100, 2) : null, faixa = v => v < 18.5 ? "abaixo do peso" : v < 25 ? "faixa saudável" : v < 30 ? "sobrepeso" : "obesidade";
+  if (!c) return `<div class="card"><h2>Composição corporal</h2>
+    ${imc ? `<div class="comp-grid num" style="margin-bottom:10px"><div><b>${fmt(imc, 1)}</b><span>IMC · ${faixa(imc)}</span></div></div>` : ""}
+    <p class="hint" style="margin:0">Com uma balança de bioimpedância (Fitdays, Xiaomi, Relaxmedic…) ligada ao Health Connect, aqui aparecem o % de gordura, a massa magra e a massa gorda, e a meta pode usar a sua massa magra no cálculo. Conecte em Dispositivos.</p></div>`;
+  const s30 = c.serie.filter(e => e.data >= addDays(iso(new Date()), -30)), d = s30.length >= 2 ? s30[s30.length - 1].gord - s30[0].gord : null;
+  return `<div class="card"><h2>Composição corporal</h2>
+    <div class="comp-grid num">
+      <div><b>${fmt(c.gord, 1)}%</b><span>gordura corporal${d != null ? ` · ${d > 0 ? "+" : d < 0 ? "−" : ""}${fmt(Math.abs(d), 1)} pp em 30 dias` : ""}</span></div>
+      <div><b>${fmt(c.magra, 1)} kg</b><span>massa magra</span></div>
+      <div><b>${fmt(c.gorda, 1)} kg</b><span>massa gorda</span></div>
+      <div><b>${imc ? fmt(imc, 1) : "–"}</b><span>IMC${imc ? " · " + faixa(imc) : ""}</span></div>
+    </div>
+    <p class="small muted" style="margin:10px 0 0">Média das 3 últimas leituras da balança (última em ${c.ultima.split("-").reverse().slice(0, 2).join("/")}). A bioimpedância varia com a hidratação: compare sempre no mesmo horário, de preferência em jejum. Massa magra inclui músculos, ossos, órgãos e água.</p>
+  </div>`;
+}
 function renderProgress(){
   document.querySelectorAll("#progSeg [data-prog]").forEach(b => b.setAttribute("aria-pressed", b.dataset.prog === progTab));
   if (progTab === "atividade") return renderAtividade();
@@ -2672,6 +2727,7 @@ function renderProgress(){
       ${weightChart}
       ${ws.length ? `<details style="margin-top:10px"><summary class="small muted" style="cursor:pointer;font-weight:600">Pesagens registradas (${ws.length})</summary><ul class="list">${[...ws].reverse().slice(0, 60).map(e => `<li class="fi"><span class="grow num">${e.data.split("-").reverse().join("/")}</span><b class="num">${fmt(e.kg, 1)} kg</b>${e.fonte === "balança" ? `<span class="badge off" style="margin-left:6px">balança</span>` : ""}<button class="star" style="color:var(--muted)" data-wdel="${e.data}" aria-label="Remover pesagem de ${e.data}">✕</button></li>`).join("")}</ul></details>` : ""}
     </div>
+    ${cardComposicao()}
 
     <div class="card">
       <div class="head" style="margin-bottom:12px"><h2>Calorias por dia</h2>
@@ -2814,6 +2870,7 @@ function renderRefEditor(){
 /* ---------- saúde: balança e relógio via Health Connect (só no app Android) ---------- */
 const HEALTH = () => NATIVO && window.Capacitor.Plugins && window.Capacitor.Plugins.Health;
 const SAUDE_TIPOS = ["weight", "steps", "calories", "heartRate"]; // tipos aceitos pela versão do plugin usada no APK
+const SAUDE_COMP = ["bodyFat", "height"]; // balanças de bioimpedância: % de gordura (pedido à parte)
 async function saudeConectar(){
   const H = HEALTH(); if (!H) return toast("Disponível no app Android");
   try {
@@ -2822,6 +2879,7 @@ async function saudeConectar(){
     let st;
     try { st = await H.requestAuthorization({ read: SAUDE_TIPOS, write: [] }); }
     catch(e1){ st = await H.requestAuthorization({ read: ["weight"], write: [] }); } // aparelhos que só liberam o peso
+    try { const extra = await H.requestAuthorization({ read: SAUDE_COMP, write: [] }); st.readAuthorized = [...(st.readAuthorized || []), ...((extra && extra.readAuthorized) || [])]; } catch(e2){}
     S.perfil.saude = { ligado: true, liberados: st.readAuthorized || [] }; Store.save("perfil");
     await saudeSincronizarPeso(true);
     await saudeDetectar(); renderDispositivos(); if ((location.hash || "") === "#progresso") renderProgress();
@@ -2849,6 +2907,12 @@ async function saudeSincronizarPeso(avisar){
       if (!ex) { S.peso.entradas.push({ data: d, kg, fonte: "balança" }); novos++; }
       else if (ex.fonte === "balança" && ex.kg !== kg) { ex.kg = kg; novos++; }
     });
+    try { // % de gordura das balanças de bioimpedância
+      const bf = await H.readSamples({ dataType: "bodyFat", startDate: new Date(Date.now() - 90 * 864e5).toISOString(), endDate: new Date().toISOString(), limit: 500 });
+      const ult = {}; ((bf && bf.samples) || []).forEach(x => { const d = iso(new Date(x.startDate)); if (!ult[d] || x.startDate > ult[d].startDate) ult[d] = x; });
+      Object.entries(ult).forEach(([d, x]) => { let v = +x.value; if (v > 0 && v <= 1) v *= 100; v = Math.round(v * 10) / 10; if (!(v >= 3 && v <= 70)) return;
+        let ex = S.peso.entradas.find(e => e.data === d); if (!ex) return; if (ex.gord !== v) { ex.gord = v; novos++; } });
+    } catch(e3){}
     if (novos) { Store.save("peso"); pesoPerfilAtual(); }
     S.perfil.saude.ultima = new Date().toISOString(); Store.save("perfil");
     if (avisar) toast(novos ? `${novos} ${novos > 1 ? "pesagens importadas" : "pesagem importada"} da balança` : "Nenhuma pesagem nova da balança");
@@ -3206,6 +3270,7 @@ function abrirRapido(m){
   sheet(`Adicionar ao ${nm.toLowerCase()}`, `<p class="small muted" style="margin:0">${dateLabel(day)} · refeição escolhida pelo horário, toque para trocar.</p>
     <div class="meal-chips">${MEALS.map(([k, n]) => `<button class="tab" data-rq="${k}" aria-pressed="${k === m}">${n}</button>`).join("")}</div>
     <div class="qgrid">
+      <button data-qa="prato" class="destaque">${ICO_R.foto}Foto do prato</button>
       <button data-qa="busca">${ICO_R.busca}Buscar</button><button data-qa="cod">${ICO_R.cod}Código de barras</button><button data-qa="foto">${ICO_R.foto}Foto da tabela</button>
       <button data-qa="fav">${ICO_R.fav}Favoritos</button><button data-qa="ff">${ICO_R.ff}Fast food</button><button data-qa="agua"><span style="color:var(--agua);display:flex">${ICO.agua.replace('<svg', '<svg width="24" height="24"')}</span>Água</button>
     </div>
@@ -3220,6 +3285,7 @@ function abrirRapido(m){
     if (v === "busca") openAdd(m);
     else if (v === "cod") openScanner("diario");
     else if (v === "foto") fotoTabelaNovo();
+    else if (v === "prato") fotoPrato(m);
     else if (v === "fav") openAdd(m, "", "favoritos");
     else if (v === "ff") openAdd(m, "", "fastfood");
     else if (v === "agua") openAgua();
@@ -3227,6 +3293,103 @@ function abrirRapido(m){
     else if (v === "comum") copiar(comum, `${nm} adicionado`);
     else if (v === "quick") openQuick();
   });
+}
+/* ---------- reconhecimento de prato por foto (Gemini via Firebase AI Logic) ---------- */
+const IA_MODELO = "gemini-2.5-flash";
+const IA_PROMPT = `Você é nutricionista. Analise a foto de uma refeição e liste CADA alimento separadamente (nunca junte pratos: arroz, feijão, bife, salada e farofa são itens diferentes).
+Para cada item informe:
+- nome: nome curto em português do Brasil, como o brasileiro chama (ex.: "Arroz branco cozido", "Feijão carioca cozido", "Bife de alcatra grelhado").
+- busca: 2 a 4 palavras sem acento para buscar numa tabela tipo TACO (ex.: "arroz tipo 1 cozido", "feijao carioca cozido", "carne bovina alcatra grelhada", "batata frita").
+- gramas: peso estimado da porção visível, já preparada. Use o tamanho do prato (cerca de 26 cm), talheres e copos como referência.
+- kcal100, p100, c100, g100: calorias e gramas de proteína, carboidrato e gordura por 100 g do alimento como está preparado (considere o óleo de preparo).
+- confianca: alta, media ou baixa.
+- rede: se o item for um lanche identificável de rede de fast food (McDonald's, Burger King, Subway, KFC, Habib's, Giraffas, Popeyes, Pizza Hut), escreva o nome da rede; senão deixe vazio. Nesse caso use em "nome" e "busca" o nome do produto como a rede vende (ex.: "Big Mac", "Whopper", "McFritas média") e em "gramas" o peso de uma unidade.
+Se a foto não for de comida, devolva itens vazio. Não invente itens que não aparecem.`;
+const IA_SCHEMA = { type: "OBJECT", properties: { itens: { type: "ARRAY", items: { type: "OBJECT", properties: {
+  nome: { type: "STRING" }, busca: { type: "STRING" }, gramas: { type: "NUMBER" }, kcal100: { type: "NUMBER" }, p100: { type: "NUMBER" }, c100: { type: "NUMBER" }, g100: { type: "NUMBER" },
+  confianca: { type: "STRING", enum: ["alta", "media", "baixa"] }, rede: { type: "STRING" } }, required: ["nome", "busca", "gramas", "kcal100", "p100", "c100", "g100"] } } }, required: ["itens"] };
+function reduzirFoto(dataUrl, lado){
+  return new Promise(res => { const im = new Image(); im.onload = () => { const k = Math.min(1, lado / Math.max(im.width, im.height)); const c = document.createElement("canvas");
+    c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL("image/jpeg", .82)); };
+    im.onerror = () => res(dataUrl); im.src = dataUrl; });
+}
+async function iaAnalisarPrato(dataUrl){
+  const img = await reduzirFoto(dataUrl, 1024), b64 = img.split(",")[1];
+  const r = await fbFetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${FB.proj}/models/${IA_MODELO}:generateContent`, { method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": FB.key },
+    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: b64 } }] }],
+      generationConfig: { temperature: 0.2, responseMimeType: "application/json", responseSchema: IA_SCHEMA } }) }, 45000);
+  if (!r) throw new Error("sem conexão");
+  if (!r.ok) throw new Error(r.status === 429 ? "limite" : "http " + r.status);
+  const j = await r.json(), c0 = (j.candidates || [])[0] || {}, txt = ((c0.content || {}).parts || []).map(x => x.text || "").join("") || "{}";
+  return (JSON.parse(txt).itens || []).filter(x => x && x.nome && x.gramas > 0);
+}
+async function fotoPrato(m){
+  if (!pref.get("iaFotoOk", false)) {
+    return sheet("Foto do prato", `<p style="margin:0">Fotografe o prato e o app separa cada alimento, estima os gramas e calcula as calorias e os macros.</p>
+      <p class="small muted" style="margin:0">A foto é enviada ao Google Gemini só para essa análise e não fica guardada no Equilibrium. Os valores são estimativas: confira os gramas antes de adicionar. Para precisão total, pese na balança.</p>`,
+      [["Cancelar", closeSheet], ["Entendi, fotografar", () => { pref.set("iaFotoOk", true); fotoPrato(m); }, "primary"]]);
+  }
+  let foto;
+  try { foto = await fotografarRotulo({ dataUrl: true, titulo: "Fotografar o prato", dica: "Enquadre o prato inteiro, de cima ou levemente inclinado, com boa luz. Deixe os talheres à vista: ajudam a estimar o tamanho." }); } catch(e){ foto = null; }
+  if (!foto || typeof foto !== "string") return;
+  sheet("Analisando o prato…", `<div class="scan-box" style="aspect-ratio:4/3"><img src="${foto}" alt="" style="width:100%;height:100%;object-fit:cover"></div><p class="muted" style="margin:0">Identificando os alimentos e estimando as porções. Leva alguns segundos.</p>`, []);
+  let itens;
+  try { itens = await iaAnalisarPrato(foto); }
+  catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>`, [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]); }
+  if (!itens.length) return sheet("Foto do prato", `<p style="margin:0">Não identifiquei comida nessa foto. Tente de novo com o prato inteiro enquadrado e boa luz.</p>`, [["Tentar de novo", () => fotoPrato(m), "primary"], ["Fechar", closeSheet]]);
+  revisarPrato(m, foto, itens);
+}
+function revisarPrato(m, foto, itens){
+  const todos = allFoods().filter(f => f.tipo !== "receita"), geral = todos.filter(f => f.tipo !== "rede"), redes = todos.filter(f => f.tipo === "rede");
+  const linhas = itens.map(it => {
+    let opcoes = [];
+    if (it.rede) { // lanche de rede: usa a tabela oficial (por unidade)
+      const rn = normNome(it.rede).replace(/[^a-z ]/g, "").split(" ")[0];
+      opcoes = searchFoods(it.busca, redes.filter(f => normNome(f.rede).includes(rn))).slice(0, 5);
+      if (!opcoes.length) opcoes = searchFoods(it.nome, redes).slice(0, 5);
+    }
+    if (!opcoes.length) opcoes = searchFoods(it.busca, geral).slice(0, 5);
+    const ia = Object.assign(emptyPer100(), { kcal: it.kcal100, p: it.p100, c: it.c100, g: it.g100 });
+    return { it, opcoes, escolha: opcoes.length ? 0 : -1, g: Math.round(it.gramas / 5) * 5, un: 1, on: true, ia };
+  });
+  const porUn = L => L.escolha >= 0 && L.opcoes[L.escolha].unid; // fast food por unidade: 100 = 1 unidade
+  const qtd = L => porUn(L) ? L.un * 100 : L.g;
+  const per = L => L.escolha >= 0 ? L.opcoes[L.escolha].per100 : L.ia;
+  const adicionar = () => {
+    const dd = dayData(day, true), alvo = lista(dd, m), novos = [];
+    linhas.filter(L => L.on && qtd(L) > 0).forEach(L => {
+      let f = L.escolha >= 0 ? L.opcoes[L.escolha] : null;
+      if (!f) { // estimativa vira um alimento seu, para poder editar depois
+        const salvo = { id: "u" + uid(), nome: L.it.nome + " (estimativa por foto)", cat: "Estimativas por foto", per100: L.ia, porcoes: [], fonte: "Estimativa por foto (Gemini)" };
+        S.biblioteca.proprios.unshift(salvo); Store.save("biblioteca"); f = Object.assign({ tipo: "proprio" }, salvo);
+      }
+      const e = porUn(L) ? makeEntry(f, L.un * 100, L.un === 1 ? "1 unidade" : `${L.un} unidades`) : makeEntry(f, L.g); alvo.push(e); novos.push(e.id); pushRecent(f.id);
+    });
+    if (!novos.length) return toast("Nenhum item marcado");
+    saveDay(day); closeSheet(); renderDiary(); vibrar();
+    toast(`${novos.length} ${novos.length > 1 ? "itens adicionados" : "item adicionado"}`, { label: "Desfazer", fn: () => { const l = dayData(day)[m]; for (let i = l.length - 1; i >= 0; i--) if (novos.includes(l[i].id)) l.splice(i, 1); saveDay(day); renderDiary(); } });
+  };
+  const draw = () => {
+    const tot = linhas.filter(L => L.on).reduce((a, L) => { const n = scaled(per(L), qtd(L)); ["kcal", "p", "c", "g"].forEach(k => a[k] += n[k] || 0); return a; }, { kcal: 0, p: 0, c: 0, g: 0 });
+    sheet(`Prato · ${nomeRef(m)}`, `<div style="display:flex;gap:12px;align-items:center"><img src="${foto}" alt="" style="width:76px;height:76px;object-fit:cover;border-radius:14px">
+      <div><b class="num" style="font-size:1.4rem">${fmt(tot.kcal)} kcal</b><div class="small muted num">P ${fmt(tot.p)} g · C ${fmt(tot.c)} g · G ${fmt(tot.g)} g</div></div></div>
+      <div class="notice" style="margin:0"><p style="margin:0"><b>Os pesos foram estimados pela foto</b> e não têm a precisão de uma balança: a margem de erro costuma ficar entre 20% e 40% por item. Se você pesou, corrija os gramas abaixo.</p></div>
+      <p class="small muted" style="margin:0">Troque o alimento da tabela se precisar. Lanches de fast food usam a tabela oficial da rede, por unidade. Itens desmarcados não entram.</p>
+      ${linhas.map((L, i) => { const n = scaled(per(L), qtd(L)); return `<div class="ia-item">
+        <input type="checkbox" data-ion="${i}" ${L.on ? "checked" : ""} aria-label="Incluir ${esc(L.it.nome)}">
+        <div style="min-width:0"><b>${esc(L.it.nome)}</b>${L.it.confianca === "baixa" ? ` <span class="badge fix">confira</span>` : ""}<br>
+          <select data-iop="${i}" aria-label="Alimento da tabela">${L.opcoes.map((f, j) => `<option value="${j}" ${L.escolha === j ? "selected" : ""}>${esc(f.nome)}</option>`).join("")}<option value="-1" ${L.escolha < 0 ? "selected" : ""}>Estimativa da foto</option></select></div>
+        ${porUn(L) ? `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="1" step="1" value="${L.un}" data-iu="${i}" style="width:60px" aria-label="Unidades de ${esc(L.it.nome)}">un</label>`
+          : `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="0" step="5" value="${L.g}" data-ig="${i}" aria-label="Gramas de ${esc(L.it.nome)}">g</label>`}
+        <div class="k num">${fmt(n.kcal)} kcal · P ${fmt(n.p, 1)} · C ${fmt(n.c, 1)} · G ${fmt(n.g, 1)} · ${L.escolha >= 0 ? sourceLabel(L.opcoes[L.escolha]) : `<span class="badge user">Estimativa</span>`}</div></div>`; }).join("")}`,
+      [["Refazer foto", () => fotoPrato(m)], [`Adicionar ao ${nomeRef(m).toLowerCase()}`, adicionar, "primary"]], closeSheet);
+    document.querySelectorAll("[data-ion]").forEach(c => c.onchange = () => { linhas[+c.dataset.ion].on = c.checked; draw(); });
+    document.querySelectorAll("[data-iop]").forEach(s2 => s2.onchange = () => { linhas[+s2.dataset.iop].escolha = +s2.value; draw(); });
+    document.querySelectorAll("[data-ig]").forEach(g => g.onchange = () => { linhas[+g.dataset.ig].g = Math.max(0, +g.value || 0); draw(); });
+    document.querySelectorAll("[data-iu]").forEach(u => u.onchange = () => { linhas[+u.dataset.iu].un = Math.max(1, Math.round(+u.value || 1)); draw(); });
+  };
+  draw();
 }
 function fotoTabelaNovo(){
   const m = addState.meal;
@@ -3293,12 +3456,18 @@ const NOTIF_TIPOS = {
   agua: ["Água", "Lembra quanto falta para a meta de água.", 15],
   fecha: ["Resumo do dia", "À noite, mostra como ficaram calorias e macros.", 21]
 };
-function notifCfg(){ const n = S.perfil.notif || (S.perfil.notif = {}); Object.entries(NOTIF_TIPOS).forEach(([k, v]) => { if (!n[k]) n[k] = { on: false, h: v[2] }; }); return n; }
+const AGUA_MSGS = ["Não quero que vocês que estão testando o app morram desidratados! Falta {falta} de água pra tomar hoje."];
+function notifCfg(){
+  const n = S.perfil.notif || (S.perfil.notif = {});
+  Object.entries(NOTIF_TIPOS).forEach(([k, v]) => { if (!n[k]) n[k] = { on: k === "agua", h: v[2] }; });
+  if (!n.aguaV2) { n.aguaV2 = true; Object.assign(n.agua, { on: true, ini: 9, fim: 21, cada: 2, msgs: AGUA_MSGS.slice() }); Store.save("perfil"); } // água ligada por padrão
+  return n;
+}
 let notifTimer = null;
 function notifAgendarDepois(){ clearTimeout(notifTimer); notifTimer = setTimeout(notifReagendar, 1500); }
 async function notifReagendar(){
   const LN = NOTIF(); if (!LN) return;
-  const cfg = notifCfg(), ids = [101, 102, 103, 104, 201, 202, 203, 204];
+  const cfg = notifCfg(), ids = [101, 102, 103, 104, 201, 202, 203, 204]; for (let i = 300; i < 440; i++) ids.push(i);
   try { await LN.cancel({ notifications: ids.map(id => ({ id })) }); } catch(e){}
   if (!Object.values(cfg).some(c => c.on)) return;
   try { const pm = await LN.checkPermissions(); if (pm.display !== "granted") return; } catch(e){ return; }
@@ -3317,9 +3486,16 @@ async function notifReagendar(){
     const r1 = refeicoes().find(x => x.hora != null && x.hora + 1 >= 8); if (r1) add(202, amanha, r1.hora + 1, `Já registrou o ${r1.nome.toLowerCase()}?`, "Toque para registrar em poucos segundos.", "diario");
   }
   if (cfg.agua.on) {
-    const meta = aguaMeta(), bebeu = dd.agua || 0;
-    if (bebeu < meta * .6) add(103, hoje, cfg.agua.h, `Faltam ${fmt((meta - bebeu) / 1000, 1)} L de água hoje`, `Você bebeu ${fmt(bebeu / 1000, 1)} de ${fmt(meta / 1000, 1)} L. Toque para registrar.`, "diario");
-    add(203, amanha, cfg.agua.h, "Hora de um copo d'água", `Meta de hoje: ${fmt(meta / 1000, 1)} L. Toque para registrar.`, "diario");
+    const a = cfg.agua, meta = aguaMeta(), bebeu = dd.agua || 0, cad = (a.msgs || []).filter(m => m.trim()), msgs = cad.length ? cad : AGUA_MSGS;
+    const L = v => fmt(v / 1000, 1) + " L", texto = (i, b) => msgs[i % msgs.length].replace(/\{falta\}/g, L(Math.max(0, meta - b))).replace(/\{meta\}/g, L(meta)).replace(/\{bebeu\}/g, L(b));
+    // agenda 7 dias à frente: os lembretes chegam mesmo com o app fechado e sem ser aberto por dias
+    for (let dia = 0; dia < 7; dia++) {
+      let i = 0;
+      for (let h = a.ini || 9; h <= (a.fim || 21) && i < 20; h += (a.cada || 2), i++) {
+        if (dia === 0) { if (bebeu < meta) add(300 + i, hoje, h, "Água", texto(i, bebeu), "diario"); }
+        else add(300 + dia * 20 + i, addDays(hoje, dia), h, "Água", texto(i, 0), "diario");
+      }
+    }
   }
   if (cfg.fecha.on && mg) {
     const resto = mg.kcal - t.kcal;
@@ -3328,14 +3504,22 @@ async function notifReagendar(){
   }
   if (lista2.length) try { await LN.schedule({ notifications: lista2 }); } catch(e){}
 }
+function aguaNotifHtml(a){
+  const op = (k, de, ate, suf) => { let o = ""; for (let v = de; v <= ate; v++) o += `<option value="${v}" ${a[k] === v ? "selected" : ""}>${v}${suf}</option>`; return `<select class="field" data-aw="${k}" style="width:auto">${o}</select>`; };
+  return `<div class="small" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;font-weight:600">Das ${op("ini", 7, 14, "h")} às ${op("fim", 15, 22, "h")}, a cada ${op("cada", 1, 4, " h")}</div>
+    <label class="small" for="aguaMsgs" style="display:block;margin-top:10px;font-weight:600">Mensagem do lembrete (se escrever mais de uma, uma por linha, elas se revezam)</label>
+    <textarea class="field" id="aguaMsgs" rows="4" style="width:100%;margin-top:6px;font:inherit;font-size:.92rem">${esc((a.msgs || AGUA_MSGS).join("\n"))}</textarea>
+    <p class="small muted" style="margin:6px 0 0">Use {falta}, {bebeu} e {meta} para mostrar os litros. Os lembretes de hoje param quando você bate a meta.</p>
+    <button class="btn ghost sm" id="aguaMsgsPadrao" type="button" style="margin-top:6px">Restaurar mensagens padrão</button>`;
+}
 function renderNotifCard(){
   const el = $("#notifCard"); if (!el) return;
   const cfg = notifCfg(), LN = NOTIF();
   const horas = []; for (let h = 8; h <= 22; h++) horas.push(h);
-  el.innerHTML = `<p class="hint" style="margin:0 0 6px">Tudo desligado por padrão. Cada aviso sai no máximo uma vez por dia, entre 8h e 22h, com os números da última vez que você usou o app.${LN ? "" : " Funciona só no app Android."}</p>
+  el.innerHTML = `<p class="hint" style="margin:0 0 6px">Só o lembrete de água vem ligado; os outros você liga se quiser. Cada aviso sai no máximo uma vez por dia, entre 8h e 22h, com os números da última vez que você usou o app.${LN ? "" : " Funciona só no app Android."}</p>
     ${Object.entries(NOTIF_TIPOS).map(([k, [nm, desc, hd]]) => `<div style="padding:10px 0;border-top:1px solid var(--line)">
       <label class="switch-row" for="nt-${k}"><span><b>${nm}</b><br><span class="small muted">${desc}</span></span><input type="checkbox" id="nt-${k}" data-nt="${k}" ${cfg[k].on ? "checked" : ""}></label>
-      ${hd != null ? `<label class="small" style="display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;margin-top:8px;font-weight:600" for="nh-${k}">Horário<select class="field" id="nh-${k}" data-nh="${k}" style="width:auto">${horas.map(h => `<option value="${h}" ${cfg[k].h === h ? "selected" : ""}>${h}h</option>`).join("")}</select></label>` : ""}
+      ${k === "agua" ? aguaNotifHtml(cfg.agua) : hd != null ? `<label class="small" style="display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;margin-top:8px;font-weight:600" for="nh-${k}">Horário<select class="field" id="nh-${k}" data-nh="${k}" style="width:auto">${horas.map(h => `<option value="${h}" ${cfg[k].h === h ? "selected" : ""}>${h}h</option>`).join("")}</select></label>` : ""}
     </div>`).join("")}`;
   el.querySelectorAll("[data-nt]").forEach(c => c.onchange = async () => {
     const k = c.dataset.nt;
@@ -3343,6 +3527,9 @@ function renderNotifCard(){
     cfg[k].on = c.checked; Store.save("perfil"); notifReagendar(); toast(c.checked ? `${NOTIF_TIPOS[k][0]}: ligado` : `${NOTIF_TIPOS[k][0]}: desligado`);
   });
   el.querySelectorAll("[data-nh]").forEach(sl => sl.onchange = () => { cfg[sl.dataset.nh].h = +sl.value; Store.save("perfil"); notifReagendar(); });
+  el.querySelectorAll("[data-aw]").forEach(sl => sl.onchange = () => { cfg.agua[sl.dataset.aw] = +sl.value; Store.save("perfil"); notifReagendar(); });
+  const am = $("#aguaMsgs"); if (am) am.onchange = () => { cfg.agua.msgs = am.value.split("\n").map(x => x.trim()).filter(Boolean).slice(0, 10); Store.save("perfil"); notifReagendar(); toast("Mensagens salvas"); };
+  const ar = $("#aguaMsgsPadrao"); if (ar) ar.onclick = () => { cfg.agua.msgs = AGUA_MSGS.slice(); Store.save("perfil"); renderNotifCard(); notifReagendar(); };
 }
 (() => {
   const LN = NOTIF(); if (!LN) return;
@@ -3356,6 +3543,10 @@ function renderNotifCard(){
     if (document.hidden || Date.now() - ultSincPeso < 5 * 60e3) return; ultSincPeso = Date.now();
     saudeSincronizarPeso(false).then(n => { if (n) { toast("Peso atualizado pela balança"); renderAll(); } });
   });
+  setTimeout(async () => { // água vem ligada: pede a permissão de notificação uma vez, depois da configuração inicial
+    try { const cfg = notifCfg(); if (!S.perfil.meta || !cfg.agua.on || pref.get("notifPedida", false)) return;
+      pref.set("notifPedida", true); let pm = await LN.checkPermissions(); if (pm.display !== "granted") pm = await LN.requestPermissions(); notifReagendar(); } catch(e){}
+  }, 4000);
   notifAgendarDepois();
 })();
 
@@ -3547,6 +3738,10 @@ document.querySelectorAll("[data-hoje]").forEach(b => b.onclick = () => {
   atualizarHoje(); vibrar(8);
 });
 $("#quickSearch").onclick = () => openAdd(mealByHour());
+$("#qsFoto").onclick = () => fotoPrato(mealByHour());
+document.addEventListener("click", e => { if (!e.target.closest("#formulaTroca")) return;
+  S.perfil.formula = S.perfil.formula === "katch" ? "mifflin" : "katch"; Store.save("perfil"); renderProfile(); renderDiary();
+  toast(S.perfil.formula === "katch" ? "Usando Katch-McArdle: aplique a nova meta no aviso" : "Usando Mifflin–St Jeor"); });
 $("#ringBtn").onclick = () => { pref.set("anel", pref.get("anel", "restante") === "restante" ? "consumido" : "restante"); vibrar(8); renderDiary(); };
 $("#ringBtn").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#ringBtn").click(); } };
 $("#comunidadeSw").onchange = e => pref.set("comunidade", e.target.checked);
