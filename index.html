@@ -834,7 +834,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-03T22:03:23Z";
+const BIB_EMBUTIDA = "2026-11-03T22:26:25Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -3295,7 +3295,7 @@ function abrirRapido(m){
   });
 }
 /* ---------- reconhecimento de prato por foto (Gemini via Firebase AI Logic) ---------- */
-const IA_MODELO = "gemini-2.5-flash";
+const IA_MODELOS = ["gemini-3.8-flash", "gemini-flash-latest"]; // o Google aposenta modelos: tenta o próximo se um sumir
 const IA_PROMPT = `Você é nutricionista. Analise a foto de uma refeição e liste CADA alimento separadamente (nunca junte pratos: arroz, feijão, bife, salada e farofa são itens diferentes).
 Para cada item informe:
 - nome: nome curto em português do Brasil, como o brasileiro chama (ex.: "Arroz branco cozido", "Feijão carioca cozido", "Bife de alcatra grelhado").
@@ -3315,10 +3315,14 @@ function reduzirFoto(dataUrl, lado){
 }
 async function iaAnalisarPrato(dataUrl){
   const img = await reduzirFoto(dataUrl, 1024), b64 = img.split(",")[1];
-  const r = await fbFetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${FB.proj}/models/${IA_MODELO}:generateContent`, { method: "POST",
+  let r = null;
+  for (const modelo of IA_MODELOS) {
+  r = await fbFetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${FB.proj}/models/${modelo}:generateContent`, { method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": FB.key },
     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: b64 } }] }],
       generationConfig: { temperature: 0.2, responseMimeType: "application/json", responseSchema: IA_SCHEMA } }) }, 45000);
+  if (!r || r.status !== 404) break;
+  }
   if (!r) throw new Error("sem conexão");
   if (!r.ok) throw new Error(r.status === 429 ? "limite" : "http " + r.status);
   const j = await r.json(), c0 = (j.candidates || [])[0] || {}, txt = ((c0.content || {}).parts || []).map(x => x.text || "").join("") || "{}";
