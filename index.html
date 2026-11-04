@@ -296,7 +296,7 @@ button.mrow:hover{background:var(--sunk)}
 .agua-card .info{flex:1;min-width:0}.agua-card .info b{font-size:1.05rem}.agua-card .bar{display:block;height:7px;border-radius:9px;background:color-mix(in srgb,var(--agua) 22%,transparent);margin-top:6px;overflow:hidden}
 .agua-card .bar i{display:block;height:100%;background:#2f8fe0;border-radius:9px}
 .agua-card .mais{flex:0 0 auto;border:0;border-radius:12px;background:#2f8fe0;color:#fff;font:inherit;font-weight:800;padding:10px 12px;cursor:pointer}
-.qgrid .destaque{grid-column:1/-1;flex-direction:row;justify-content:center;gap:10px;background:var(--accent);color:var(--on-accent,#fff);font-weight:800}
+.qgrid .destaque svg{width:24px;height:24px;flex:0 0 24px;margin:0;color:var(--on-accent,#fff)!important;stroke:currentColor}.qgrid .destaque{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:center;gap:10px;background:var(--accent);color:var(--on-accent,#fff);font-weight:800}
 .ia-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .ia-item select,.ia-item input[type=number]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;max-width:100%}
 .ia-item .g{width:84px}.ia-item .k{grid-column:2/-1;font-size:.85rem;color:var(--muted)}
@@ -834,7 +834,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-04T11:12:32Z";
+const BIB_EMBUTIDA = "2026-11-04T11:28:03Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -3295,7 +3295,7 @@ function abrirRapido(m){
   });
 }
 /* ---------- reconhecimento de prato por foto (Gemini via Firebase AI Logic) ---------- */
-const IA_MODELOS = ["gemini-3.8-flash", "gemini-flash-latest"]; // o Google aposenta modelos: tenta o próximo se um sumir
+const IA_MODELOS = ["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.8-flash"]; // se um estiver fora do ar, sobrecarregado ou aposentado, tenta o próximo
 const IA_PROMPT = `Você é nutricionista. Analise a foto de uma refeição e liste CADA alimento separadamente (nunca junte pratos: arroz, feijão, bife, salada e farofa são itens diferentes).
 Para cada item informe:
 - nome: nome curto em português do Brasil, como o brasileiro chama (ex.: "Arroz branco cozido", "Feijão carioca cozido", "Bife de alcatra grelhado").
@@ -3320,11 +3320,11 @@ async function iaAnalisarPrato(dataUrl){
   r = await fbFetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${FB.proj}/models/${modelo}:generateContent`, { method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": FB.key },
     body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: b64 } }] }],
-      generationConfig: { temperature: 0.2, responseMimeType: "application/json", responseSchema: IA_SCHEMA } }) }, 45000);
-  if (!r || r.status !== 404) break;
+      generationConfig: { temperature: 0.2, responseMimeType: "application/json", responseSchema: IA_SCHEMA } }) }, 25000);
+  if (r && (r.ok || r.status === 400)) break; // sem resposta, 404, 429 ou 5xx: tenta o próximo modelo
   }
   if (!r) throw new Error("sem conexão");
-  if (!r.ok) throw new Error(r.status === 429 ? "limite" : "http " + r.status);
+  if (!r.ok) throw new Error(r.status === 429 ? "limite" : r.status >= 500 ? "ocupado" : "http " + r.status);
   const j = await r.json(), c0 = (j.candidates || [])[0] || {}, txt = ((c0.content || {}).parts || []).map(x => x.text || "").join("") || "{}";
   return (JSON.parse(txt).itens || []).filter(x => x && x.nome && x.gramas > 0);
 }
@@ -3340,7 +3340,7 @@ async function fotoPrato(m){
   sheet("Analisando o prato…", `<div class="scan-box" style="aspect-ratio:4/3"><img src="${foto}" alt="" style="width:100%;height:100%;object-fit:cover"></div><p class="muted" style="margin:0">Identificando os alimentos e estimando as porções. Leva alguns segundos.</p>`, []);
   let itens;
   try { itens = await iaAnalisarPrato(foto); }
-  catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>`, [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]); }
+  catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "ocupado" ? "O serviço de análise do Google está sobrecarregado agora. Tente de novo em alguns minutos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>`, [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]); }
   if (!itens.length) return sheet("Foto do prato", `<p style="margin:0">Não identifiquei comida nessa foto. Tente de novo com o prato inteiro enquadrado e boa luz.</p>`, [["Tentar de novo", () => fotoPrato(m), "primary"], ["Fechar", closeSheet]]);
   revisarPrato(m, foto, itens);
 }
@@ -3460,10 +3460,12 @@ const NOTIF_TIPOS = {
   agua: ["Água", "Lembra quanto falta para a meta de água.", 15],
   fecha: ["Resumo do dia", "À noite, mostra como ficaram calorias e macros.", 21]
 };
-const AGUA_MSGS = ["Não quero que vocês que estão testando o app morram desidratados! Falta {falta} de água pra tomar hoje."];
+const AGUA_MSGS = ["Hora de beber água! 💧 Faltam {falta} para bater sua meta de hoje."];
+const AGUA_MSG_ANTIGA = "Não quero que vocês que estão testando o app morram desidratados! Falta {falta} de água pra tomar hoje.";
 function notifCfg(){
   const n = S.perfil.notif || (S.perfil.notif = {});
   Object.entries(NOTIF_TIPOS).forEach(([k, v]) => { if (!n[k]) n[k] = { on: k === "agua", h: v[2] }; });
+  if (n.agua && n.agua.msgs && n.agua.msgs.length === 1 && n.agua.msgs[0] === AGUA_MSG_ANTIGA) { n.agua.msgs = AGUA_MSGS.slice(); Store.save("perfil"); }
   if (!n.aguaV2) { n.aguaV2 = true; Object.assign(n.agua, { on: true, ini: 9, fim: 21, cada: 2, msgs: AGUA_MSGS.slice() }); Store.save("perfil"); } // água ligada por padrão
   return n;
 }
