@@ -834,7 +834,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-04T11:28:03Z";
+const BIB_EMBUTIDA = "2026-11-04T12:15:17Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -3328,7 +3328,11 @@ async function iaAnalisarPrato(dataUrl){
   const j = await r.json(), c0 = (j.candidates || [])[0] || {}, txt = ((c0.content || {}).parts || []).map(x => x.text || "").join("") || "{}";
   return (JSON.parse(txt).itens || []).filter(x => x && x.nome && x.gramas > 0);
 }
+const IA_LIMITE_DIA = 5; // análises por foto por usuário por dia (cota gratuita é dividida entre todos)
+function iaUsoHoje(){ const u = pref.get("iaUso", null), hoje = iso(new Date()); return u && u.d === hoje ? u.n : 0; }
+function iaContar(){ pref.set("iaUso", { d: iso(new Date()), n: iaUsoHoje() + 1 }); }
 async function fotoPrato(m){
+  if (iaUsoHoje() >= IA_LIMITE_DIA) return sheet("Foto do prato", `<p style="margin:0">Você usou suas ${IA_LIMITE_DIA} análises por foto de hoje. Amanhã libera de novo.</p><p class="small muted" style="margin:0">Enquanto isso, use a busca ou o código de barras.</p>`, [["Buscar", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]);
   if (!pref.get("iaFotoOk", false)) {
     return sheet("Foto do prato", `<p style="margin:0">Fotografe o prato e o app separa cada alimento, estima os gramas e calcula as calorias e os macros.</p>
       <p class="small muted" style="margin:0">A foto é enviada ao Google Gemini só para essa análise e não fica guardada no Equilibrium. Os valores são estimativas: confira os gramas antes de adicionar. Para precisão total, pese na balança.</p>`,
@@ -3339,7 +3343,7 @@ async function fotoPrato(m){
   if (!foto || typeof foto !== "string") return;
   sheet("Analisando o prato…", `<div class="scan-box" style="aspect-ratio:4/3"><img src="${foto}" alt="" style="width:100%;height:100%;object-fit:cover"></div><p class="muted" style="margin:0">Identificando os alimentos e estimando as porções. Leva alguns segundos.</p>`, []);
   let itens;
-  try { itens = await iaAnalisarPrato(foto); }
+  try { itens = await iaAnalisarPrato(foto); iaContar(); }
   catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "ocupado" ? "O serviço de análise do Google está sobrecarregado agora. Tente de novo em alguns minutos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>`, [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]); }
   if (!itens.length) return sheet("Foto do prato", `<p style="margin:0">Não identifiquei comida nessa foto. Tente de novo com o prato inteiro enquadrado e boa luz.</p>`, [["Tentar de novo", () => fotoPrato(m), "primary"], ["Fechar", closeSheet]]);
   revisarPrato(m, foto, itens);
@@ -3377,7 +3381,7 @@ function revisarPrato(m, foto, itens){
   const draw = () => {
     const tot = linhas.filter(L => L.on).reduce((a, L) => { const n = scaled(per(L), qtd(L)); ["kcal", "p", "c", "g"].forEach(k => a[k] += n[k] || 0); return a; }, { kcal: 0, p: 0, c: 0, g: 0 });
     sheet(`Prato · ${nomeRef(m)}`, `<div style="display:flex;gap:12px;align-items:center"><img src="${foto}" alt="" style="width:76px;height:76px;object-fit:cover;border-radius:14px">
-      <div><b class="num" style="font-size:1.4rem">${fmt(tot.kcal)} kcal</b><div class="small muted num">P ${fmt(tot.p)} g · C ${fmt(tot.c)} g · G ${fmt(tot.g)} g</div></div></div>
+      <div><b class="num" style="font-size:1.4rem">${fmt(tot.kcal)} kcal</b><div class="small muted num">P ${fmt(tot.p)} g · C ${fmt(tot.c)} g · G ${fmt(tot.g)} g</div><div class="small muted num">${iaUsoHoje()} de ${IA_LIMITE_DIA} análises por foto hoje</div></div></div>
       <div class="notice" style="margin:0"><p style="margin:0"><b>Os pesos foram estimados pela foto</b> e não têm a precisão de uma balança: a margem de erro costuma ficar entre 20% e 40% por item. Se você pesou, corrija os gramas abaixo.</p></div>
       <p class="small muted" style="margin:0">Troque o alimento da tabela se precisar. Lanches de fast food usam a tabela oficial da rede, por unidade. Itens desmarcados não entram.</p>
       ${linhas.map((L, i) => { const n = scaled(per(L), qtd(L)); return `<div class="ia-item">
