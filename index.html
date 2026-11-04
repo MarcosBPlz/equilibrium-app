@@ -834,7 +834,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-04T12:15:17Z";
+const BIB_EMBUTIDA = "2026-11-04T14:21:33Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -3295,7 +3295,15 @@ function abrirRapido(m){
   });
 }
 /* ---------- reconhecimento de prato por foto (Gemini via Firebase AI Logic) ---------- */
-const IA_MODELOS = ["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.8-flash"]; // se um estiver fora do ar, sobrecarregado ou aposentado, tenta o próximo
+// se um estiver fora do ar, sobrecarregado ou aposentado, tenta o próximo.
+// "pensar" controla o raciocínio interno: no padrão o 3.5-flash levava ~60 s por foto (estourava o tempo limite);
+// com "low" leva ~9 s e identifica os mesmos alimentos e gramas. ms = tempo máximo de espera de cada tentativa.
+const IA_MODELOS = [
+  { id: "gemini-3.5-flash", pensar: "low", ms: 30000 },
+  { id: "gemini-3.8-flash", pensar: "low", ms: 30000 },
+  { id: "gemini-flash-lite-latest", pensar: "minimal", ms: 35000 }
+];
+const IA_TEMPO_TOTAL = 75000; // não deixa o usuário esperando mais que isso no total
 const IA_PROMPT = `Você é nutricionista. Analise a foto de uma refeição e liste CADA alimento separadamente (nunca junte pratos: arroz, feijão, bife, salada e farofa são itens diferentes).
 Para cada item informe:
 - nome: nome curto em português do Brasil, como o brasileiro chama (ex.: "Arroz branco cozido", "Feijão carioca cozido", "Bife de alcatra grelhado").
@@ -3315,16 +3323,31 @@ function reduzirFoto(dataUrl, lado){
 }
 async function iaAnalisarPrato(dataUrl){
   const img = await reduzirFoto(dataUrl, 1024), b64 = img.split(",")[1];
-  let r = null;
+  if (navigator.onLine === false) throw new Error("sem conexão");
+  const inicio = Date.now();
+  let r = null, demorou = false, ultimoErro = null;
   for (const modelo of IA_MODELOS) {
-  r = await fbFetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${FB.proj}/models/${modelo}:generateContent`, { method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": FB.key },
-    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: b64 } }] }],
-      generationConfig: { temperature: 0.2, responseMimeType: "application/json", responseSchema: IA_SCHEMA } }) }, 25000);
-  if (r && (r.ok || r.status === 400)) break; // sem resposta, 404, 429 ou 5xx: tenta o próximo modelo
+    const resta = IA_TEMPO_TOTAL - (Date.now() - inicio);
+    if (resta < 8000) break; // sem tempo para outra tentativa
+    const gen = { temperature: 0.2, responseMimeType: "application/json", responseSchema: IA_SCHEMA };
+    if (modelo.pensar) gen.thinkingConfig = { thinkingLevel: modelo.pensar };
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), Math.min(modelo.ms, resta));
+    try {
+      r = await fetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${FB.proj}/models/${modelo.id}:generateContent`, { method: "POST", signal: ctl.signal,
+        headers: { "Content-Type": "application/json", "x-goog-api-key": FB.key },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: b64 } }] }], generationConfig: gen }) });
+    } catch(e){ r = null; if (e && e.name === "AbortError") demorou = true; } // AbortError = estourou o tempo; outro erro = rede
+    clearTimeout(t);
+    if (r && r.ok) break;
+    if (r) ultimoErro = r.status; // 400 (configuração não aceita pelo modelo), 404, 429 ou 5xx: tenta o próximo
   }
-  if (!r) throw new Error("sem conexão");
-  if (!r.ok) throw new Error(r.status === 429 ? "limite" : r.status >= 500 ? "ocupado" : "http " + r.status);
+  if (!r || !r.ok) {
+    if (ultimoErro === 429) throw new Error("limite");
+    if (ultimoErro >= 500) throw new Error("ocupado");
+    if (demorou) throw new Error("demorou");
+    if (ultimoErro) throw new Error("http " + ultimoErro);
+    throw new Error("sem conexão");
+  }
   const j = await r.json(), c0 = (j.candidates || [])[0] || {}, txt = ((c0.content || {}).parts || []).map(x => x.text || "").join("") || "{}";
   return (JSON.parse(txt).itens || []).filter(x => x && x.nome && x.gramas > 0);
 }
@@ -3344,7 +3367,7 @@ async function fotoPrato(m){
   sheet("Analisando o prato…", `<div class="scan-box" style="aspect-ratio:4/3"><img src="${foto}" alt="" style="width:100%;height:100%;object-fit:cover"></div><p class="muted" style="margin:0">Identificando os alimentos e estimando as porções. Leva alguns segundos.</p>`, []);
   let itens;
   try { itens = await iaAnalisarPrato(foto); iaContar(); }
-  catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "ocupado" ? "O serviço de análise do Google está sobrecarregado agora. Tente de novo em alguns minutos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>`, [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]); }
+  catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "ocupado" ? "O serviço de análise do Google está sobrecarregado agora. Tente de novo em alguns minutos." : msg === "demorou" ? "A análise demorou mais que o normal e foi interrompida. Tente de novo; costuma levar menos de 15 segundos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>`, [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]); }
   if (!itens.length) return sheet("Foto do prato", `<p style="margin:0">Não identifiquei comida nessa foto. Tente de novo com o prato inteiro enquadrado e boa luz.</p>`, [["Tentar de novo", () => fotoPrato(m), "primary"], ["Fechar", closeSheet]]);
   revisarPrato(m, foto, itens);
 }
