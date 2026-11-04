@@ -291,11 +291,36 @@ button.mrow:hover{background:var(--sunk)}
 .wk-day[aria-pressed="true"].has i{background:var(--accent-ink)}
 .qs-row{display:flex;gap:8px;align-items:stretch}.qs-row .quick-search{flex:1}
 .qs-cam{flex:0 0 52px;border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.agua-card{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,#2f8fe0 14%,var(--surface));border:1px solid color-mix(in srgb,#2f8fe0 40%,var(--line));cursor:pointer}
-.agua-card .gota{flex:0 0 42px;height:42px;border-radius:50%;background:#2f8fe0;color:#fff;display:flex;align-items:center;justify-content:center}
-.agua-card .info{flex:1;min-width:0}.agua-card .info b{font-size:1.05rem}.agua-card .bar{display:block;height:7px;border-radius:9px;background:color-mix(in srgb,var(--agua) 22%,transparent);margin-top:6px;overflow:hidden}
-.agua-card .bar i{display:block;height:100%;background:#2f8fe0;border-radius:9px}
-.agua-card .mais{flex:0 0 auto;border:0;border-radius:12px;background:#2f8fe0;color:#fff;font:inherit;font-weight:800;padding:10px 12px;cursor:pointer}
+.agua-card{display:flex;flex-direction:column;gap:12px;margin:10px 0 4px;padding:15px 16px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,#2f8fe0 22%,var(--surface)),color-mix(in srgb,#0ea5e9 10%,var(--surface)));border:1.5px solid color-mix(in srgb,#2f8fe0 52%,var(--line));box-shadow:0 6px 20px -8px rgba(47,143,224,.28);cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.agua-card.meta-ok{border-color:color-mix(in srgb,#22c55e 55%,#2f8fe0);box-shadow:0 6px 22px -8px rgba(34,197,94,.28)}
+.agua-card .agua-top{display:flex;align-items:center;gap:12px}
+.agua-card .gota{flex:0 0 48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#38bdf8,#2563eb);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+.agua-card .info{flex:1;min-width:0}
+.agua-card .agua-lbl{display:block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#38bdf8;margin-bottom:1px}
+:root[data-tema="light"] .agua-card .agua-lbl,:root[data-tema="rose"] .agua-card .agua-lbl{color:#1d70b8}
+.agua-card .info b{font-size:1.42rem;line-height:1.1;letter-spacing:-.02em}
+.agua-card .agua-de{font-size:.9rem;color:var(--muted);font-weight:600;margin-left:4px}
+.agua-card .agua-status{text-align:right;flex:0 0 auto}
+.agua-card .agua-pct{display:inline-block;font-size:.88rem;font-weight:800;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,#2f8fe0 24%,var(--surface));color:#60a5fa}
+:root[data-tema="light"] .agua-card .agua-pct,:root[data-tema="rose"] .agua-card .agua-pct{color:#1d6fb8}
+.agua-card.meta-ok .agua-pct{background:color-mix(in srgb,#22c55e 24%,var(--surface));color:#4ade80}
+:root[data-tema="light"] .agua-card.meta-ok .agua-pct,:root[data-tema="rose"] .agua-card.meta-ok .agua-pct{color:#15803d}
+.agua-card .agua-falta{display:block;font-size:.76rem;color:var(--muted);margin-top:3px;font-weight:600}
+.agua-card .bar{display:block;height:10px;border-radius:999px;background:color-mix(in srgb,#2f8fe0 20%,var(--track));overflow:hidden}
+.agua-card .bar i{display:block;height:100%;background:linear-gradient(90deg,#2563eb,#38bdf8);border-radius:999px;transition:width .3s ease}
+.agua-card.meta-ok .bar i{background:linear-gradient(90deg,#2563eb,#22c55e)}
+.agua-card .agua-copos{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.agua-card .copo-ic{width:22px;height:26px;display:inline-flex;align-items:center;justify-content:center;color:color-mix(in srgb,#2f8fe0 35%,var(--muted));transition:transform .15s,color .15s}
+.agua-card .copo-ic.cheio{color:#38bdf8;transform:scale(1.04)}
+:root[data-tema="light"] .agua-card .copo-ic.cheio,:root[data-tema="rose"] .agua-card .copo-ic.cheio{color:#2563eb}
+.agua-card .copo-ic.meio{color:#60a5fa}
+.agua-card .copos-txt{margin-left:auto;font-size:.76rem;color:var(--muted);font-weight:600}
+.agua-card .agua-acoes{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.agua-card .agua-qbtn{border:1px solid color-mix(in srgb,#2f8fe0 38%,var(--line));border-radius:12px;background:color-mix(in srgb,#2f8fe0 12%,var(--surface));color:var(--ink);font:inherit;font-size:.86rem;font-weight:700;padding:9px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15;transition:transform .1s,background .15s}
+.agua-card .agua-qbtn small{font-size:.68rem;font-weight:600;color:var(--muted)}
+.agua-card .agua-qbtn:active{transform:scale(.97)}
+.agua-card .agua-qbtn.pri{background:linear-gradient(135deg,#2f8fe0,#2563eb);border-color:#2563eb;color:#fff;box-shadow:0 3px 10px rgba(37,99,235,.3)}
+.agua-card .agua-qbtn.pri small{color:rgba(255,255,255,.82)}
 .qgrid .destaque svg{width:24px;height:24px;flex:0 0 24px;margin:0;color:var(--on-accent,#fff)!important;stroke:currentColor}.qgrid .destaque{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:center;gap:10px;background:var(--accent);color:var(--on-accent,#fff);font-weight:800}
 .ia-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .ia-item select,.ia-item input[type=number]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;max-width:100%}
@@ -835,7 +860,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-04T16:20:29Z";
+const BIB_EMBUTIDA = "2026-11-04T18:37:40Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -1169,13 +1194,39 @@ function aguaMeta(){ const p = S.perfil; return p.aguaMeta || (p.peso ? Math.rou
 function renderAguaCard(){
   const el = $("#aguaCard"); if (!el) return;
   const dd = dayData(day) || {}, bebeu = dd.agua || 0, meta = aguaMeta(), pct = Math.min(100, Math.round(bebeu / meta * 100));
-  el.innerHTML = `<div class="agua-card" id="aguaAbrir" role="button" tabindex="0" aria-label="Água: abrir registro">
-    <span class="gota">${ICO.agua.replace('<svg', '<svg width="24" height="24"')}</span>
-    <span class="info"><b class="num">${fmt(bebeu / 1000, 2)} L</b> <span class="small muted num">de ${fmt(meta / 1000, 1)} L de água</span><span class="bar"><i style="width:${pct}%"></i></span></span>
-    <button class="mais" id="aguaMais" aria-label="Adicionar 250 ml de água">+250 ml</button></div>`;
-  $("#aguaAbrir").onclick = e => { if (e.target.closest("#aguaMais")) return; openAgua(); };
-  $("#aguaMais").onclick = () => { const d2 = dayData(day, true); d2.agua = (d2.agua || 0) + 250; saveDay(day); vibrar(20); renderDiary(); notifAgendarDepois();
-    toast("+250 ml de água", { label: "Desfazer", fn: () => { d2.agua = Math.max(0, d2.agua - 250); saveDay(day); renderDiary(); } }); };
+  const falta = Math.max(0, meta - bebeu), bateu = bebeu >= meta;
+  const totalCopos = Math.min(12, Math.max(6, Math.round(meta / 250))), coposBebidos = bebeu / 250;
+  const svgCopo = st => `<span class="copo-ic ${st === 2 ? "cheio" : st === 1 ? "meio" : ""}" aria-hidden="true"><svg viewBox="0 0 20 24" width="20" height="24" fill="none"><path d="M4 3h12l-1.4 17a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>${st === 2 ? `<path d="M4.8 7.5h10.4l-1 12.2a1 1 0 0 1-1 .9H6.8a1 1 0 0 1-1-.9L4.8 7.5z" fill="currentColor" opacity=".85"/>` : st === 1 ? `<path d="M5.3 13.5h9.4l-.5 6.2a1 1 0 0 1-1 .9H6.8a1 1 0 0 1-1-.9l-.5-6.2z" fill="currentColor" opacity=".6"/>` : ""}</svg></span>`;
+  let coposHtml = "";
+  for (let i = 0; i < totalCopos; i++) coposHtml += svgCopo(coposBebidos >= i + 1 ? 2 : coposBebidos >= i + 0.4 ? 1 : 0);
+  el.innerHTML = `<div class="agua-card ${bateu ? "meta-ok" : ""}" id="aguaAbrir" role="button" tabindex="0" aria-label="Água: abrir registro">
+    <div class="agua-top">
+      <span class="gota">${ICO.agua.replace('<svg', '<svg width="26" height="26"')}</span>
+      <span class="info">
+        <span class="agua-lbl">Hidratação do dia</span>
+        <b class="num">${fmt(bebeu / 1000, 2)} L</b><span class="agua-de num">de ${fmt(meta / 1000, 1)} L</span>
+      </span>
+      <span class="agua-status num">
+        <span class="agua-pct">${bateu ? "✓ " : ""}${Math.round(bebeu / meta * 100)}%</span>
+        <span class="agua-falta">${bateu ? "Meta batida! 💧" : `Faltam ${falta >= 1000 ? fmt(falta / 1000, 2) + " L" : fmt(falta) + " ml"}`}</span>
+      </span>
+    </div>
+    <span class="bar"><i style="width:${pct}%"></i></span>
+    <div class="agua-copos">${coposHtml}<span class="copos-txt num">${Math.floor(coposBebidos)}/${Math.round(meta / 250)} copos (250 ml)</span></div>
+    <div class="agua-acoes">
+      <button type="button" class="agua-qbtn num" data-agua-add="200" aria-label="Adicionar 200 ml">+200 ml<small>Copo</small></button>
+      <button type="button" class="agua-qbtn pri num" data-agua-add="250" aria-label="Adicionar 250 ml">+250 ml<small>Copo grande</small></button>
+      <button type="button" class="agua-qbtn num" data-agua-add="500" aria-label="Adicionar 500 ml">+500 ml<small>Garrafa</small></button>
+      <button type="button" class="agua-qbtn num" id="aguaOutroBtn" aria-label="Outras opções de água">Opções<small>${bebeu > 0 ? "ou corrigir" : "outro ml"}</small></button>
+    </div>
+  </div>`;
+  const addMl = ml => {
+    const d2 = dayData(day, true); d2.agua = Math.max(0, (d2.agua || 0) + ml); saveDay(day); vibrar(20); renderDiary(); notifAgendarDepois();
+    toast(`+${ml} ml · ${fmt(d2.agua / 1000, 2)} L hoje`, { label: "Desfazer", fn: () => { d2.agua = Math.max(0, d2.agua - ml); saveDay(day); renderDiary(); notifAgendarDepois(); } });
+  };
+  el.querySelectorAll("[data-agua-add]").forEach(b => b.onclick = e => { e.stopPropagation(); addMl(+b.dataset.aguaAdd); });
+  $("#aguaOutroBtn").onclick = e => { e.stopPropagation(); openAgua(); };
+  $("#aguaAbrir").onclick = e => { if (e.target.closest("[data-agua-add],#aguaOutroBtn")) return; openAgua(); };
 }
 function openAgua(){
   const dd = dayData(day, true); dd.agua = dd.agua || 0;
