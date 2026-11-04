@@ -646,6 +646,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       <div class="week" id="weekStrip"></div>
       <p class="greet" id="greet"></p>
       <div class="qs-row"><button class="quick-search" id="quickSearch"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>O que você comeu?</span><em id="qsMeal"></em></button><button class="qs-cam" id="qsFoto" aria-label="Fotografar o prato"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button></div>
+      <div id="adminNotice"></div>
       <div id="aguaCard"></div>
       <div id="goalNotice"></div>
       <div id="weightCard"></div>
@@ -834,7 +835,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-04T14:21:33Z";
+const BIB_EMBUTIDA = "2026-11-04T16:20:29Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -993,16 +994,28 @@ async function bibProdutos(gerado){ // base de produtos (código de barras) fica
     OFF_LOCAL.map = null; OFF_LOCAL.loading = null;
   } catch(e){}
 }
+const ADM_REMOTO = (() => { try { return Object.assign({ tsAlim: 0, alimentos: [], tsRec: 0, receitas: [], tsListas: 0, listasBusca: [], tsMsg: 0, mensagens: [] }, JSON.parse(localStorage.getItem("equilibrium.adminRemoto") || "{}")); } catch(e){ return { tsAlim: 0, alimentos: [], tsRec: 0, receitas: [], tsListas: 0, listasBusca: [], tsMsg: 0, mensagens: [] }; } })();
+function salvarAdmRemoto(){ try { localStorage.setItem("equilibrium.adminRemoto", JSON.stringify(ADM_REMOTO)); } catch(e){} }
+function admItemToFood(a){
+  const per100 = { kcal: +a.kcal || 0, p: +a.p || 0, c: +a.c || 0, g: +a.g || 0, fib: a.fib != null ? +a.fib : null, na: a.na != null ? +a.na : null, ca: null, fe: null, k: null, mg: null, zn: null, vitc: null, col: null };
+  const base = { id: a.id || ("adm-" + norm(a.nome || "").replace(/[^a-z0-9]+/g, "").slice(0, 40)), nome: a.rede && !String(a.nome).includes(a.rede) ? `${a.nome} (${a.rede})` : (a.marca ? productName(a.nome, a.marca, "") : a.nome),
+    cat: a.rede ? "Fast food · " + a.rede : (a.cat || "Oficial Equilibrium"), rede: a.rede || "", ean: a.ean ? String(a.ean) : "", fonte: a.fonte || "Catálogo Equilibrium",
+    tipo: a.rede ? "rede" : "oficial", per100 };
+  if (a.unid) return Object.assign(base, { unid: true, porcoes: [{ nome: a.porcaoNome || "1 unidade", g: 100 }] });
+  return Object.assign(base, { porcoes: +a.porcaoG ? [{ nome: a.porcaoNome || "1 porção", g: +a.porcaoG }] : [] });
+}
 function montarAlimentos(){
   const fixes = S.biblioteca.correcoes;
   const taco = TACO.map(f => fixes[f.id] ? Object.assign({}, f, { per100: fixes[f.id].per100, porcoes: fixes[f.id].porcoes, corrigido: true, nota: fixes[f.id].nota }) : f);
   const rec = S.biblioteca.receitas.map(r => ({ id: r.id, nome: r.nome, cat: "Receitas", per100: recipePer100(r), porcoes: r.porcoes ? [{ nome: "1 porção", g: recipeYield(r) / r.porcoes }] : [], tipo: "receita" }));
-  return [...S.biblioteca.proprios.map(f => Object.assign({ tipo: "proprio" }, f)), ...rec, ...REDES_ALIM, ...taco];
+  const oficiais = [...(ADM_REMOTO.alimentos || []), ...(ADM_REMOTO.listasBusca || [])].map(admItemToFood);
+  return [...S.biblioteca.proprios.map(f => Object.assign({ tipo: "proprio" }, f)), ...rec, ...oficiais, ...REDES_ALIM, ...taco];
 }
 function findFood(id){ allFoods(); return FOODS_CACHE.byId.get(id); }
 function sourceLabel(f){
   if (f.tipo === "rede") return `<span class="badge rede">${esc(f.rede)}</span>`;
   if (f.tipo === "receita") return `<span class="badge rec">Receita</span>`;
+  if (f.tipo === "oficial") return `<span class="badge taco">Equilibrium</span>`;
   if (f.tipo === "proprio") return f.off ? `<span class="badge off">Open Food Facts</span>` : `<span class="badge user">Seu</span>`;
   if (f.corrigido) return `<span class="badge fix">${f.ibge ? "IBGE" : "TACO"} corrigido</span>`;
   return `<span class="badge taco">${f.ibge ? "IBGE" : "TACO"}</span>`;
@@ -1010,6 +1023,7 @@ function sourceLabel(f){
 function sourceText(f){
   if (f.tipo === "rede") return `Tabela nutricional oficial do ${f.rede}, ${f.unid ? "por unidade" : "por 100 g"} (consultada em ${f.coletado ? f.coletado.split("-").reverse().join("/") : "2026"})`;
   if (f.tipo === "receita") return "Receita sua, calculada a partir dos ingredientes";
+  if (f.tipo === "oficial") return (f.fonte || "Catálogo oficial Equilibrium") + (f.ean ? ` · código ${f.ean}` : "");
   if (f.tipo === "proprio") return (f.off ? "Open Food Facts (base colaborativa, licença ODbL). Confira com o rótulo" : "Cadastrado por você" + (f.fonte ? ` · fonte: ${f.fonte}` : "")) + (f.ean ? ` · código ${f.ean}` : "");
   if (f.corrigido) return `Corrigido por você a partir da TACO nº ${f.taco}` + (f.nota ? ` · ${f.nota}` : "");
   if (f.ibge) return "IBGE, POF 2008-2009 · Tabela de composição nutricional dos alimentos consumidos no Brasil · preparação já pronta";
@@ -1317,20 +1331,20 @@ async function carregarReceitas(){
 function renderDicas(){
   const el = $("#bibReceitas");
   if (RECEITAS_ARQ) { el.innerHTML = `<div class="card"><p class="muted" style="margin:0">Carregando receitas…</p></div>`; carregarReceitas().then(renderDicas); return; }
-  if (!RECEITAS_IG.length) {
+  const lista = [...(ADM_REMOTO.receitas || []), ...RECEITAS_IG];
+  if (!lista.length) {
     el.innerHTML = `<div class="card"><h2>Dicas de receitas</h2>
       <p style="margin:6px 0 0">Aqui vão aparecer as receitas da sua página do Instagram, com ingredientes, modo de preparo e as calorias e macros por porção calculados pela TACO.</p>
       <p class="hint" style="margin-top:10px">Para trazer os posts: no Instagram, vá em <b>Configurações › Central de Contas › Suas informações e permissões › Baixar suas informações</b>, escolha a conta, marque só <b>Conteúdo › Publicações</b>, formato <b>JSON</b>, e baixe o arquivo .zip quando o Instagram avisar. Depois é só mandar o arquivo para o Claude.</p></div>`;
     return;
   }
-  const lista = RECEITAS_IG;
   el.innerHTML = `<p class="hint" style="margin:0">Receitas do perfil <a href="https://www.instagram.com/tento_ser_fit/" target="_blank" rel="noopener">@tento_ser_fit</a>. Calorias e macros como informados em cada post.</p>
     <input class="search" id="recQ" type="search" placeholder="Buscar receita ou ingrediente: whey, banana, frango…" value="${esc(recQ)}" aria-label="Buscar receita">
-    <div class="rec-grid">${lista.map(r => `<button class="card rec-card" data-rec="${RECEITAS_IG.indexOf(r)}">${r.foto ? `<img src="${r.foto}" alt="" loading="lazy">` : ""}<div class="rb"><b>${esc(r.titulo)}</b><span class="small muted num">${r.porcao ? `${fmt(r.porcao.kcal)} kcal por ${esc(r.porcaoNome)} · P ${fmt(r.porcao.p)} · C ${fmt(r.porcao.c)} · G ${fmt(r.porcao.g)}` : ""}</span></div></button>`).join("") || `<p class="muted">Nada encontrado.</p>`}</div>`;
-  const filtrar = () => { const q = norm(recQ); el.querySelectorAll("[data-rec]").forEach(b => { const r = RECEITAS_IG[+b.dataset.rec]; b.hidden = !!q && !norm(r.titulo + " " + (r.ingredientes || []).join(" ")).includes(q); }); };
+    <div class="rec-grid">${lista.map((r, idx) => `<button class="card rec-card" data-rec="${idx}">${r.foto ? `<img src="${r.foto}" alt="" loading="lazy">` : ""}<div class="rb"><b>${esc(r.titulo)}</b><span class="small muted num">${r.porcao ? `${fmt(r.porcao.kcal)} kcal por ${esc(r.porcaoNome || "porção")} · P ${fmt(r.porcao.p)} · C ${fmt(r.porcao.c)} · G ${fmt(r.porcao.g)}` : ""}</span></div></button>`).join("") || `<p class="muted">Nada encontrado.</p>`}</div>`;
+  const filtrar = () => { const q = norm(recQ); el.querySelectorAll("[data-rec]").forEach(b => { const r = lista[+b.dataset.rec]; b.hidden = !!q && !norm(r.titulo + " " + (r.ingredientes || []).join(" ")).includes(q); }); };
   $("#recQ").oninput = e => { recQ = e.target.value; filtrar(); };
   filtrar();
-  el.querySelectorAll("[data-rec]").forEach(b => b.onclick = () => openDica(RECEITAS_IG[+b.dataset.rec]));
+  el.querySelectorAll("[data-rec]").forEach(b => b.onclick = () => openDica(lista[+b.dataset.rec]));
 }
 function openDica(r){
   const pn = r.porcaoNome || "porção";
@@ -1488,7 +1502,20 @@ function renderGoalNotice(target){
     Store.save("perfil"); renderAll();
   });
 }
+function renderAdminNotice(){
+  const el = $("#adminNotice"); if (!el) return;
+  const hoje = iso(new Date()), vistas = pref.get("admCardVistos", []);
+  const msgs = (ADM_REMOTO.mensagens || []).filter(m => m && m.ativa !== false && m.card && !vistas.includes(m.id) && (!m.expira || m.expira >= hoje));
+  if (!msgs.length) { el.innerHTML = ""; return; }
+  el.innerHTML = msgs.map(m => `<div class="dica" style="margin-bottom:8px;align-items:flex-start"><div class="t">${m.subtitulo ? `<span class="tag ok" style="margin-bottom:4px">${esc(m.subtitulo)}</span> ` : ""}<b>${esc(m.titulo)}</b><span>${esc(m.corpo)}</span></div>${m.botao ? `<button class="btn sm primary" data-adm-go="${esc(m.id)}">${esc(m.botao)}</button>` : ""}<button class="icon-btn" data-adm-x="${esc(m.id)}" aria-label="Fechar aviso">✕</button></div>`).join("");
+  el.querySelectorAll("[data-adm-x]").forEach(b => b.onclick = () => { const v = pref.get("admCardVistos", []); if (!v.includes(b.dataset.admX)) v.push(b.dataset.admX); pref.set("admCardVistos", v); renderAdminNotice(); });
+  el.querySelectorAll("[data-adm-go]").forEach(b => b.onclick = () => {
+    const m = msgs.find(x => String(x.id) === b.dataset.admGo);
+    if (m && m.rota) { if (/^https?:\/\//i.test(m.rota)) window.open(m.rota, "_blank", "noopener"); else location.hash = "#" + m.rota.replace(/^#/, ""); }
+  });
+}
 function renderDiary(){
+  try { renderAdminNotice(); } catch(e){}
   try { renderAguaCard(); } catch(e){}
   atualizarHoje();
   renderWeek(); renderWeightCard();
@@ -2379,6 +2406,8 @@ async function lookupCode(code){
   if (fv) return { food: fv, origem: "seu" };
   const own = S.biblioteca.proprios.find(f => f.ean === code);
   if (own) return { food: Object.assign({ tipo: "proprio" }, own), origem: "seu" };
+  const admOficial = [...(ADM_REMOTO.alimentos || []), ...(ADM_REMOTO.listasBusca || [])].find(a => String(a.ean || "") === code);
+  if (admOficial) return { food: admItemToFood(admOficial), origem: "base" };
   const map = await loadOffLocal();
   if (map.has(code)) return { food: rowToFood(map.get(code)), origem: "base" };
   const ext = await listasExtras();
@@ -3564,6 +3593,75 @@ function renderNotifCard(){
   const am = $("#aguaMsgs"); if (am) am.onchange = () => { cfg.agua.msgs = am.value.split("\n").map(x => x.trim()).filter(Boolean).slice(0, 10); Store.save("perfil"); notifReagendar(); toast("Mensagens salvas"); };
   const ar = $("#aguaMsgsPadrao"); if (ar) ar.onclick = () => { cfg.agua.msgs = AGUA_MSGS.slice(); Store.save("perfil"); renderNotifCard(); notifReagendar(); };
 }
+/* ---------- sincronização em tempo real com o Painel Admin (Firebase Firestore) ---------- */
+let admSincRodando = false;
+async function dispararPushAdmin(m){
+  const hashId = 5000 + (Array.from(String(m.id || "")).reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0) & 0xfff);
+  const LN = NOTIF();
+  if (LN) {
+    try {
+      let pm = await LN.checkPermissions();
+      if (pm.display !== "granted") pm = await LN.requestPermissions();
+      if (pm.display === "granted") {
+        await LN.schedule({ notifications: [{ id: hashId, title: m.titulo || "Equilibrium", body: m.corpo || "", schedule: { at: new Date(Date.now() + 900), allowWhileIdle: true }, extra: { rota: m.rota || "diario" } }] });
+        return;
+      }
+    } catch(e){}
+  }
+  if ("Notification" in window) {
+    try {
+      if (Notification.permission === "granted") new Notification(m.titulo || "Equilibrium", { body: m.corpo || "", icon: "icone-180.png" });
+    } catch(e){}
+  }
+}
+async function adminSincronizar(){
+  if (admSincRodando || navigator.onLine === false) return;
+  admSincRodando = true;
+  try {
+    const r = await fbFetch(`${FB_DOCS}/publico?pageSize=20`, { cache: "no-store" }, 10000);
+    if (!r || !r.ok) { admSincRodando = false; return; }
+    const j = await r.json(), docs = j.documents || [];
+    let mudou = false;
+    for (const d of docs) {
+      const id = (d.name || "").split("/").pop(), o = fbDocToObj(d), ts = +o.ts || 0;
+      if (!o.json) continue;
+      if (id === "alimentos" && ts > (ADM_REMOTO.tsAlim || 0)) {
+        ADM_REMOTO.alimentos = JSON.parse(o.json) || []; ADM_REMOTO.tsAlim = ts; FOODS_CACHE = null; mudou = true;
+      } else if (id === "receitas" && ts > (ADM_REMOTO.tsRec || 0)) {
+        ADM_REMOTO.receitas = JSON.parse(o.json) || []; ADM_REMOTO.tsRec = ts; mudou = true;
+      } else if (id === "listas" && ts > (ADM_REMOTO.tsListas || 0)) {
+        const listas = JSON.parse(o.json) || [], naBusca = [];
+        try {
+          const antigas = (await IDB.all()).filter(x => String(x.id).startsWith("adm_"));
+          for (const a of antigas) await IDB.del(a.id);
+          for (const l of listas) {
+            if (Array.isArray(l.rows) && l.rows.length) await IDB.put({ id: "adm_" + l.id, nome: l.nome + " (Oficial)", data: l.data || ts, rows: l.rows });
+            if (l.naBusca && Array.isArray(l.rows)) l.rows.forEach(rw => { if (rw[1] && rw[6] != null) naBusca.push({ id: "adml-" + rw[0], ean: String(rw[0]), nome: rw[1], marca: rw[2] || "", porcaoG: rw[4] || null, porcaoNome: rw[5] || "1 porção", kcal: rw[6], p: rw[7] || 0, c: rw[8] || 0, g: rw[9] || 0, fib: rw[10], na: rw[11], cat: l.nome, fonte: l.nome }); });
+          }
+          LISTAS_MAP = null;
+        } catch(e){}
+        ADM_REMOTO.listasBusca = naBusca; ADM_REMOTO.tsListas = ts; FOODS_CACHE = null; mudou = true;
+      } else if (id === "mensagens" && ts > (ADM_REMOTO.tsMsg || 0)) {
+        const msgs = JSON.parse(o.json) || [];
+        ADM_REMOTO.mensagens = msgs; ADM_REMOTO.tsMsg = ts; mudou = true;
+        const hoje = iso(new Date()), vistos = pref.get("admPushVistos", []);
+        for (const m of msgs) {
+          if (m && m.ativa !== false && m.push && !vistos.includes(m.id) && (!m.expira || m.expira >= hoje)) {
+            vistos.push(m.id); pref.set("admPushVistos", vistos);
+            dispararPushAdmin(m);
+          }
+        }
+      }
+    }
+    if (mudou) { salvarAdmRemoto(); if (typeof renderAll === "function") renderAll(); }
+  } catch(e){}
+  admSincRodando = false;
+}
+setTimeout(adminSincronizar, 1800);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) adminSincronizar(); });
+window.addEventListener("focus", adminSincronizar);
+setInterval(() => { if (!document.hidden) adminSincronizar(); }, 45000);
+
 (() => {
   const LN = NOTIF(); if (!LN) return;
   try { LN.addListener("localNotificationActionPerformed", ev => { const r = ev && ev.notification && ev.notification.extra && ev.notification.extra.rota; day = iso(new Date()); location.hash = "#" + (r || "diario"); renderAll(); }); } catch(e){}
