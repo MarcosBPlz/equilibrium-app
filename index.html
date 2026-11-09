@@ -195,6 +195,7 @@ main{padding:28px 24px 110px;max-width:808px;width:100%;margin:0 auto;display:fl
 .fi button.pick:hover{background:var(--sunk)}
 .fi .t{font-weight:500}
 .fi .s{font-size:.8rem;color:var(--muted)}
+.fi .uso{font-size:.75rem;font-weight:600;color:var(--cal);margin-top:2px}
 .star{border:0;background:transparent;cursor:pointer;font-size:1.15rem;color:var(--line);width:34px;height:34px;border-radius:8px}
 .star[aria-pressed="true"]{color:var(--carb)}
 .badge{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:6px;background:var(--sunk);color:var(--muted);vertical-align:1px;margin-right:4px}
@@ -763,7 +764,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
       <div class="card" id="listasCard"></div>
       <div class="card" id="dataCard"></div>
-      <div class="card"><label class="switch-row" for="comunidadeSw"><span><b>Base colaborativa</b><br><span class="small muted">Busca produtos cadastrados por outros usuários e compartilha os que você cadastrar pelo código de barras. Só vão código, nome, marca e tabela nutricional; nada sobre você.</span></span><input type="checkbox" id="comunidadeSw"></label></div>
+      <div class="card"><label class="switch-row" for="comunidadeSw"><span><b>Base colaborativa</b><br><span class="small muted">Mostra na busca os alimentos cadastrados por outros usuários e compartilha os que você cadastrar pelo código de barras, pela foto do prato ou pela foto da tabela. Só vão código, nome, marca e tabela nutricional; nada sobre você.</span></span><input type="checkbox" id="comunidadeSw"></label></div>
       <details class="card" id="notifBox"><summary style="cursor:pointer;font-weight:700">Notificações e lembretes</summary><div id="notifCard" style="margin-top:12px"></div></details>
       <div class="card"><h2>Sobre</h2><p class="hint" style="margin:0">Equilibrium · alimentos da Tabela TACO (NEPA/Unicamp), preparações do IBGE (POF 2008-2009) e produtos do Open Food Facts (ODbL). As metas são estimativas e não substituem a orientação de um nutricionista ou médico. <a href="https://marcosbplz.github.io/equilibrium-app/privacidade.html" target="_blank" rel="noopener">Política de privacidade</a></p></div>
       <div class="card"><h2>Configuração inicial</h2><p class="hint" style="margin:0 0 10px">Refaz as três telas de boas-vindas e recalcula a meta.</p><button class="btn" id="redoOnb" style="margin-top:12px">Rever a configuração inicial</button></div>
@@ -835,7 +836,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-09T17:33:05Z";
+const BIB_EMBUTIDA = "2026-11-09T18:47:47Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -861,7 +862,7 @@ const CATS = [...new Set(TACO.map(f => f.cat))].sort((a,b) => a.localeCompare(b,
 const defaults = () => ({
   perfil: { sexo: null, idade: null, peso: null, altura: null, ativ: "leve", obj: "manter", intens: 0,
             meta: null, metaTipo: null, metaBase: null, macros: { p: 40, c: 40, g: 20 }, macrosPadrao: 2, fibra: 25 },
-  biblioteca: { proprios: [], correcoes: {}, receitas: [], refeicoes: [], favoritos: [], recentes: [], medidas: {} },
+  biblioteca: { proprios: [], correcoes: {}, receitas: [], refeicoes: [], favoritos: [], recentes: [], medidas: {}, comUsados: {} },
   peso: { entradas: [] },
   meses: {} // "2026-10": { dias: { "2026-10-28": { cafe:[...], ... } } }
 });
@@ -996,6 +997,17 @@ async function bibProdutos(gerado){ // base de produtos (código de barras) fica
 }
 const ADM_REMOTO = (() => { try { return Object.assign({ tsAlim: 0, alimentos: [], tsRec: 0, receitas: [], tsListas: 0, listasBusca: [], tsMsg: 0, mensagens: [] }, JSON.parse(localStorage.getItem("equilibrium.adminRemoto") || "{}")); } catch(e){ return { tsAlim: 0, alimentos: [], tsRec: 0, receitas: [], tsListas: 0, listasBusca: [], tsMsg: 0, mensagens: [] }; } })();
 function salvarAdmRemoto(){ try { localStorage.setItem("equilibrium.adminRemoto", JSON.stringify(ADM_REMOTO)); } catch(e){} }
+// biblioteca comunitária: alimentos sem código de barras cadastrados por outros usuários (foto do prato, foto da tabela).
+// cópia guardada no aparelho para funcionar sem internet; atualizada por comunidadeBibSincronizar()
+const COM_BIB_CHAVE = "equilibrium.comunidadeBib";
+let COM_BIB = (() => { try { const o = JSON.parse(localStorage.getItem(COM_BIB_CHAVE) || "null"); return o && Array.isArray(o.itens) ? o : { ts: 0, itens: [] }; } catch(e){ return { ts: 0, itens: [] }; } })();
+// chave do alimento = nome sem acento, minúsculo, sem o "(estimativa por foto)" do fim
+const chaveAlimento = nome => norm(String(nome || "").replace(/\s*\([^)]*\)\s*$/, "")).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+function comItemToFood(e){
+  const per100 = Object.assign(emptyPer100(), { kcal: e.kcal, p: e.p, c: e.c, g: e.g, fib: e.fib ?? null, na: e.na ?? null });
+  return { id: "cm-" + e.chave, nome: e.nome, cat: "Comunidade Equilibrium", tipo: "comunidade", comunidade: true, origem: e.origem || "manual", confirmacoes: e.confirmacoes || 1,
+    per100, porcoes: e.porcao ? [{ nome: "1 porção", g: e.porcao }] : [] };
+}
 function admItemToFood(a){
   const per100 = { kcal: +a.kcal || 0, p: +a.p || 0, c: +a.c || 0, g: +a.g || 0, fib: a.fib != null ? +a.fib : null, na: a.na != null ? +a.na : null, ca: null, fe: null, k: null, mg: null, zn: null, vitc: null, col: null };
   const base = { id: a.id || ("adm-" + norm(a.nome || "").replace(/[^a-z0-9]+/g, "").slice(0, 40)), nome: a.rede && !String(a.nome).includes(a.rede) ? `${a.nome} (${a.rede})` : (a.marca ? productName(a.nome, a.marca, "") : a.nome),
@@ -1009,13 +1021,19 @@ function montarAlimentos(){
   const taco = TACO.map(f => fixes[f.id] ? Object.assign({}, f, { per100: fixes[f.id].per100, porcoes: fixes[f.id].porcoes, corrigido: true, nota: fixes[f.id].nota }) : f);
   const rec = S.biblioteca.receitas.map(r => ({ id: r.id, nome: r.nome, cat: "Receitas", per100: recipePer100(r), porcoes: r.porcoes ? [{ nome: "1 porção", g: recipeYield(r) / r.porcoes }] : [], tipo: "receita" }));
   const oficiais = [...(ADM_REMOTO.alimentos || []), ...(ADM_REMOTO.listasBusca || [])].map(admItemToFood);
-  return [...S.biblioteca.proprios.map(f => Object.assign({ tipo: "proprio" }, f)), ...rec, ...oficiais, ...REDES_ALIM, ...taco];
+  let comAtiva = true; try { comAtiva = pref.get("comunidade", true); } catch(e){}
+  const meus = new Set(S.biblioteca.proprios.map(f => chaveAlimento(f.nome)));
+  const daBase = comAtiva ? COM_BIB.itens : [], naBase = new Set(daBase.map(e => e && e.chave));
+  const usados = Object.values(S.biblioteca.comUsados || {}).filter(e => e && !naBase.has(e.chave)); // os que você já usou ficam com você
+  const comunidade = [...daBase, ...usados].filter(e => e && e.chave && !meus.has(e.chave)).map(comItemToFood); // o que já é seu não aparece duas vezes
+  return [...S.biblioteca.proprios.map(f => Object.assign({ tipo: "proprio" }, f)), ...rec, ...oficiais, ...comunidade, ...REDES_ALIM, ...taco];
 }
 function findFood(id){ allFoods(); return FOODS_CACHE.byId.get(id); }
 function sourceLabel(f){
   if (f.tipo === "rede") return `<span class="badge rede">${esc(f.rede)}</span>`;
   if (f.tipo === "receita") return `<span class="badge rec">Receita</span>`;
   if (f.tipo === "oficial") return `<span class="badge taco">Equilibrium</span>`;
+  if (f.tipo === "comunidade") return `<span class="badge off">Comunidade</span>`;
   if (f.tipo === "proprio") return f.off ? `<span class="badge off">Open Food Facts</span>` : `<span class="badge user">Seu</span>`;
   if (f.corrigido) return `<span class="badge fix">${f.ibge ? "IBGE" : "TACO"} corrigido</span>`;
   return `<span class="badge taco">${f.ibge ? "IBGE" : "TACO"}</span>`;
@@ -1024,6 +1042,7 @@ function sourceText(f){
   if (f.tipo === "rede") return `Tabela nutricional oficial do ${f.rede}, ${f.unid ? "por unidade" : "por 100 g"} (consultada em ${f.coletado ? f.coletado.split("-").reverse().join("/") : "2026"})`;
   if (f.tipo === "receita") return "Receita sua, calculada a partir dos ingredientes";
   if (f.tipo === "oficial") return (f.fonte || "Catálogo oficial Equilibrium") + (f.ean ? ` · código ${f.ean}` : "");
+  if (f.tipo === "comunidade") return `Cadastrado por usuários do Equilibrium${f.origem === "foto" ? " a partir da foto do prato (valores estimados)" : f.origem === "rotulo" ? " a partir da tabela nutricional do rótulo" : ""} · ${f.confirmacoes >= 2 ? `confirmado por ${f.confirmacoes} pessoas` : "ainda não confirmado por outra pessoa"}. Confira os valores.`;
   if (f.tipo === "proprio") return (f.off ? "Open Food Facts (base colaborativa, licença ODbL). Confira com o rótulo" : "Cadastrado por você" + (f.fonte ? ` · fonte: ${f.fonte}` : "")) + (f.ean ? ` · código ${f.ean}` : "");
   if (f.corrigido) return `Corrigido por você a partir da TACO nº ${f.taco}` + (f.nota ? ` · ${f.nota}` : "");
   if (f.ibge) return "IBGE, POF 2008-2009 · Tabela de composição nutricional dos alimentos consumidos no Brasil · preparação já pronta";
@@ -1088,8 +1107,17 @@ function dayTotals(d){
 }
 function mealTotal(items){ return items.reduce((a, e) => a + (e.n.kcal || 0), 0); }
 function makeEntry(f, grams, porcao, med){
+  if (f.tipo === "comunidade") guardarComunitarioUsado(f);
   if (f.unid) return { id: uid(), ref: f.id, nome: f.nome, g: grams, un: true, porcao: porcao || "1 unidade", med: med || null, fonte: f.rede, n: scaled(f.per100, grams) };
-  return { id: uid(), ref: f.id, nome: f.nome, g: grams, porcao: porcao || null, med: med || null, fonte: f.tipo === "taco" ? (f.corrigido ? "TACO corrigido" : "TACO") : (f.tipo === "receita" ? "Receita" : "Seu"), n: scaled(f.per100, grams) };
+  return { id: uid(), ref: f.id, nome: f.nome, g: grams, porcao: porcao || null, med: med || null, fonte: f.tipo === "taco" ? (f.corrigido ? "TACO corrigido" : "TACO") : (f.tipo === "receita" ? "Receita" : f.tipo === "comunidade" ? "Comunidade" : "Seu"), n: scaled(f.per100, grams) };
+}
+
+function guardarComunitarioUsado(f){ // fica na sua biblioteca pessoal mesmo se sair da base comunitária
+  const u = S.biblioteca.comUsados || (S.biblioteca.comUsados = {}), pc = f.per100 || {};
+  const novo = { chave: f.id.slice(3), nome: f.nome, origem: f.origem || "manual", kcal: pc.kcal, p: pc.p, c: pc.c, g: pc.g, fib: pc.fib ?? null, na: pc.na ?? null,
+    porcao: f.porcoes && f.porcoes[0] ? f.porcoes[0].g : null, confirmacoes: f.confirmacoes || 1 };
+  if (JSON.stringify(u[f.id]) === JSON.stringify(novo)) return;
+  u[f.id] = novo; Store.save("biblioteca");
 }
 
 /* ---------- composição corporal (balança de bioimpedância) ---------- */
@@ -1383,14 +1411,36 @@ function renderBib(){
 document.querySelectorAll("#bibSeg [data-bib]").forEach(b => b.onclick = () => { bibTab = b.dataset.bib; renderBib(); });
 
 /* ---------- sugestões por hábito ---------- */
-function sugestoes(meal){
-  const cont = new Map(), hoje = iso(new Date());
-  for (let i = 1; i <= 60; i++) {
-    const dd = dayData(addDays(hoje, -i)); if (!dd || !dd[meal]) continue;
-    dd[meal].forEach(e => { if (e.ref) cont.set(e.ref, (cont.get(e.ref) || 0) + 1); });
+/* ---------- biblioteca pessoal: o que você usa e o que você cadastrou, na ordem do seu uso ---------- */
+// conta no diário inteiro quantas vezes cada alimento entrou em cada refeição
+function usoAlimentos(){
+  const uso = new Map();
+  for (const ym in S.meses) {
+    const dias = (S.meses[ym] || {}).dias || {};
+    for (const d in dias) {
+      const dd = dias[d];
+      chavesDia(dd).forEach(k => dd[k].forEach(e => {
+        if (!e || !e.ref) return;
+        let u = uso.get(e.ref); if (!u) uso.set(e.ref, u = { total: 0, ultimo: "", porRef: {} });
+        u.total++; u.porRef[k] = (u.porRef[k] || 0) + 1; if (d > u.ultimo) u.ultimo = d;
+      }));
+    }
   }
-  const foods = new Map(allFoods().map(f => [f.id, f]));
-  return [...cont.entries()].filter(([id, n]) => n >= 2 && foods.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id]) => foods.get(id));
+  return uso;
+}
+// meal = refeição que define a ordem; sem refeição, vale o total. Empate: total geral, depois o uso mais recente
+function bibliotecaPessoal(meal, uso){
+  uso = uso || usoAlimentos(); allFoods(); const byId = FOODS_CACHE.byId, ids = new Set(uso.keys());
+  FOODS_CACHE.list.forEach(f => { if (f.tipo === "proprio" || f.tipo === "receita" || f.corrigido) ids.add(f.id); });
+  return [...ids].map(id => byId.get(id)).filter(Boolean).map(f => {
+    const u = uso.get(f.id) || { total: 0, ultimo: "", porRef: {} };
+    return { f, n: meal ? u.porRef[meal] || 0 : u.total, total: u.total, ultimo: u.ultimo };
+  }).sort((a, b) => b.n - a.n || b.total - a.total || (a.ultimo < b.ultimo ? 1 : a.ultimo > b.ultimo ? -1 : 0) || a.f.nome.localeCompare(b.f.nome, "pt-BR"));
+}
+function notaUso(x, meal){
+  if (x.n) return `usado ${x.n}× ${meal ? "nesta refeição" : "no diário"}`;
+  if (x.total) return `usado ${x.total}× em outras refeições`;
+  return x.f.tipo === "receita" ? "sua receita, ainda não usada" : "cadastrado por você, ainda não usado";
 }
 
 /* ---------- preferências locais do diário ---------- */
@@ -1655,10 +1705,10 @@ $("#overlay").addEventListener("mousedown", e => { if (e.target.id === "overlay"
 
 /* ---------- adicionar ---------- */
 let addState = { meal: "almoco", tab: "recentes", q: "" };
-function openAdd(meal, q, tab){ addState.meal = meal || mealByHour(); addState.q = q || ""; addState.tab = tab || (sugestoes(addState.meal).length ? "sugestoes" : S.biblioteca.recentes.length ? "recentes" : "todos"); renderAddList(); }
+function openAdd(meal, q, tab){ addState.meal = meal || mealByHour(); addState.q = q || ""; addState.tab = tab || (bibliotecaPessoal(addState.meal).length ? "pessoal" : "todos"); renderAddList(); }
 function renderAddList(){
   const mealName = nomeRef(addState.meal);
-  const tabs = [...(sugestoes(addState.meal).length ? [["sugestoes","Para você"]] : []), ["recentes","Recentes"],["favoritos","Favoritos"],["fastfood","Fast food"],["meus","Meus"],["refeicoes","Refeições prontas"],["todos","Todos"]];
+  const tabs = [["pessoal","Minha biblioteca"],["recentes","Recentes"],["favoritos","Favoritos"],["fastfood","Fast food"],["refeicoes","Refeições prontas"],["todos","Todos"]];
   sheet(`Adicionar ao ${mealName.toLowerCase()}`,
     `<div class="meal-chips">${MEALS.map(([k, nm]) => `<button class="tab" data-addmeal="${k}" aria-pressed="${addState.meal === k}">${nm}</button>`).join("")}</div>
      <input class="search" id="addQ" type="search" placeholder="Buscar: arroz, feijão, banana..." value="${esc(addState.q)}" aria-label="Buscar alimento">
@@ -1666,7 +1716,7 @@ function renderAddList(){
      <ul class="list" id="addList"></ul>`,
     [["Escanear código de barras", () => openScanner("diario")], ["Adição rápida (kcal/macros)", openQuick], ["Criar alimento ou receita", openCriar]]);
   const q = $("#addQ");
-  document.querySelectorAll("[data-addmeal]").forEach(b => b.onclick = () => { addState.meal = b.dataset.addmeal; if (addState.tab === "sugestoes" && !sugestoes(addState.meal).length) addState.tab = "recentes"; renderAddList(); });
+  document.querySelectorAll("[data-addmeal]").forEach(b => b.onclick = () => { addState.meal = b.dataset.addmeal; renderAddList(); }); // a ordem da biblioteca pessoal muda com a refeição
   const preencher = adiar(fillAddList, 110);
   q.oninput = () => { addState.q = q.value; preencher(); document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-pressed", !q.value && b.dataset.tab === addState.tab)); };
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { addState.tab = b.dataset.tab; addState.q = ""; q.value = ""; document.querySelectorAll("[data-tab]").forEach(x => x.setAttribute("aria-pressed", x === b)); fillAddList(); });
@@ -1679,9 +1729,10 @@ function openCriar(){
   $("#crA").onclick = () => openFoodForm(null, () => renderAddList());
   $("#crR").onclick = () => openRecipeForm(null);
 }
-function foodRow(f, plus){
+function foodRow(f, plus, nota){
   const fav = S.biblioteca.favoritos.includes(f.id), pg = plus ? gramasPadrao(f) : null;
-  return `<li class="fi"><button class="pick" data-pick="${f.id}"><div class="t">${esc(f.nome)}</div><div class="s num">${sourceLabel(f)}${fmt(f.per100.kcal)} kcal · P ${fmt(f.per100.p, 1)} · C ${fmt(f.per100.c, 1)} · G ${fmt(f.per100.g, 1)} <span class="muted">${f.unid ? "por unidade" : "por 100 g"}</span></div></button>
+  nota = typeof nota === "string" ? nota : "";
+  return `<li class="fi"><button class="pick" data-pick="${f.id}"><div class="t">${esc(f.nome)}</div><div class="s num">${sourceLabel(f)}${fmt(f.per100.kcal)} kcal · P ${fmt(f.per100.p, 1)} · C ${fmt(f.per100.c, 1)} · G ${fmt(f.per100.g, 1)} <span class="muted">${f.unid ? "por unidade" : "por 100 g"}</span>${nota ? `<div class="uso">${esc(nota)}</div>` : ""}</div></button>
     <button class="star" data-star="${f.id}" aria-pressed="${fav}" aria-label="${fav ? "Remover dos favoritos" : "Favoritar"}">★</button>${plus ? `<button class="plus" data-plus="${f.id}" aria-label="Adicionar ${f.unid ? pg.qtd + " unidade" : fmt(pg.g) + " g"}">+<small>${f.unid ? pg.qtd + " un" : fmt(pg.g) + " g"}</small></button>` : ""}</li>`;
 }
 function fillAddList(){
@@ -1690,17 +1741,22 @@ function fillAddList(){
   let html = "";
   if (addState.q) {
     const visiveis = addState.tab === "fastfood" ? foods.filter(f => f.tipo === "rede") : foods.filter(f => f.tipo !== "rede");
-    const res = searchFoods(addState.q, visiveis).slice(0, 60);
+    const uso = usoAlimentos(), nUso = f => { const u = uso.get(f.id); return u ? (u.porRef[addState.meal] || 0) * 1000 + u.total : 0; };
+    const res = searchFoods(addState.q, visiveis).slice(0, 60).map((f, i) => [f, i]).sort((a, b) => nUso(b[0]) - nUso(a[0]) || a[1] - b[1]).map(x => x[0]);
     html = res.length ? res.map(f => foodRow(f, true)).join("") : `<li class="empty">Nada encontrado para “${esc(addState.q)}”. Use “Criar alimento” para cadastrar.</li>`;
+  } else if (addState.tab === "pessoal") {
+    const lst = bibliotecaPessoal(addState.meal);
+    html = lst.length ? lst.slice(0, 200).map(x => foodRow(x.f, true, notaUso(x, addState.meal))).join("")
+      : `<li class="empty">Sua biblioteca começa vazia. Os alimentos que você registrar no diário e os que você cadastrar aparecem aqui, dos mais usados nesta refeição para os menos usados.</li>`;
   } else if (addState.tab === "refeicoes") {
     const r = S.biblioteca.refeicoes;
     html = r.length ? r.map(m => `<li class="fi"><button class="pick" data-meal-pick="${m.id}"><div class="t">${esc(m.nome)}</div><div class="s num">${m.itens.length} itens · ${fmt(mealTotal(m.itens))} kcal</div></button><button class="star" data-del-meal="${m.id}" aria-label="Excluir refeição pronta" style="color:var(--muted)">✕</button></li>`).join("")
       : `<li class="empty">Nenhuma refeição pronta ainda. No diário, use ⋯ › “Salvar como refeição pronta”.</li>`;
   } else {
-    const especial = addState.tab === "fastfood" ? foods.filter(f => f.tipo === "rede") : addState.tab === "meus" ? foods.filter(f => f.tipo === "proprio" || f.tipo === "receita" || f.corrigido) : null;
-    const ids = addState.tab === "sugestoes" ? sugestoes(addState.meal).map(f => f.id) : addState.tab === "recentes" ? S.biblioteca.recentes : addState.tab === "favoritos" ? S.biblioteca.favoritos : null;
+    const especial = addState.tab === "fastfood" ? foods.filter(f => f.tipo === "rede") : null;
+    const ids = addState.tab === "recentes" ? S.biblioteca.recentes : addState.tab === "favoritos" ? S.biblioteca.favoritos : null;
     const list = especial || (ids ? ids.map(id => byId.get(id)).filter(Boolean) : foods.filter(f => f.tipo !== "rede").slice(0, 80));
-    html = list.length ? list.map(f => foodRow(f, true)).join("") : `<li class="empty">${addState.tab === "favoritos" ? "Toque na ★ de um alimento para favoritá-lo." : addState.tab === "meus" ? "Alimentos e receitas que você cadastrar aparecem aqui." : "Os alimentos que você registrar aparecem aqui."}</li>`;
+    html = list.length ? list.map(f => foodRow(f, true)).join("") : `<li class="empty">${addState.tab === "favoritos" ? "Toque na ★ de um alimento para favoritá-lo." : "Os alimentos que você registrar aparecem aqui."}</li>`;
     if (!ids && !especial) html += `<li class="empty small">Mostrando os primeiros 80. Busque pelo nome para ver os ${foods.filter(f => f.tipo !== "rede").length}.</li>`;
     if (addState.tab === "fastfood") html = `<li class="empty small">Digite o nome do lanche ou da rede para filtrar (ex.: big mac, whopper, kfc).</li>` + html;
   }
@@ -1824,17 +1880,19 @@ function openQuick(entry, mealKey){
 /* ---------- render: alimentos ---------- */
 let lib = { q: "", tab: "todos", cat: "", limit: 60 };
 function renderLib(){
-  const tabs = [["todos","Todos"],["favoritos","Favoritos"],["meus","Meus e corrigidos"],["receitas","Receitas"]];
+  const tabs = [["todos","Todos"],["pessoal","Minha biblioteca"],["favoritos","Favoritos"],["receitas","Receitas"]];
   $("#libTabs").innerHTML = tabs.map(([k, l]) => `<button class="tab" data-ltab="${k}" aria-pressed="${lib.tab === k}">${l}</button>`).join("");
   $("#libCat").innerHTML = `<option value="">Todos os grupos</option>` + CATS.map(c => `<option ${lib.cat === c ? "selected" : ""}>${esc(c)}</option>`).join("");
   let list = allFoods();
   if (lib.tab === "favoritos") { const s = new Set(S.biblioteca.favoritos); list = list.filter(f => s.has(f.id)); }
-  if (lib.tab === "meus") list = list.filter(f => f.tipo === "proprio" || f.corrigido);
+  let notas = null;
+  if (lib.tab === "pessoal") { const pes = bibliotecaPessoal(null); list = pes.map(x => x.f); notas = new Map(pes.map(x => [x.f.id, notaUso(x, null)])); }
   if (lib.tab === "receitas") list = list.filter(f => f.tipo === "receita");
   if (lib.cat) list = list.filter(f => f.cat === lib.cat);
-  list = searchFoods(lib.q, list);
+  if (notas) { if (lib.q) { const ok = new Set(searchFoods(lib.q, list)); list = list.filter(f => ok.has(f)); } } // mantém a ordem de uso
+  else list = searchFoods(lib.q, list);
   const shown = list.slice(0, lib.limit);
-  $("#libList").innerHTML = shown.length ? shown.map(foodRow).join("") : `<li class="empty">${lib.tab === "receitas" ? "Nenhuma receita ainda. Use “Nova receita”." : lib.tab === "meus" ? "Alimentos que você cadastrar ou corrigir aparecem aqui." : "Nada encontrado."}</li>`;
+  $("#libList").innerHTML = shown.length ? shown.map(f => foodRow(f, false, notas ? notas.get(f.id) : "")).join("") : `<li class="empty">${lib.tab === "receitas" ? "Nenhuma receita ainda. Use “Nova receita”." : lib.tab === "pessoal" ? "Os alimentos que você registrar no diário e os que você cadastrar ou corrigir aparecem aqui, dos mais usados para os menos usados." : "Nada encontrado."}</li>`;
   $("#libMore").innerHTML = list.length > lib.limit ? `<button class="btn sm" id="libMoreBtn">Mostrar mais (${fmt(list.length - lib.limit)} restantes)</button>` : `<span class="small muted">${fmt(list.length)} ${list.length === 1 ? "alimento" : "alimentos"}</span>`;
   const mb = $("#libMoreBtn"); if (mb) mb.onclick = () => { lib.limit += 100; renderLib(); };
   document.querySelectorAll("[data-ltab]").forEach(b => b.onclick = () => { lib.tab = b.dataset.ltab; lib.limit = 60; renderLib(); });
@@ -1862,6 +1920,9 @@ function openFoodDetail(id){
   } else if (f.tipo === "proprio") {
     acts.push(["Excluir", () => { S.biblioteca.proprios = S.biblioteca.proprios.filter(x => x.id !== f.id); Store.save("biblioteca"); closeSheet(); renderLib(); }, "danger"]);
     acts.push(["Editar", () => openFoodForm(f)]);
+  } else if (f.tipo === "comunidade") {
+    acts.push(["Corrigir", () => openFoodForm(null, saved => { if (saved) comunidadeEnviarAlimento(saved, f.origem); closeSheet(); renderLib(); },
+      { nome: f.nome, ean: "", per100: Object.assign({}, f.per100), porcoes: (f.porcoes || []).slice(), fonte: "Comunidade, corrigido por você" })]);
   } else if (f.tipo === "receita") {
     acts.push(["Excluir", () => { S.biblioteca.receitas = S.biblioteca.receitas.filter(x => x.id !== f.id); Store.save("biblioteca"); closeSheet(); renderLib(); }, "danger"]);
     acts.push(["Editar receita", () => openRecipeForm(S.biblioteca.receitas.find(r => r.id === f.id))]);
@@ -2401,6 +2462,64 @@ async function comunidadeEnviar(food){ // manda só os dados do produto; nada do
     return !!(r && r.ok);
   } catch(e){ return false; }
 }
+// manda para a biblioteca comunitária um alimento sem código de barras (com código, vai para os envios por código)
+// origem: "foto" (foto do prato), "rotulo" (foto da tabela) ou "manual". Só vão nome e tabela; nada do usuário
+async function comunidadeEnviarAlimento(food, origem){
+  if (food && /^\d{8,14}$/.test(String(food.ean || ""))) return comunidadeEnviar(food);
+  try {
+    if (!comunidadeAtiva() || !food) return false;
+    const pc = food.per100 || {};
+    if ([pc.kcal, pc.p, pc.c, pc.g].some(v => v == null || isNaN(+v))) return false;
+    const nome = String(food.nome || "").replace(/\s*\([^)]*\)\s*$/, "").trim().slice(0, 80), chave = chaveAlimento(nome);
+    if (nome.length < 2 || chave.length < 2) return false;
+    const a = await fbToken(); if (!a) return false;
+    const fields = { chave: { stringValue: chave }, uid: { stringValue: a.uid }, nome: { stringValue: nome },
+      origem: { stringValue: ["foto", "rotulo", "manual"].includes(origem) ? origem : "manual" }, ts: { doubleValue: Date.now() } };
+    const porcao = food.porcoes && food.porcoes[0] ? +food.porcoes[0].g : null;
+    const vals = { kcal: +pc.kcal, p: +pc.p, c: +pc.c, g: +pc.g, fib: pc.fib == null ? null : +pc.fib, na: pc.na == null ? null : +pc.na, porcao };
+    for (const k of FB_NUM) if (vals[k] != null && !isNaN(vals[k])) fields[k] = { doubleValue: Math.round(vals[k] * 10) / 10 };
+    const r = await fbFetch(`${FB_DOCS}/biblioteca/${chave}_${a.uid}`, { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${a.id}` }, body: JSON.stringify({ fields }) });
+    return !!(r && r.ok);
+  } catch(e){ return false; }
+}
+// junta os envios de todos os usuários: um alimento por nome; quando há valores diferentes, vale o grupo
+// com mais pessoas de acordo (mesma regra do código de barras); os seus próprios envios ficam de fora
+function comunidadeAgrupar(envios, meuUid){
+  const perto = (x, y) => ["kcal", "p", "c", "g"].every(k => Math.abs(x[k] - y[k]) <= Math.max(k === "kcal" ? 10 : 1, 0.05 * Math.max(x[k], y[k])));
+  const porChave = new Map();
+  envios.forEach(e => { if (!e || !e.chave || e.uid === meuUid || [e.kcal, e.p, e.c, e.g].some(v => typeof v !== "number")) return; if (!porChave.has(e.chave)) porChave.set(e.chave, []); porChave.get(e.chave).push(e); });
+  const itens = [];
+  porChave.forEach((lista, chave) => {
+    lista.sort((x, y) => (y.ts || 0) - (x.ts || 0));
+    let melhor = [];
+    lista.forEach(e => { const grupo = lista.filter(o => perto(e, o)); if (grupo.length > melhor.length) melhor = grupo; });
+    const e = melhor[0];
+    itens.push({ chave, nome: e.nome, origem: e.origem, kcal: e.kcal, p: e.p, c: e.c, g: e.g, fib: e.fib ?? null, na: e.na ?? null, porcao: e.porcao || null, confirmacoes: melhor.length });
+  });
+  return itens.sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
+}
+let comBibRodando = false;
+async function comunidadeBibSincronizar(forcar){
+  if (comBibRodando || !comunidadeAtiva() || navigator.onLine === false) return;
+  if (!forcar && Date.now() - (COM_BIB.ts || 0) < 10 * 60000) return; // no máximo a cada 10 min
+  comBibRodando = true;
+  try {
+    const a = await fbToken(); if (!a) return;
+    const docs = []; let pagina = "";
+    for (let i = 0; i < 6; i++) { // até 1.800 envios
+      const r = await fbFetch(`${FB_DOCS}/biblioteca?pageSize=300${pagina ? "&pageToken=" + encodeURIComponent(pagina) : ""}`, { headers: { Authorization: `Bearer ${a.id}` }, cache: "no-store" }, 12000);
+      if (!r || !r.ok) { if (!docs.length) return; break; }
+      const j = await r.json(); docs.push(...(j.documents || [])); pagina = j.nextPageToken; if (!pagina) break;
+    }
+    const itens = comunidadeAgrupar(docs.map(fbDocToObj), a.uid);
+    const mudou = JSON.stringify(itens) !== JSON.stringify(COM_BIB.itens);
+    COM_BIB = { ts: Date.now(), itens };
+    try { localStorage.setItem(COM_BIB_CHAVE, JSON.stringify(COM_BIB)); } catch(e){}
+    if (mudou) { FOODS_CACHE = null; BIB_VER++; if (typeof renderAll === "function") renderAll(); }
+  } catch(e){} finally { comBibRodando = false; }
+}
+setTimeout(() => comunidadeBibSincronizar(), 2500);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) comunidadeBibSincronizar(); });
 async function lookupCode(code){
   const vin = (S.biblioteca.vinculos || {})[code], fv = vin && findFood(vin);
   if (fv) return { food: fv, origem: "seu" };
@@ -3410,6 +3529,10 @@ function revisarPrato(m, foto, itens){
       if (!opcoes.length) opcoes = searchFoods(it.nome, redes).slice(0, 5);
     }
     if (!opcoes.length) opcoes = searchFoods(it.busca, geral).slice(0, 5);
+    if (!it.rede) { // alguém já cadastrou esse alimento pela foto: oferece o da comunidade também
+      const cm = geral.find(f => f.tipo === "comunidade" && f.id === "cm-" + chaveAlimento(it.nome));
+      if (cm && !opcoes.includes(cm)) opcoes.push(cm);
+    }
     const ia = Object.assign(emptyPer100(), { kcal: it.kcal100, p: it.p100, c: it.c100, g: it.g100 });
     return { it, opcoes, escolha: opcoes.length ? 0 : -1, g: Math.round(it.gramas / 5) * 5, un: 1, on: true, ia };
   });
@@ -3423,6 +3546,7 @@ function revisarPrato(m, foto, itens){
       if (!f) { // estimativa vira um alimento seu, para poder editar depois
         const salvo = { id: "u" + uid(), nome: L.it.nome + " (estimativa por foto)", cat: "Estimativas por foto", per100: L.ia, porcoes: [], fonte: "Estimativa por foto (Gemini)" };
         S.biblioteca.proprios.unshift(salvo); Store.save("biblioteca"); f = Object.assign({ tipo: "proprio" }, salvo);
+        comunidadeEnviarAlimento(salvo, "foto"); // entra também na biblioteca comunitária
       }
       const e = porUn(L) ? makeEntry(f, L.un * 100, L.un === 1 ? "1 unidade" : `${L.un} unidades`) : makeEntry(f, L.g); alvo.push(e); novos.push(e.id); pushRecent(f.id);
     });
@@ -3435,11 +3559,11 @@ function revisarPrato(m, foto, itens){
     sheet(`Prato · ${nomeRef(m)}`, `<div style="display:flex;gap:12px;align-items:center"><img src="${foto}" alt="" style="width:76px;height:76px;object-fit:cover;border-radius:14px">
       <div><b class="num" style="font-size:1.4rem">${fmt(tot.kcal)} kcal</b><div class="small muted num">P ${fmt(tot.p)} g · C ${fmt(tot.c)} g · G ${fmt(tot.g)} g</div><div class="small muted num">${iaUsoHoje()} de ${IA_LIMITE_DIA} análises por foto hoje</div></div></div>
       <div class="notice" style="margin:0"><p style="margin:0"><b>Os pesos foram estimados pela foto</b> e não têm a precisão de uma balança: a margem de erro costuma ficar entre 20% e 40% por item. Se você pesou, corrija os gramas abaixo.</p></div>
-      <p class="small muted" style="margin:0">Troque o alimento da tabela se precisar. Lanches de fast food usam a tabela oficial da rede, por unidade. Itens desmarcados não entram.</p>
+      <p class="small muted" style="margin:0">Troque o alimento da tabela se precisar. Lanches de fast food usam a tabela oficial da rede, por unidade. Itens desmarcados não entram.${comunidadeAtiva() ? " Os itens em “Estimativa da foto” também entram na biblioteca comunitária (só nome e tabela nutricional)." : ""}</p>
       ${linhas.map((L, i) => { const n = scaled(per(L), qtd(L)); return `<div class="ia-item">
         <input type="checkbox" data-ion="${i}" ${L.on ? "checked" : ""} aria-label="Incluir ${esc(L.it.nome)}">
         <div style="min-width:0"><b>${esc(L.it.nome)}</b>${L.it.confianca === "baixa" ? ` <span class="badge fix">confira</span>` : ""}<br>
-          <select data-iop="${i}" aria-label="Alimento da tabela">${L.opcoes.map((f, j) => `<option value="${j}" ${L.escolha === j ? "selected" : ""}>${esc(f.nome)}</option>`).join("")}<option value="-1" ${L.escolha < 0 ? "selected" : ""}>Estimativa da foto</option></select></div>
+          <select data-iop="${i}" aria-label="Alimento da tabela">${L.opcoes.map((f, j) => `<option value="${j}" ${L.escolha === j ? "selected" : ""}>${esc(f.nome)}${f.tipo === "comunidade" ? " (comunidade)" : ""}</option>`).join("")}<option value="-1" ${L.escolha < 0 ? "selected" : ""}>Estimativa da foto</option></select></div>
         ${porUn(L) ? `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="1" step="1" value="${L.un}" data-iu="${i}" style="width:60px" aria-label="Unidades de ${esc(L.it.nome)}">un</label>`
           : `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="0" step="5" value="${L.g}" data-ig="${i}" aria-label="Gramas de ${esc(L.it.nome)}">g</label>`}
         <div class="k num">${fmt(n.kcal)} kcal · P ${fmt(n.p, 1)} · C ${fmt(n.c, 1)} · G ${fmt(n.g, 1)} · ${L.escolha >= 0 ? sourceLabel(L.opcoes[L.escolha]) : `<span class="badge user">Estimativa</span>`}</div></div>`; }).join("")}`,
@@ -3454,7 +3578,9 @@ function revisarPrato(m, foto, itens){
 function fotoTabelaNovo(){
   const m = addState.meal;
   lerRotuloParaForm({ nome: "", ean: "", fonte: "Rótulo (lido por foto)", per100: emptyPer100(), porcoes: [] },
-    (dados, info) => openFoodForm(null, saved => { if (saved) { addState.meal = m; openQty(saved); } else closeSheet(); }, dados, info));
+    (dados, info) => openFoodForm(null, saved => {
+      if (saved) { comunidadeEnviarAlimento(saved, "rotulo").then(ok => { if (ok) toast("Alimento compartilhado com a comunidade"); }); addState.meal = m; openQty(saved); }
+      else closeSheet(); }, dados, info));
 }
 function cartaoSemana(){
   const hoje = iso(new Date()), mg = macroGoals(), meta = mg ? mg.kcal : null;
@@ -3875,7 +4001,7 @@ document.addEventListener("click", e => { if (!e.target.closest("#formulaTroca")
   toast(S.perfil.formula === "katch" ? "Usando Katch-McArdle: aplique a nova meta no aviso" : "Usando Mifflin–St Jeor"); });
 $("#ringBtn").onclick = () => { pref.set("anel", pref.get("anel", "restante") === "restante" ? "consumido" : "restante"); vibrar(8); renderDiary(); };
 $("#ringBtn").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#ringBtn").click(); } };
-$("#comunidadeSw").onchange = e => pref.set("comunidade", e.target.checked);
+$("#comunidadeSw").onchange = e => { pref.set("comunidade", e.target.checked); FOODS_CACHE = null; BIB_VER++; if (e.target.checked) comunidadeBibSincronizar(true); };
 $("#letraMaior").onchange = e => { aplicarLetra(e.target.checked); pref.set("letra", e.target.checked); S.perfil.letra = e.target.checked; Store.save("perfil"); };
 $("#redoOnb").onclick = () => openOnboarding(1);
 
