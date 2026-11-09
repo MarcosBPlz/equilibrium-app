@@ -836,7 +836,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-09T18:47:47Z";
+const BIB_EMBUTIDA = "2026-11-09T19:47:40Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function montarTaco(raw){
@@ -3729,7 +3729,8 @@ async function dispararPushAdmin(m){
       let pm = await LN.checkPermissions();
       if (pm.display !== "granted") pm = await LN.requestPermissions();
       if (pm.display === "granted") {
-        await LN.schedule({ notifications: [{ id: hashId, title: m.titulo || "Equilibrium", body: m.corpo || "", schedule: { at: new Date(Date.now() + 900), allowWhileIdle: true }, extra: { rota: m.rota || "diario" } }] });
+        // sem "schedule": o Android mostra na hora; com horário agendado ele vira alarme inexato e pode atrasar vários minutos
+        await LN.schedule({ notifications: [{ id: hashId, title: m.titulo || "Equilibrium", body: m.corpo || "", extra: { rota: m.rota || "diario" } }] });
         return;
       }
     } catch(e){}
