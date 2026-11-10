@@ -581,6 +581,92 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .toast{bottom:16px !important}
   #splash .sp-mark{width:110px;height:110px}
 }
+/* ---------- Agora: tela inicial de registro rápido ---------- */
+:root{--btn2:var(--sunk);--sub2:var(--muted);--pill-bd:var(--line);--over:#E36F5A}
+:root[data-tema="light"]{--btn2:#E2EBDA;--sub2:#3E5A47;--pill-bd:#123D2A;--over:#B23A26}
+:root[data-tema="espacial"]{--btn2:#1A2A4A;--sub2:#C3CCDA;--pill-bd:#34466A;--over:#F43F5E}
+:root[data-tema="rose"]{--btn2:#F8DCE6;--sub2:#6E3D51;--pill-bd:#B86A89;--over:#B4233F}
+:root:not([data-tema]),:root[data-tema="dark"]{--btn2:#2A2725;--sub2:#C9C0B4;--pill-bd:#4A443E}
+.nav .ag-ic{display:flex}
+main #p-agora{max-width:520px;margin:0 auto;width:100%}
+#p-agora.on{display:flex;min-height:calc(100dvh - 200px)}
+.ag-ola small{display:block;font-size:.78rem;color:var(--muted);font-weight:700}
+.ag-ola h1{margin:0;font-family:var(--display);font-weight:400;font-size:1.65rem;line-height:1.1}
+.ag-agua{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line);cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.ag-agua .gota{flex:0 0 36px;height:36px;border-radius:50%;background:var(--sunk);color:var(--agua);display:flex;align-items:center;justify-content:center}
+.ag-agua .gota svg{width:20px;height:20px}
+.ag-agua .inf{flex:1;min-width:0;font-size:.85rem;font-weight:800}
+.ag-agua .inf span{color:var(--muted);font-weight:500}
+.ag-copos{display:flex;gap:3px;margin-top:6px}.ag-copos i{flex:1;height:6px;border-radius:4px;background:var(--track)}.ag-copos i.on{background:var(--agua)}
+.ag-agua .mais{text-align:right;line-height:1.15}.ag-agua .mais b{display:block;font-size:.85rem;color:var(--agua)}.ag-agua .mais small{font-size:.66rem;color:var(--muted);font-weight:700}
+.ag-centro{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.ag-kcal{text-align:center;line-height:1}
+.ag-kcal b{display:block;font-family:var(--display);font-weight:400;font-size:2.4rem;color:var(--cal)}
+.ag-kcal > span{display:block;font-size:.78rem;color:var(--muted);font-weight:700;margin-top:4px}
+.ag-kcal.acima b,.ag-kcal .acima{color:var(--over)}
+.ag-box{position:relative;flex:none;width:clamp(190px, min(82vw, calc(100dvh - 450px - var(--ad-h, 0px))), 330px);aspect-ratio:1;margin:0 auto}
+.ag-box > svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ag-box > svg circle{transition:stroke-dashoffset .7s ease}
+.ag-bola{position:absolute;inset:6%;border-radius:50%;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--bg);container-type:size}
+.ag-half{all:unset;box-sizing:border-box;cursor:pointer;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;width:100%;transition:filter .15s;-webkit-tap-highlight-color:transparent}
+.ag-half:active{filter:brightness(.92)}.ag-half:focus-visible{outline:3px solid var(--ink);outline-offset:-6px}
+.ag-half svg{width:34px;height:34px;width:min(34px, 12.5cqw);height:min(34px, 12.5cqw);margin-bottom:2px}
+.ag-half b{font-size:1.12rem;font-size:min(1.12rem, 6.6cqw);font-weight:800;line-height:1.2}.ag-half span{font-size:.74rem;font-size:min(.74rem, 4.6cqw);font-weight:700;line-height:1.3}
+.ag-half.cima{background:var(--accent);color:var(--accent-ink);padding:6% 0 11%}
+.ag-half.baixo{background:var(--btn2);color:var(--ink);padding:11% 0 6%}.ag-half.baixo span{color:var(--sub2)}
+.ag-div{flex:0 0 3px;background:var(--bg)}
+.ag-ref{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--surface);color:var(--ink);border:1.5px solid var(--pill-bd);box-shadow:0 0 0 3px var(--bg);border-radius:999px;padding:6px 10px 6px 12px;font-size:.76rem;font-weight:800;white-space:nowrap;display:flex;gap:5px;align-items:center}
+.ag-ref svg{width:14px;height:14px;color:var(--accent);flex:none}
+.ag-mac{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ag-mac small{font-size:.7rem;color:var(--muted);font-weight:700}
+.ag-mac p{margin:2px 0 5px;font-size:.82rem;font-weight:800}.ag-mac em{font-style:normal;color:var(--muted);font-weight:500;font-size:.7rem}
+.ag-mac .mb{height:6px;border-radius:9px;background:var(--track);overflow:hidden}.ag-mac .mb i{display:block;height:100%;border-radius:9px;transition:width .6s}
+.ag-ult{text-align:center;font-size:.76rem;color:var(--muted);font-weight:700;min-height:1.2em}
+.ag-ult b{color:var(--accent)}
+.ag-ov{position:fixed;z-index:40;overflow:hidden;display:flex;left:0;top:0;width:100%;height:100%}
+.ag-ov[hidden]{display:none !important}
+.ag-fade{opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s}
+.ag-ov.pronto .ag-fade{opacity:1;transform:none}
+.ag-pan{all:unset;box-sizing:border-box;cursor:pointer;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 14px}
+.ag-pan:active{filter:brightness(.92)}
+.ag-pan .ag-fade{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ag-pan svg{width:56px;height:56px}
+.ag-pan b{font-size:1.3rem;font-weight:800;line-height:1.15}.ag-pan span{font-size:.82rem;font-weight:700;line-height:1.35}
+.ag-topo{position:absolute;left:0;right:0;top:calc(18px + env(safe-area-inset-top));display:flex;justify-content:center;align-items:center;pointer-events:none}
+.ag-ov.pronto .ag-topo{pointer-events:auto}
+.ag-x{all:unset;box-sizing:border-box;cursor:pointer;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--ink);border:1.5px solid var(--pill-bd);flex:none}
+.ag-x svg{width:20px;height:20px}
+.ag-chip{background:var(--surface);color:var(--ink);border:1.5px solid var(--pill-bd);border-radius:999px;padding:6px 12px;font-size:.76rem;font-weight:800;display:flex;gap:5px;align-items:center}
+.ag-chip svg{width:14px;height:14px;color:var(--accent)}
+.ag-txb{flex:1 1 0;min-height:0;background:var(--btn2);transition:background .35s;overflow:hidden}
+.ag-ov.pronto .ag-txb{background:var(--bg)}
+.ag-txc{height:100%;box-sizing:border-box;padding:calc(18px + env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) calc(18px + var(--ad-b, 0px)) max(18px, env(safe-area-inset-left));display:flex;flex-direction:column;gap:12px;overflow:auto;max-width:560px;margin:0 auto}
+.ag-txc h2{margin:0;font-family:var(--display);font-weight:400;font-size:1.75rem;line-height:1.1}
+.ag-ta{box-sizing:border-box;display:block;width:100%;min-height:96px;resize:none;background:var(--surface);color:var(--ink);border:1.5px solid var(--pill-bd);border-radius:18px;padding:14px 16px;font:500 16px/1.45 var(--body)}
+.ag-ta::placeholder{color:var(--muted)}
+.ag-ta:focus{outline:2px solid var(--accent);outline-offset:1px}
+.ag-big{all:unset;box-sizing:border-box;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px;width:100%;padding:14px;border-radius:16px;font-weight:800;font-size:.95rem;background:var(--accent);color:var(--accent-ink)}
+.ag-big svg{width:18px;height:18px}
+.ag-big.sec{background:transparent;color:var(--ink);border:1.5px solid var(--pill-bd);padding:12.5px 14px;margin-top:-4px}
+.ag-big.sec svg{color:var(--accent)}
+.ag-err{font-size:.82rem;color:var(--over);font-weight:700;margin-top:-6px}
+.ag-lbl{font-size:.7rem;font-weight:800;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin:2px 0 -2px}
+.ag-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.ag-row .nm{flex:1;min-width:0}.ag-row .nm b{display:block;font-size:.88rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-row .nm small{font-size:.74rem;color:var(--muted);font-weight:700}
+.ag-row .kc{font-size:.8rem;font-weight:800;color:var(--cal);white-space:nowrap}
+.ag-mini{all:unset;box-sizing:border-box;cursor:pointer;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 34px;background:var(--accent);color:var(--accent-ink)}
+.ag-mini svg{width:18px;height:18px}
+@media (max-width:860px){
+  .nav a.agora{color:var(--accent);padding-top:0;background:none !important}
+  .nav a.agora .ag-ic{width:54px;height:54px;margin-top:-28px;border-radius:50%;border:4px solid var(--bg);background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.22);box-sizing:border-box}
+  .nav a.agora .ag-ic svg{width:24px;height:24px}
+  #p-agora.on{min-height:calc(100dvh - 190px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--ad-h, 0px))}
+}
+@media (orientation:landscape) and (max-height:560px){
+  .nav a.agora .ag-ic{margin-top:0 !important;width:44px !important;height:44px !important}
+  .ag-box{width:min(42vh, 260px)}
+}
+@media (prefers-reduced-motion:reduce){.ag-box > svg circle,.ag-mac .mb i,.ag-fade,.ag-txb{transition:none}}
 </style>
 </head>
 <body>
@@ -622,7 +708,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="nav">
       <a href="#diario" data-nav="diario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2v4M16 2v4M4 10h16"/></svg>Diário</a>
       <a href="#biblioteca" data-nav="biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21c-5 0-8-3.5-8-8 0-3 2-5 4.5-5 1.5 0 2.5.7 3.5.7S14 8 15.5 8C18 8 20 10 20 13c0 4.5-3 8-8 8Z"/><path d="M12 8c0-2.5 1-4.5 3-5"/></svg>Receitas</a>
-      <button class="fab" id="fab" aria-label="Registrar: adicionar alimento ou escanear">+</button>
+      <a href="#agora" data-nav="agora" class="agora" aria-label="Agora: registro rápido"><span class="ag-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>Agora</a>
       <a href="#progresso" data-nav="progresso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M6 16l4-5 3 3 5-7"/></svg>Progresso</a>
       <a href="#perfil" data-nav="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Perfil</a>
     </div>
@@ -632,6 +718,30 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </nav>
 
   <main>
+    <!-- AGORA: tela inicial de registro rápido -->
+    <section class="page" id="p-agora" aria-labelledby="agOla">
+      <div class="ag-ola"><small id="agData"></small><h1 id="agOla">Olá!</h1></div>
+      <div class="ag-agua" id="agAgua" role="button" tabindex="0" aria-label="Água: toque para adicionar 250 ml, segure para outras quantidades">
+        <span class="gota"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.4c3.2 4.2 6.6 8 6.6 11.8a6.6 6.6 0 0 1-13.2 0C5.4 10.4 8.8 6.6 12 2.4z"/></svg></span>
+        <div class="inf">Água <span id="agAguaTxt"></span><div class="ag-copos" id="agCopos"></div></div>
+        <div class="mais"><b>+250</b><small>segure p/ mais</small></div>
+      </div>
+      <div class="ag-centro">
+        <div class="ag-kcal" id="agKcal"><b id="agKcalN">0</b><span id="agKcalSub"></span></div>
+        <div class="ag-box">
+          <svg viewBox="0 0 300 300" aria-hidden="true"><circle cx="150" cy="150" r="144" fill="none" stroke="var(--track)" stroke-width="9"/><circle id="agArc" cx="150" cy="150" r="144" fill="none" stroke="var(--cal)" stroke-width="9" stroke-linecap="round" stroke-dasharray="904.8" stroke-dashoffset="904.8"/><circle id="agArcAcima" cx="150" cy="150" r="144" fill="none" stroke="var(--over)" stroke-width="9" stroke-linecap="round" stroke-dasharray="904.8" stroke-dashoffset="904.8"/></svg>
+          <div class="ag-bola" id="agBola">
+            <button class="ag-half cima" id="agFoto" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><b>Registre por foto</b><span>Código ou prato</span></button>
+            <div class="ag-div"></div>
+            <button class="ag-half baixo" id="agTexto" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg><b>Registre por texto</b><span>Escreva o que comeu</span></button>
+          </div>
+          <button class="ag-ref" id="agRef" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="agRefTxt"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        </div>
+        <div class="ag-mac" id="agMac"></div>
+        <div class="ag-ult" id="agUlt" aria-live="polite"></div>
+      </div>
+    </section>
+
     <!-- DIÁRIO -->
     <section class="page" id="p-diario" aria-labelledby="h-diario">
       <div class="head">
@@ -766,6 +876,30 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   </main>
 </div>
 
+<div class="ag-ov" id="agSplit" hidden role="dialog" aria-modal="true" aria-label="Registrar por foto">
+  <button class="ag-pan" id="agCod" type="button" style="background:var(--accent);color:var(--accent-ink)"><span class="ag-fade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 8v8M10 8v8M13 8v8M16 8v8"/></svg><b>Ler código de barras</b><span>Produto embalado</span></span></button>
+  <div style="flex:0 0 3px;background:var(--bg)"></div>
+  <button class="ag-pan" id="agPrato" type="button" style="background:var(--btn2);color:var(--ink)"><span class="ag-fade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="6"/><path d="M3 4v5a2 2 0 0 0 2 2V20M5 4v5M21 4c-1.5 0-2.5 1.5-2.5 4v4H21V20"/></svg><b>Fotografar o prato</b><span style="color:var(--sub2)">Comida servida</span></span></button>
+  <div class="ag-topo ag-fade">
+    <button class="ag-x" id="agSplitX" type="button" aria-label="Voltar" style="position:absolute;left:max(18px, env(safe-area-inset-left))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="ag-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="agRefNome"></span></div>
+  </div>
+</div>
+<div class="ag-ov" id="agTxt" hidden role="dialog" aria-modal="true" aria-label="Registrar por texto" style="flex-direction:column">
+  <div class="ag-txb"><div class="ag-txc ag-fade">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button class="ag-x" id="agTxtX" type="button" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <button class="ag-ref" id="agRef2" type="button" style="position:static;transform:none;box-shadow:none" aria-label="Trocar refeição"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="agRefNome"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    </div>
+    <h2 id="agTxtH">O que você comeu?</h2>
+    <textarea class="ag-ta" id="agFrase" rows="3" maxlength="400" placeholder="2 ovos mexidos, 1 pão francês e café com leite" aria-labelledby="agTxtH"></textarea>
+    <button class="ag-big" id="agEntender" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Entender a frase</button>
+    <button class="ag-big sec" id="agBiblio" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>Buscar na biblioteca</button>
+    <div class="ag-err" id="agErr" hidden></div>
+    <div id="agLista" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div></div>
+  <div id="agTxtMetade" style="flex:0 0 auto;height:0;background:var(--accent)"></div>
+</div>
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheet">
     <div class="sheet-h"><button class="icon-btn" id="sheetBack" aria-label="Voltar" hidden>←</button><h2 id="sheetTitle"></h2><button class="icon-btn" id="sheetClose" aria-label="Fechar">✕</button></div>
@@ -832,7 +966,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-10T14:50:46Z";
+const BIB_EMBUTIDA = "2026-11-10T16:14:19Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -1563,6 +1697,7 @@ function renderGoalNotice(target){
   });
 }
 function renderDiary(){
+  try { renderAgora(); } catch(e){ console.error(e); }
   try { renderAguaCard(); } catch(e){}
   atualizarHoje();
   renderWeek(); renderWeightCard();
@@ -1904,10 +2039,6 @@ $("#libCat").onchange = e => { lib.cat = e.target.value; lib.limit = 60; renderL
 $("#newFood").onclick = () => openFoodForm(null);
 $("#scanLib").onclick = () => openScanner("biblioteca");
 function mealByHour(){ const h = new Date().getHours() + new Date().getMinutes() / 60, r = refeicoes(); let at = r[0]; r.forEach(x => { if ((x.hora ?? 0) <= h) at = x; }); return at.k; }
-$("#fab").onclick = () => {
-  if (location.hash !== "#diario" && location.hash !== "") location.hash = "#diario";
-  abrirRapido(mealByHour());
-};
 $("#newRecipe").onclick = () => openRecipeForm(null);
 
 function openFoodDetail(id){
@@ -3252,7 +3383,7 @@ const ANUNCIO = {
   banner: "ca-app-pub-3940256099942544/9214589741",
   telaCheia: "ca-app-pub-3940256099942544/1033173712",
   intervalo: 3 * 60 * 1000, // o primeiro sai na primeira troca de tela; depois, pelo menos 3 minutos entre um e outro
-  folga: 6,                 // espaço (px) entre o banner e a barra de navegação
+  folga: 12,                // espaço (px) entre o banner e a barra de navegação: longe o bastante para evitar clique acidental
   ativo: false, bannerOk: false, telaCheiaPronta: false, carregando: false, ultimo: 0, escondido: false
 };
 const ADMOB = () => NATIVO && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
@@ -3360,7 +3491,7 @@ async function renderListasCard(){
 }
 
 /* ---------- navegação ---------- */
-const PAGES = { diario: "p-diario", biblioteca: "p-alimentos", progresso: "p-progresso", perfil: "p-perfil", dispositivos: "p-disp" };
+const PAGES = { agora: "p-agora", diario: "p-diario", biblioteca: "p-alimentos", progresso: "p-progresso", perfil: "p-perfil", dispositivos: "p-disp" };
 const ALIAS = { alimentos: "biblioteca", metas: "perfil", ajustes: "perfil", extras: "biblioteca" };
 let paginaAtual = null;
 
@@ -3486,8 +3617,25 @@ function reduzirFoto(dataUrl, lado){
     c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL("image/jpeg", .82)); };
     im.onerror = () => res(dataUrl); im.src = dataUrl; });
 }
+const IA_PROMPT_TEXTO = `Você é nutricionista. A pessoa descreveu em texto o que comeu. Liste CADA alimento separadamente (nunca junte: "arroz, feijão e bife" são três itens).
+Para cada item informe:
+- nome: nome curto em português do Brasil, como o brasileiro chama (ex.: "Ovo mexido", "Pão francês", "Café com leite").
+- busca: 2 a 4 palavras sem acento para buscar numa tabela tipo TACO (ex.: "ovo galinha mexido", "pao trigo frances", "cafe com leite").
+- gramas: peso da porção descrita. Use as quantidades e medidas que a pessoa escreveu (unidades, colheres, conchas, fatias, copos); se não disser, use uma porção média brasileira.
+- kcal100, p100, c100, g100: calorias e gramas de proteína, carboidrato e gordura por 100 g do alimento como foi descrito.
+- confianca: alta se a quantidade foi dita, media se precisou estimar, baixa se o alimento é vago.
+- rede: se o item for um lanche identificável de rede de fast food (McDonald's, Burger King, Subway, KFC, Habib's, Giraffas, Popeyes, Pizza Hut), escreva o nome da rede; senão deixe vazio. Nesse caso use em "nome" e "busca" o nome do produto como a rede vende e em "gramas" o peso de uma unidade.
+Se o texto não descrever comida ou bebida, devolva itens vazio. Não invente itens que não foram citados.
+
+Texto: `;
 async function iaAnalisarPrato(dataUrl){
-  const img = await reduzirFoto(dataUrl, 1024), b64 = img.split(",")[1];
+  const img = await reduzirFoto(dataUrl, 1024);
+  return iaGerar([{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: img.split(",")[1] } }]);
+}
+async function iaAnalisarTexto(frase){
+  return iaGerar([{ text: IA_PROMPT_TEXTO + String(frase).slice(0, 400) }]);
+}
+async function iaGerar(parts){
   if (navigator.onLine === false) throw new Error("sem conexão");
   const inicio = Date.now();
   let r = null, demorou = false, ultimoErro = null;
@@ -3500,7 +3648,7 @@ async function iaAnalisarPrato(dataUrl){
     try {
       r = await fetch(`https://firebasevertexai.googleapis.com/v1beta/projects/${FB.proj}/models/${modelo.id}:generateContent`, { method: "POST", signal: ctl.signal,
         headers: { "Content-Type": "application/json", "x-goog-api-key": FB.key },
-        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: b64 } }] }], generationConfig: gen }) });
+        body: JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: gen }) });
     } catch(e){ r = null; if (e && e.name === "AbortError") demorou = true; } // AbortError = estourou o tempo; outro erro = rede
     clearTimeout(t);
     if (r && r.ok) break;
@@ -3536,7 +3684,7 @@ async function fotoPrato(m){
   if (!itens.length) return sheet("Foto do prato", `<p style="margin:0">Não identifiquei comida nessa foto. Tente de novo com o prato inteiro enquadrado e boa luz.</p>`, [["Tentar de novo", () => fotoPrato(m), "primary"], ["Fechar", closeSheet]]);
   revisarPrato(m, foto, itens);
 }
-function revisarPrato(m, foto, itens){
+function revisarPrato(m, foto, itens, frase){ // foto = dataURL (prato) ou null quando veio do registro por texto
   const todos = allFoods().filter(f => f.tipo !== "receita"), geral = todos.filter(f => f.tipo !== "rede"), redes = todos.filter(f => f.tipo === "rede");
   const linhas = itens.map(it => {
     let opcoes = [];
@@ -3561,9 +3709,9 @@ function revisarPrato(m, foto, itens){
     linhas.filter(L => L.on && qtd(L) > 0).forEach(L => {
       let f = L.escolha >= 0 ? L.opcoes[L.escolha] : null;
       if (!f) { // estimativa vira um alimento seu, para poder editar depois
-        const salvo = { id: "u" + uid(), nome: L.it.nome + " (estimativa por foto)", cat: "Estimativas por foto", per100: L.ia, porcoes: [], fonte: "Estimativa por foto (Gemini)" };
+        const salvo = { id: "u" + uid(), nome: L.it.nome + (foto ? " (estimativa por foto)" : " (estimativa por texto)"), cat: foto ? "Estimativas por foto" : "Estimativas por texto", per100: L.ia, porcoes: [], fonte: foto ? "Estimativa por foto (Gemini)" : "Estimativa por texto (Gemini)" };
         S.biblioteca.proprios.unshift(salvo); Store.save("biblioteca"); f = Object.assign({ tipo: "proprio" }, salvo);
-        comunidadeEnviarAlimento(salvo, "foto"); // entra também na biblioteca comunitária
+        if (foto) comunidadeEnviarAlimento(salvo, "foto"); // entra também na biblioteca comunitária
       }
       const e = porUn(L) ? makeEntry(f, L.un * 100, L.un === 1 ? "1 unidade" : `${L.un} unidades`) : makeEntry(f, L.g); alvo.push(e); novos.push(e.id); pushRecent(f.id);
     });
@@ -3573,18 +3721,19 @@ function revisarPrato(m, foto, itens){
   };
   const draw = () => {
     const tot = linhas.filter(L => L.on).reduce((a, L) => { const n = scaled(per(L), qtd(L)); ["kcal", "p", "c", "g"].forEach(k => a[k] += n[k] || 0); return a; }, { kcal: 0, p: 0, c: 0, g: 0 });
-    sheet(`Prato · ${nomeRef(m)}`, `<div style="display:flex;gap:12px;align-items:center"><img src="${foto}" alt="" style="width:76px;height:76px;object-fit:cover;border-radius:14px">
-      <div><b class="num" style="font-size:1.4rem">${fmt(tot.kcal)} kcal</b><div class="small muted num">P ${fmt(tot.p)} g · C ${fmt(tot.c)} g · G ${fmt(tot.g)} g</div><div class="small muted num">${iaUsoHoje()} de ${IA_LIMITE_DIA} análises por foto hoje</div></div></div>
-      <div class="notice" style="margin:0"><p style="margin:0"><b>Os pesos foram estimados pela foto</b> e não têm a precisão de uma balança: a margem de erro costuma ficar entre 20% e 40% por item. Se você pesou, corrija os gramas abaixo.</p></div>
-      <p class="small muted" style="margin:0">Troque o alimento da tabela se precisar. Lanches de fast food usam a tabela oficial da rede, por unidade. Itens desmarcados não entram.${comunidadeAtiva() ? " Os itens em “Estimativa da foto” também entram na biblioteca comunitária (só nome e tabela nutricional)." : ""}</p>
+    sheet(`${foto ? "Prato" : "Texto"} · ${nomeRef(m)}`, `<div style="display:flex;gap:12px;align-items:center">${foto ? `<img src="${foto}" alt="" style="width:76px;height:76px;object-fit:cover;border-radius:14px">` : ""}
+      <div><b class="num" style="font-size:1.4rem">${fmt(tot.kcal)} kcal</b><div class="small muted num">P ${fmt(tot.p)} g · C ${fmt(tot.c)} g · G ${fmt(tot.g)} g</div><div class="small muted num">${iaUsoHoje()} de ${IA_LIMITE_DIA} análises com IA hoje</div></div></div>
+      ${foto ? "" : `<p class="small muted" style="margin:0">“${esc(frase || "")}”</p>`}
+      <div class="notice" style="margin:0"><p style="margin:0"><b>Os pesos foram estimados ${foto ? "pela foto" : "pela sua descrição"}</b> e não têm a precisão de uma balança: a margem de erro costuma ficar entre 20% e 40% por item. Se você pesou, corrija os gramas abaixo.</p></div>
+      <p class="small muted" style="margin:0">Troque o alimento da tabela se precisar. Lanches de fast food usam a tabela oficial da rede, por unidade. Itens desmarcados não entram.${foto && comunidadeAtiva() ? " Os itens em “Estimativa da foto” também entram na biblioteca comunitária (só nome e tabela nutricional)." : ""}</p>
       ${linhas.map((L, i) => { const n = scaled(per(L), qtd(L)); return `<div class="ia-item">
         <input type="checkbox" data-ion="${i}" ${L.on ? "checked" : ""} aria-label="Incluir ${esc(L.it.nome)}">
         <div style="min-width:0"><b>${esc(L.it.nome)}</b>${L.it.confianca === "baixa" ? ` <span class="badge fix">confira</span>` : ""}<br>
-          <select data-iop="${i}" aria-label="Alimento da tabela">${L.opcoes.map((f, j) => `<option value="${j}" ${L.escolha === j ? "selected" : ""}>${esc(f.nome)}${f.tipo === "comunidade" ? " (comunidade)" : ""}</option>`).join("")}<option value="-1" ${L.escolha < 0 ? "selected" : ""}>Estimativa da foto</option></select></div>
+          <select data-iop="${i}" aria-label="Alimento da tabela">${L.opcoes.map((f, j) => `<option value="${j}" ${L.escolha === j ? "selected" : ""}>${esc(f.nome)}${f.tipo === "comunidade" ? " (comunidade)" : ""}</option>`).join("")}<option value="-1" ${L.escolha < 0 ? "selected" : ""}>${foto ? "Estimativa da foto" : "Estimativa da IA"}</option></select></div>
         ${porUn(L) ? `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="1" step="1" value="${L.un}" data-iu="${i}" style="width:60px" aria-label="Unidades de ${esc(L.it.nome)}">un</label>`
           : `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="0" step="5" value="${L.g}" data-ig="${i}" aria-label="Gramas de ${esc(L.it.nome)}">g</label>`}
         <div class="k num">${fmt(n.kcal)} kcal · P ${fmt(n.p, 1)} · C ${fmt(n.c, 1)} · G ${fmt(n.g, 1)} · ${L.escolha >= 0 ? sourceLabel(L.opcoes[L.escolha]) : `<span class="badge user">Estimativa</span>`}</div></div>`; }).join("")}`,
-      [["Refazer foto", () => fotoPrato(m)], [`Adicionar ${refCom("a", m)}`, adicionar, "primary"]], closeSheet);
+      [[foto ? "Refazer foto" : "Escrever de novo", () => foto ? fotoPrato(m) : (closeSheet(), agoraTextoAbrir(frase))], [`Adicionar ${refCom("a", m)}`, adicionar, "primary"]], closeSheet);
     document.querySelectorAll("[data-ion]").forEach(c => c.onchange = () => { linhas[+c.dataset.ion].on = c.checked; draw(); });
     document.querySelectorAll("[data-iop]").forEach(s2 => s2.onchange = () => { linhas[+s2.dataset.iop].escolha = +s2.value; draw(); });
     document.querySelectorAll("[data-ig]").forEach(g => g.onchange = () => { linhas[+g.dataset.ig].g = Math.max(0, +g.value || 0); draw(); });
@@ -3989,8 +4138,169 @@ Object.assign(SHR, pref.get("shr", {}));
 $("#shareDay").onclick = e => { e.preventDefault(); e.stopPropagation(); abrirCompartilhar(); };
 $("#resumoToggle").onclick = () => { pref.set("resumoAberto", !pref.get("resumoAberto", false)); vibrar(8); renderDiary(); };
 
+/* ---------- Agora: tela inicial de registro rápido ---------- */
+// A bola dividida leva ao registro por foto (código de barras ou prato) e por texto (busca + Gemini).
+// O registro vai sempre para hoje, na refeição escolhida pela hora (ou na que a pessoa trocar no selo).
+const AG = { ref: null, conhecidos: null, dia: null, ultimo: null, ocupado: false };
+const AG_EASE = "cubic-bezier(.65,0,.35,1)";
+const agHoje = () => iso(new Date());
+const agRefAtual = () => (AG.ref && refeicoes().some(r => r.k === AG.ref)) ? AG.ref : mealByHour();
+const agSemAnimacao = () => matchMedia("(prefers-reduced-motion: reduce)").matches || !Element.prototype.animate || !$("#agBola").offsetWidth;
+function agIrParaHoje(){ if (day !== agHoje()) { day = agHoje(); atualizarHoje(); } }
+function renderAgora(){
+  const hoje = agHoje(), t = dayTotals(hoje), mg = macroGoals(), g = mg ? mg.kcal : null, C = 904.8, agora = new Date(), h = agora.getHours();
+  const nome = (S.perfil.nome || "").trim().split(" ")[0];
+  const data = agora.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).replace("-feira", "");
+  $("#agData").textContent = data.charAt(0).toUpperCase() + data.slice(1);
+  $("#agOla").textContent = `${h < 5 ? "Boa noite" : h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite"}${nome ? ", " + nome : ""}`;
+  // calorias: anel em volta da bola; passando da meta, o excedente aparece em tom de alerta
+  const acima = !!g && t.kcal > g, p = g ? t.kcal / g : 0;
+  $("#agKcalN").textContent = fmt(t.kcal);
+  $("#agKcal").classList.toggle("acima", acima);
+  $("#agKcalSub").innerHTML = g ? (acima ? `de ${fmt(g)} kcal · <span class="acima">${fmt(t.kcal - g)} acima</span>` : `de ${fmt(g)} kcal · faltam ${fmt(g - t.kcal)}`) : `kcal hoje · <a href="#perfil">defina sua meta</a>`;
+  $("#agArc").style.strokeDashoffset = C * (1 - Math.min(p, 1));
+  $("#agArcAcima").style.strokeDashoffset = p > 1 ? C * (1 - Math.min(p - 1, 1)) : C;
+  $("#agMac").innerHTML = [["Proteína", "p", "prot"], ["Carbo", "c", "carb"], ["Gordura", "g", "fat"]].map(([l, k, v]) => {
+    const meta = mg && mg[k], q = meta ? (t[k] || 0) / meta : 0;
+    return `<div><small>${l}</small><p class="num">${fmt(t[k] || 0)}<em> / ${meta ? fmt(meta) : "–"} g</em></p><div class="mb"><i style="width:${Math.min(q * 100, 100)}%;background:var(--${q > 1.05 ? "over" : v})"></i></div></div>`;
+  }).join("");
+  // água
+  const dd = dayData(hoje) || {}, ml = dd.agua || 0, meta = aguaMeta(), n = Math.max(1, Math.min(16, Math.round(meta / 250))), cheios = Math.min(n, Math.floor(ml / meta * n + 1e-9));
+  $("#agAguaTxt").textContent = `${fmt(ml / 1000, 2)} / ${fmt(meta / 1000, 1)} L${ml >= meta ? " · meta batida" : ""}`;
+  $("#agCopos").innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i < cheios ? "on" : ""}"></i>`).join("");
+  // refeição do próximo registro
+  const nm = nomeRef(agRefAtual());
+  $("#agRefTxt").textContent = nm; document.querySelectorAll(".agRefNome").forEach(e => e.textContent = nm);
+  $("#agRef").setAttribute("aria-label", `Refeição: ${nm}. Toque para trocar`);
+  $("#agFoto").setAttribute("aria-label", `Registrar por foto ${refCom("em", agRefAtual())}`);
+  $("#agTexto").setAttribute("aria-label", `Registrar por texto ${refCom("em", agRefAtual())}`);
+  // "Último": o que entrou hoje desde a última vez que a tela foi desenhada, venha de onde vier
+  const itens = []; chavesDia(dd).forEach(k => dd[k].forEach(e => itens.push([k, e])));
+  const ids = new Set(itens.map(([, e]) => e.id));
+  if (AG.conhecidos && AG.dia === hoje) {
+    const novos = itens.filter(([, e]) => !AG.conhecidos.has(e.id));
+    if (novos.length) { AG.ultimo = { k: novos[0][0], ids: novos.map(([, e]) => e.id), nome: novos.length > 1 ? `${novos.length} itens` : novos[0][1].nome.split(",")[0], kcal: novos.reduce((a, [, e]) => a + (e.n.kcal || 0), 0) }; AG.ref = null; }
+  } else AG.ultimo = null;
+  AG.conhecidos = ids; AG.dia = hoje;
+  if (AG.ultimo && !AG.ultimo.ids.some(id => ids.has(id))) AG.ultimo = null; // desfeito
+  $("#agUlt").innerHTML = AG.ultimo ? `<b aria-hidden="true">✓</b> Último · ${esc(nomeRef(AG.ultimo.k))}: ${esc(AG.ultimo.nome)} · <span class="num">${fmt(AG.ultimo.kcal)} kcal</span>` : "";
+}
+function agTrocarRef(){
+  const auto = mealByHour(), atual = agRefAtual();
+  sheet("Registrar em", `<p class="small muted" style="margin:0">Pela hora seria ${esc(nomeRef(auto)).toLowerCase()}. A troca vale para o próximo registro.</p>
+    <div style="display:flex;flex-direction:column;gap:8px">${refeicoes().map(r => `<button class="btn ${r.k === atual ? "primary" : ""}" type="button" data-agref="${esc(r.k)}" aria-pressed="${r.k === atual}" style="justify-content:space-between;min-height:48px">${esc(r.nome)}${r.k === auto ? `<small style="font-weight:600;opacity:.8">pela hora</small>` : ""}</button>`).join("")}</div>`, []);
+  document.querySelectorAll("[data-agref]").forEach(b => b.onclick = () => { AG.ref = b.dataset.agref === auto ? null : b.dataset.agref; closeSheet(); renderAgora(); vibrar(8); });
+}
+// animação: a bola gira e cresce até virar a tela cheia; ao fechar, faz o caminho de volta
+function agGeo(){
+  const b = $("#agBola").getBoundingClientRect();
+  return { d: b.width, bola: { left: b.left + "px", top: b.top + "px", width: b.width + "px", height: b.height + "px", borderRadius: b.width / 2 + "px" },
+    tela: { left: "0px", top: "0px", width: document.documentElement.clientWidth + "px", height: window.innerHeight + "px", borderRadius: "0px" } };
+}
+function agQuadros(de){ const g = agGeo(); return [{ ...g.bola, transform: `rotate(${de}deg)` }, { ...g.bola, transform: "rotate(0deg)", offset: .42 }, { ...g.tela, transform: "rotate(0deg)" }]; }
+function agLimpar(el){ el.getAnimations({ subtree: true }).forEach(a => a.cancel()); }
+function agAbrir(el, de, extra, fim){
+  if (AG.ocupado || !el.hidden) return;
+  AG.ocupado = true; agLimpar(el); el.hidden = false; el.classList.remove("pronto");
+  try { history.pushState({ ag: true }, ""); } catch(e){} // o voltar do Android fecha a tela cheia em vez de sair do app
+  const ok = () => { agLimpar(el); el.classList.add("pronto"); AG.ocupado = false; fim && fim(); }; // sem a animação, o CSS já deixa em tela cheia (e acompanha o teclado)
+  if (agSemAnimacao()) return ok();
+  vibrar(8); if (extra) extra(true);
+  el.animate(agQuadros(de), { duration: 820, easing: AG_EASE, fill: "forwards" }).onfinish = ok;
+}
+function agFechar(el, de, extra, fim){
+  if (el.hidden) { fim && fim(); return; }
+  if (AG.ocupado) return;
+  AG.ocupado = true; el.classList.remove("pronto");
+  if (history.state && history.state.ag) { AG.voltando = true; history.back(); } // tira a entrada criada ao abrir
+  if (document.activeElement && el.contains(document.activeElement)) document.activeElement.blur();
+  const ok = () => { el.hidden = true; agLimpar(el); AG.ocupado = false; fim && fim(); };
+  if (agSemAnimacao()) return ok();
+  setTimeout(() => { const r = agQuadros(de).reverse(); r[1].offset = .58; agLimpar(el); if (extra) extra(false);
+    el.animate(r, { duration: 640, easing: AG_EASE, fill: "forwards" }).onfinish = ok; }, 160); // espera o teclado baixar para medir a bola no lugar certo
+}
+function agoraFecharSemAnimar(){ ["#agSplit", "#agTxt"].forEach(s => { const el = $(s); if (el && !el.hidden) { agLimpar(el); el.hidden = true; el.classList.remove("pronto"); } }); AG.ocupado = false; }
+const agMetade = ida => { const h = agGeo().d / 2 + "px"; $("#agTxtMetade").animate(ida ? [{ height: h }, { height: h, offset: .42 }, { height: "0px" }] : [{ height: "0px" }, { height: h, offset: .58 }, { height: h }], { duration: ida ? 820 : 640, easing: AG_EASE, fill: "forwards" }); };
+// foto: tela dividida entre código de barras (leitor do Google) e foto do prato (Gemini)
+$("#agFoto").onclick = () => agAbrir($("#agSplit"), 90, null, () => $("#agCod").focus({ preventScroll: true }));
+$("#agSplitX").onclick = () => agFechar($("#agSplit"), 90);
+$("#agCod").onclick = () => agFechar($("#agSplit"), 90, null, () => { agIrParaHoje(); addState.meal = agRefAtual(); scanCtx = "diario"; if (NATIVO) scanNativo(); else openScanner("diario"); });
+$("#agPrato").onclick = () => agFechar($("#agSplit"), 90, null, () => { agIrParaHoje(); fotoPrato(agRefAtual()); });
+// texto: busca na base enquanto digita + "Entender a frase" com o Gemini
+function agoraTextoAbrir(frase){
+  $("#agFrase").value = frase || ""; $("#agErr").hidden = true; agLista();
+  agAbrir($("#agTxt"), -180, agMetade, () => { try { $("#agFrase").focus({ preventScroll: true }); } catch(e){} });
+}
+const agFecharTexto = fim => agFechar($("#agTxt"), -180, agMetade, fim);
+$("#agTexto").onclick = () => agoraTextoAbrir("");
+$("#agTxtX").onclick = () => agFecharTexto();
+$("#agRef").onclick = agTrocarRef; $("#agRef2").onclick = agTrocarRef;
+function agLista(){
+  const q = $("#agFrase").value.trim(), el = $("#agLista");
+  const ult = q.split(/[,;+\n]|\s+e\s+/).pop().trim();
+  let res = [], titulo = "";
+  if (!q) { res = (S.biblioteca.recentes || []).map(id => findFood(id)).filter(Boolean).slice(0, 5); titulo = "Recentes"; }
+  else if (ult.length >= 2) { const r0 = searchFoods(ult, allFoods()); res = r0.filter(f => f.tipo !== "rede").concat(r0.filter(f => f.tipo === "rede")).slice(0, 6); titulo = "Na sua base"; } // alimento comum antes de lanche de rede
+  el.innerHTML = res.length ? `<div class="ag-lbl">${titulo}</div>` + res.map(f => `<div class="ag-row"><div class="nm"><b>${esc(f.nome)}</b><small class="num">${fmt(f.per100.kcal)} kcal por ${f.unid ? "unidade" : "100 g"}</small></div><button class="ag-mini" type="button" data-agadd="${esc(f.id)}" aria-label="Adicionar ${esc(f.nome)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`).join("") : "";
+  el.querySelectorAll("[data-agadd]").forEach(b => b.onclick = () => { const f = findFood(b.dataset.agadd); if (!f) return; const m = agRefAtual(); agFecharTexto(() => { agIrParaHoje(); addState.meal = m; openQty(f); }); });
+}
+// biblioteca completa do app (abas, favoritos, fast food, refeições prontas), já buscando o último item digitado
+$("#agBiblio").onclick = () => {
+  const termo = $("#agFrase").value.trim().split(/[,;+\n]|\s+e\s+/).pop().trim().replace(/^(\d+([.,]\d+)?|um|uma|dois|duas|três|tres|meio|meia)\s+/i, ""), m = agRefAtual();
+  agFecharTexto(() => { agIrParaHoje(); openAdd(m, termo); });
+};
+let agBuscaT = null;
+$("#agFrase").oninput = () => { $("#agErr").hidden = true; clearTimeout(agBuscaT); agBuscaT = setTimeout(agLista, 160); };
+function iaMsgErro(msg){
+  return msg === "limite" ? "O limite gratuito de análises com IA foi atingido agora. Tente de novo em alguns minutos." : msg === "ocupado" ? "O serviço de análise do Google está sobrecarregado agora. Tente de novo em alguns minutos."
+    : msg === "demorou" ? "A análise demorou mais que o normal e foi interrompida. Tente de novo; costuma levar poucos segundos." : msg === "sem conexão" ? "Sem internet: entender a frase precisa de conexão." : "Não consegui entender a frase agora.";
+}
+async function agEntender(frase, m){
+  agIrParaHoje();
+  sheet("Entendendo a frase…", `<p style="margin:0">“${esc(frase)}”</p><p class="small muted" style="margin:0">Separando os alimentos e estimando as porções. Leva alguns segundos.</p>`, []);
+  const deNovo = () => { closeSheet(); agoraTextoAbrir(frase); };
+  let itens;
+  try { itens = await iaAnalisarTexto(frase); iaContar(); }
+  catch(e){ return sheet("Registro por texto", `<p style="margin:0">${iaMsgErro(String(e && e.message))}</p><p class="small muted" style="margin:0">A busca da tela de texto funciona mesmo sem a IA.</p>`, [["Escrever de novo", deNovo, "primary"], ["Fechar", closeSheet]]); }
+  if (!itens.length) return sheet("Registro por texto", `<p style="margin:0">Não encontrei comida nessa frase. Tente algo como “2 ovos mexidos e 1 pão francês”.</p>`, [["Escrever de novo", deNovo, "primary"], ["Fechar", closeSheet]]);
+  revisarPrato(m, null, itens, frase);
+}
+$("#agEntender").onclick = () => {
+  const frase = $("#agFrase").value.trim(), err = $("#agErr"), m = agRefAtual();
+  const avisar = t => { err.textContent = t; err.hidden = false; };
+  if (!frase) { avisar("Escreva o que você comeu primeiro."); $("#agFrase").focus(); return; }
+  if (iaUsoHoje() >= IA_LIMITE_DIA) return avisar(`Você usou suas ${IA_LIMITE_DIA} análises com IA de hoje. Use a busca abaixo ou volte amanhã.`);
+  if (navigator.onLine === false) return avisar("Sem internet: entender a frase precisa de conexão. A busca abaixo funciona sem internet.");
+  agFecharTexto(() => {
+    if (pref.get("iaTextoOk", false)) return agEntender(frase, m);
+    sheet("Registro por texto", `<p style="margin:0">O app separa cada alimento da frase, estima os gramas e calcula as calorias e os macros.</p>
+      <p class="small muted" style="margin:0">O texto é enviado ao Google Gemini só para essa análise e não fica guardado no Equilibrium. Os valores são estimativas: confira os gramas antes de adicionar.</p>`,
+      [["Cancelar", () => { closeSheet(); agoraTextoAbrir(frase); }], ["Entendi, continuar", () => { pref.set("iaTextoOk", true); agEntender(frase, m); }, "primary"]]);
+  });
+};
+// água: toque soma 250 ml; segurar abre as outras quantidades
+(function(){
+  const el = $("#agAgua"); let t = null, longo = false;
+  const somar = () => { const d = agHoje(), dd = dayData(d, true); dd.agua = (dd.agua || 0) + 250; saveDay(d); vibrar(15); renderDiary();
+    toast(`+250 ml · ${fmt(dd.agua / 1000, 2)} L hoje`, { label: "Desfazer", fn: () => { dd.agua = Math.max(0, (dd.agua || 0) - 250); saveDay(d); renderDiary(); } }); };
+  el.addEventListener("pointerdown", () => { longo = false; clearTimeout(t); t = setTimeout(() => { longo = true; vibrar(30); agIrParaHoje(); openAgua(); }, 500); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => el.addEventListener(ev, () => clearTimeout(t)));
+  el.addEventListener("click", () => { if (longo) { longo = false; return; } somar(); });
+  el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); somar(); } });
+  el.addEventListener("contextmenu", e => e.preventDefault());
+})();
+document.addEventListener("keydown", e => { if (e.key !== "Escape" || $("#overlay").classList.contains("on")) return;
+  if (!$("#agTxt").hidden) agFecharTexto(); else if (!$("#agSplit").hidden) agFechar($("#agSplit"), 90); });
+window.addEventListener("popstate", () => {
+  if (AG.voltando) { AG.voltando = false; return; }
+  if (AG.ocupado) return;
+  if (!$("#agTxt").hidden) agFecharTexto(); else if (!$("#agSplit").hidden) agFechar($("#agSplit"), 90);
+});
+setInterval(() => { if (paginaAtual === "agora" && !document.hidden) renderAgora(); }, 60000); // virada de refeição/dia sem precisar tocar na tela
+
 function route(){
-  let h = location.hash.slice(1); h = ALIAS[h] || h; const pg = PAGES[h] ? h : "diario";
+  let h = location.hash.slice(1); h = ALIAS[h] || h; const pg = PAGES[h] ? h : "agora";
+  agoraFecharSemAnimar(); // voltar/trocar de tela com a tela cheia do registro aberta
   if (paginaAtual && paginaAtual !== pg) anuncioNaTrocaDeTela();
   paginaAtual = pg;
   Object.entries(PAGES).forEach(([k, id]) => $("#" + id).classList.toggle("on", k === pg));
@@ -3999,6 +4309,7 @@ function route(){
   if (pg === "progresso") renderProgress();
   if (pg === "perfil") { if (h === "ajustes") perfTab = "pref"; renderProfile(); renderPerfTabs(); }
   if (pg === "diario") renderDiary();
+  if (pg === "agora") renderAgora();
   if (pg === "dispositivos") renderDispositivos();
   document.querySelectorAll("[data-disp-open]").forEach(a => { if (pg === "dispositivos") a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
 }
@@ -4011,7 +4322,7 @@ function atualizarHoje(){
 }
 document.querySelectorAll("[data-hoje]").forEach(b => b.onclick = () => {
   day = iso(new Date());
-  if ((location.hash || "#diario") !== "#diario") location.hash = "#diario"; else renderDiary();
+  if (location.hash !== "#diario") location.hash = "#diario"; else renderDiary();
   atualizarHoje(); vibrar(8);
 });
 document.addEventListener("click", e => { if (!e.target.closest("#formulaTroca")) return;
