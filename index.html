@@ -195,6 +195,10 @@ main{padding:28px 24px 110px;max-width:808px;width:100%;margin:0 auto;display:fl
 .fi button.pick:hover{background:var(--sunk)}
 .fi .t{font-weight:500}
 .fi .s{font-size:.8rem;color:var(--muted)}
+.fi .s b.k{color:var(--ink);font-weight:700}
+.fi .pick .mac{margin-top:3px}
+.fi .edit{flex:none;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;border:1.5px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer}
+.fi .edit:active{background:var(--accent-soft);color:var(--accent)}
 .fi .uso{font-size:.75rem;font-weight:600;color:var(--cal);margin-top:2px}
 .star{border:0;background:transparent;cursor:pointer;font-size:1.15rem;color:var(--line);width:34px;height:34px;border-radius:8px}
 .star[aria-pressed="true"]{color:var(--carb)}
@@ -787,7 +791,7 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
           <button class="btn primary" id="newFood">Novo alimento</button>
       </div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <input class="search" id="libSearch" type="search" placeholder="Buscar entre 591 alimentos da TACO e os seus" aria-label="Buscar alimentos">
+        <input class="search" id="libSearch" type="search" placeholder="Buscar alimento" aria-label="Buscar alimentos">
         <div class="row wrap">
           <div class="tabs" id="libTabs"></div>
           <select class="field" id="libCat" style="width:auto;margin-left:auto" aria-label="Filtrar por grupo"></select>
@@ -820,7 +824,7 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
       <div id="perfMetas" class="perf-pane">
       <div class="card">
         <h2>Seus dados</h2>
-        <label for="fNome" style="margin-bottom:12px">Seu nome (opcional)<input class="field" id="fNome" autocomplete="given-name" placeholder="Para a saudação no Diário"></label>
+        <label for="fNome" style="margin-bottom:12px">Seu nome (opcional)<input class="field" id="fNome" autocomplete="given-name" placeholder="Ex.: Ana"></label>
         <div class="grid2" style="margin-bottom:12px">
           <label>Sexo (usado na fórmula)
             <div class="seg" id="sexSeg"><button type="button" data-v="f">Feminino</button><button type="button" data-v="m">Masculino</button></div>
@@ -891,7 +895,7 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
       <button class="ag-ref" id="agRef2" type="button" style="position:static;transform:none;box-shadow:none" aria-label="Trocar refeição"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="agRefNome"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     </div>
     <h2 id="agTxtH">O que você comeu?</h2>
-    <textarea class="ag-ta" id="agFrase" rows="3" maxlength="400" placeholder="2 ovos mexidos, 1 pão francês e café com leite" aria-labelledby="agTxtH"></textarea>
+    <textarea class="ag-ta" id="agFrase" rows="3" maxlength="400" placeholder="Ex.: 2 ovos e 1 pão" aria-labelledby="agTxtH"></textarea>
     <button class="ag-big" id="agEntender" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Entender a frase</button>
     <button class="ag-big sec" id="agBiblio" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>Buscar na biblioteca</button>
     <div class="ag-err" id="agErr" hidden></div>
@@ -964,7 +968,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-10T17:07:40Z";
+const BIB_EMBUTIDA = "2026-11-10T21:04:26Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -1349,7 +1353,7 @@ function openAgua(){
   const draw = () => {
     sheet("Água", `<p style="margin:0"><b class="num" style="font-size:1.6rem">${fmt(dd.agua / 1000, 2)} L</b> <span class="muted num">de ${fmt(aguaMeta() / 1000, 1)} L · ${dateLabel(day)}</span></p>
       <div class="agua-btns">${[150, 250, 350, 500, 750, 1000].map(ml => `<button class="btn" data-ml="${ml}">+ ${ml >= 1000 ? "1 L" : ml + " ml"}</button>`).join("")}</div>
-      <div class="row"><input class="field num grow" id="aguaMl" type="number" inputmode="numeric" placeholder="Outra quantidade (ml)" aria-label="Quantidade em ml"><button class="btn" id="aguaAdd">Adicionar</button></div>`,
+      <div class="row"><input class="field num grow" id="aguaMl" type="number" inputmode="numeric" placeholder="Outro (ml)" aria-label="Quantidade em ml"><button class="btn" id="aguaAdd">Adicionar</button></div>`,
       [["Tirar 250 ml", () => { dd.agua = Math.max(0, dd.agua - 250); saveDay(day); renderDiary(); draw(); }], ["Pronto", () => closeSheet(), "primary"]]);
     document.querySelectorAll("[data-ml]").forEach(b => b.onclick = () => { dd.agua += +b.dataset.ml; saveDay(day); renderDiary(); draw(); });
     $("#aguaAdd").onclick = () => { const v = +$("#aguaMl").value; if (v > 0) { dd.agua += v; saveDay(day); renderDiary(); draw(); } };
@@ -1580,7 +1584,7 @@ function renderReceitas(){
   receitasSincronizar();
   el.innerHTML = `
     <div class="row" style="gap:8px;flex-wrap:nowrap">
-      <input class="search" id="recQ" type="search" placeholder="Nome ou ingrediente" value="${esc(recF.q)}" aria-label="Buscar receita por nome ou ingrediente" style="flex:1;min-width:0">
+      <input class="search" id="recQ" type="search" placeholder="Buscar receita" value="${esc(recF.q)}" aria-label="Buscar receita por nome ou ingrediente" style="flex:1;min-width:0">
       <button class="btn primary" id="recNova" type="button" style="white-space:nowrap">+ Compartilhar</button>
     </div>
     <div class="meal-chips">${[["", "Todas"], ...REC_CATS].map(([k, n]) => `<button class="tab" type="button" data-rcat="${k}" aria-pressed="${recF.cat === k}">${n}</button>`).join("")}</div>
@@ -1691,14 +1695,14 @@ function openReceitaForm(){
       `<label class="btn" for="rcFoto" style="flex-direction:row;font-size:1rem;color:inherit;justify-content:center">${d.thumb ? "Trocar foto" : "Adicionar foto"}<input id="rcFoto" type="file" accept="image/*" hidden></label>
        ${d.thumb ? `<img src="${esc(d.thumb)}" alt="" style="width:100%;max-width:240px;aspect-ratio:1;object-fit:cover;border-radius:12px;align-self:center">` : ""}
        ${minhas.length ? `<label for="rcMinha">Usar uma receita sua<select class="field" id="rcMinha"><option value="">Escolher…</option>${minhas.map(m => `<option value="${esc(m.id)}">${esc(m.nome)}</option>`).join("")}</select></label>` : ""}
-       <label for="rcTit">Nome da receita<input class="field" id="rcTit" maxlength="80" value="${esc(d.titulo)}" placeholder="Ex.: Panqueca de banana com whey"></label>
+       <label for="rcTit">Nome da receita<input class="field" id="rcTit" maxlength="80" value="${esc(d.titulo)}" placeholder="Ex.: Panqueca fit"></label>
        <div><span class="small muted">Categorias (até 4)</span><div class="chips" style="margin-top:6px">${REC_CATS.map(([k, n]) => `<button class="tab" type="button" data-fcat="${k}" aria-pressed="${d.categorias.includes(k)}">${n}</button>`).join("")}</div></div>
        <h3>Ingredientes</h3>
        <ul class="list">${d.itens.map((i, ix) => { const f = findFoodRaw(i.id) || i.snap; return `<li class="fi"><div class="grow"><div class="t">${esc(f ? f.nome : "Alimento removido")}</div></div><input class="field num" style="width:90px" type="number" min="0" value="${i.g}" data-fig="${ix}" aria-label="Gramas"><span class="small muted">g</span><button class="star" style="color:var(--muted)" data-firm="${ix}" aria-label="Remover ingrediente">✕</button></li>`; }).join("") || `<li class="empty">Busque e adicione cada ingrediente com o peso.</li>`}</ul>
-       <input class="search" id="rcBusca" type="search" placeholder="Adicionar ingrediente..." aria-label="Buscar ingrediente">
+       <input class="search" id="rcBusca" type="search" placeholder="Buscar ingrediente" aria-label="Buscar ingrediente">
        <ul class="list" id="rcRes"></ul>
        <div class="grid2"><label for="rcRende">Rende quantas porções<input class="field num" id="rcRende" type="number" min="1" max="50" value="${d.rende}"></label>
-         <label for="rcPn">Nome da porção<input class="field" id="rcPn" maxlength="30" value="${esc(d.porcaoNome)}" placeholder="porção, fatia, unidade"></label></div>
+         <label for="rcPn">Nome da porção<input class="field" id="rcPn" maxlength="30" value="${esc(d.porcaoNome)}" placeholder="Ex.: fatia"></label></div>
        ${d.itens.length ? `<div class="nutri num"><div><b>${fmt(t.kcal / r)}</b><span>kcal/${esc(d.porcaoNome || "porção")}</span></div><div><b>${fmt(t.p / r, 1)} g</b><span>proteína</span></div><div><b>${fmt(t.c / r, 1)} g</b><span>carbo</span></div><div><b>${fmt(t.g / r, 1)} g</b><span>gordura</span></div></div>` : ""}
        <label for="rcPrep">Modo de preparo<textarea class="field" id="rcPrep" rows="5" placeholder="Um passo por linha">${esc(d.preparo)}</textarea></label>
        <label for="rcAutor">Seu nome ou apelido<input class="field" id="rcAutor" maxlength="30" value="${esc(d.autor)}" placeholder="Opcional"></label>`,
@@ -2072,7 +2076,7 @@ function renderAddList(){
   const tabs = [["pessoal","Minha biblioteca"],["recentes","Recentes"],["favoritos","Favoritos"],["fastfood","Fast food"],["refeicoes","Refeições prontas"],["todos","Todos"]];
   sheet(`Adicionar ${refCom("a", addState.meal)}`,
     `<div class="meal-chips">${MEALS.map(([k, nm]) => `<button class="tab" data-addmeal="${k}" aria-pressed="${addState.meal === k}">${nm}</button>`).join("")}</div>
-     <input class="search" id="addQ" type="search" placeholder="Buscar: arroz, feijão, banana..." value="${esc(addState.q)}" aria-label="Buscar alimento">
+     <input class="search" id="addQ" type="search" placeholder="Buscar alimento" value="${esc(addState.q)}" aria-label="Buscar alimento">
      <div class="tabs">${tabs.map(([k, l]) => `<button class="tab" data-tab="${k}" aria-pressed="${addState.tab === k && !addState.q}">${l}</button>`).join("")}</div>
      <ul class="list" id="addList"></ul>`,
     [["Escanear código de barras", () => openScanner("diario")], ["Adição rápida (kcal/macros)", openQuick], ["Criar alimento ou receita", openCriar]]);
@@ -2085,15 +2089,24 @@ function renderAddList(){
   setTimeout(() => q.focus(), 40);
 }
 function openCriar(){
-  sheet("Criar", `<button class="btn" id="crA" style="justify-content:flex-start;min-height:56px;text-align:left"><span><b>Novo alimento</b><br><span class="small muted">Com os valores do rótulo, por 100 g</span></span></button>
+  sheet("Criar", `<button class="btn" id="crA" style="justify-content:flex-start;min-height:56px;text-align:left"><span><b>Novo alimento</b><br><span class="small muted">Com os valores do rótulo, da porção ou de 100 g</span></span></button>
     <button class="btn" id="crR" style="justify-content:flex-start;min-height:56px;text-align:left"><span><b>Nova receita</b><br><span class="small muted">O app soma os ingredientes e calcula por porção</span></span></button>`, [], renderAddList);
   $("#crA").onclick = () => openFoodForm(null, () => renderAddList());
   $("#crR").onclick = () => openRecipeForm(null);
 }
+function refLinha(f){ // quantidade mostrada na lista: a porção do rótulo/sua (ex.: 1 scoop = 30 g); senão 100 g
+  if (f.unid) return { g: 100, txt: "por unidade" };
+  const p = f.tipo !== "taco" && f.porcoes && f.porcoes[0];
+  if (p && p.g > 0 && p.g !== 100) return { g: p.g, txt: `por ${fmt(p.g, p.g % 1 ? 1 : 0)} g` };
+  return { g: 100, txt: "por 100 g" };
+}
+const podeEditar = f => f.tipo === "proprio";
 function foodRow(f, plus, nota){
   const fav = S.biblioteca.favoritos.includes(f.id), pg = plus ? gramasPadrao(f) : null;
   nota = typeof nota === "string" ? nota : "";
-  return `<li class="fi"><button class="pick" data-pick="${f.id}"><div class="t">${esc(f.nome)}</div><div class="s num">${sourceLabel(f)}${fmt(f.per100.kcal)} kcal · P ${fmt(f.per100.p, 1)} · C ${fmt(f.per100.c, 1)} · G ${fmt(f.per100.g, 1)} <span class="muted">${f.unid ? "por unidade" : "por 100 g"}</span>${nota ? `<div class="uso">${esc(nota)}</div>` : ""}</div></button>
+  const r = refLinha(f), n = r.g === 100 ? f.per100 : scaled(f.per100, r.g);
+  return `<li class="fi"><button class="pick" data-pick="${f.id}"><div class="t">${esc(f.nome)}</div><div class="s num">${sourceLabel(f)}<b class="k">${fmt(n.kcal)}</b> kcal · ${r.txt}</div>${macHtml(n)}${nota ? `<div class="uso">${esc(nota)}</div>` : ""}</button>
+    ${podeEditar(f) ? `<button class="edit" data-edit="${f.id}" aria-label="Editar ${esc(f.nome)}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>` : ""}
     <button class="star" data-star="${f.id}" aria-pressed="${fav}" aria-label="${fav ? "Remover dos favoritos" : "Favoritar"}">★</button>${plus ? `<button class="plus" data-plus="${f.id}" aria-label="Adicionar ${f.unid ? pg.qtd + " unidade" : fmt(pg.g) + " g"}">+<small>${f.unid ? pg.qtd + " un" : fmt(pg.g) + " g"}</small></button>` : ""}</li>`;
 }
 function fillAddList(){
@@ -2124,6 +2137,7 @@ function fillAddList(){
   ul.innerHTML = html;
   ul.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => openQty(byId.get(b.dataset.pick)));
   ul.querySelectorAll("[data-star]").forEach(b => b.onclick = () => { toggleFav(b.dataset.star); fillAddList(); });
+  ul.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => openFoodForm(byId.get(b.dataset.edit), () => renderAddList()));
   ul.querySelectorAll("[data-plus]").forEach(b => b.onclick = () => adicionarDireto(byId.get(b.dataset.plus)));
   ul.querySelectorAll("[data-meal-pick]").forEach(b => b.onclick = () => {
     const m = S.biblioteca.refeicoes.find(x => x.id === b.dataset.mealPick);
@@ -2176,7 +2190,7 @@ function wireQty(f, reabrir){
   $("#qSalvaMed").onclick = () => {
     const g = Number(gi.value) || 0; if (!g) return toast("Informe os gramas primeiro");
     sheet("Salvar minha medida", `<p style="margin:0">${esc(f.nome)}: <b class="num">${fmt(g)} g</b></p>
-      <label for="smNome">Nome da medida<input class="field" id="smNome" placeholder="Ex.: 1 concha da minha casa, 1 pote" value="${esc(med() ? med().nome.replace(" nivelada", "") + " (pesada)" : "")}"></label>
+      <label for="smNome">Nome da medida<input class="field" id="smNome" placeholder="Ex.: 1 concha" value="${esc(med() ? med().nome.replace(" nivelada", "") + " (pesada)" : "")}"></label>
       <p class="hint">Dica: pese o utensílio cheio do jeito que você costuma servir e desconte o peso do utensílio vazio.</p>`,
       [["Cancelar", reabrir], ["Salvar", () => {
         const nm = $("#smNome").value.trim(); if (!nm) return toast("Dê um nome à medida");
@@ -2198,7 +2212,7 @@ function wireQty(f, reabrir){
 function openQty(f, gForcado){
   const ms = medidasDe(f), ult = (S.biblioteca.ultimasG || {})[f.id];
   const def = gForcado || (ult && !f.unid) ? null : ms.find(m => m.tipo === "sua" || m.tipo === "rotulo" || m.tipo === "unidade") || null;
-  sheet(f.nome, qtyBody(f, gForcado || (def ? def.g : ult || 100), def ? def.nome : null, 1), [[`Adicionar ${refCom("a", addState.meal)}`, () => {
+  sheet(f.nome, qtyBody(f, gForcado || (def ? def.g : ult || 100), def ? def.nome : null, 1), [...(podeEditar(f) ? [["✎ Editar", () => openFoodForm(f, () => { const nf = findFood(f.id); nf ? openQty(nf) : renderAddList(); })]] : []), [`Adicionar ${refCom("a", addState.meal)}`, () => {
     const v = read(); if (!v.g) return toast("Informe a quantidade");
     const dAdd = day, mAdd = addState.meal, novo = makeEntry(f, v.g, v.porcao, v.med);
     lista(dayData(dAdd, true), mAdd).push(novo); saveDay(dAdd); pushRecent(f.id); lembrarGramas(f, v.g); vibrar();
@@ -2223,7 +2237,7 @@ function openEntry(m, id){
 function openQuick(entry, mealKey){
   const e = entry && entry.n ? entry : null;
   sheet(e ? "Editar adição rápida" : "Adição rápida",
-    `<label for="qkN">Descrição (opcional)<input class="field" id="qkN" value="${esc(e ? e.nome : "")}" placeholder="Ex.: café com leite na padaria"></label>
+    `<label for="qkN">Descrição (opcional)<input class="field" id="qkN" value="${esc(e ? e.nome : "")}" placeholder="Ex.: café na padaria"></label>
      <div class="grid2"><label for="qkK">Calorias (kcal)<input class="field num" id="qkK" type="number" min="0" inputmode="decimal" value="${e ? Math.round(e.n.kcal) : ""}"></label>
      <label for="qkP">Proteína (g)<input class="field num" id="qkP" type="number" min="0" step="0.1" inputmode="decimal" value="${e && e.n.p ? e.n.p : ""}"></label>
      <label for="qkC">Carboidrato (g)<input class="field num" id="qkC" type="number" min="0" step="0.1" inputmode="decimal" value="${e && e.n.c ? e.n.c : ""}"></label>
@@ -2262,6 +2276,7 @@ function renderLib(){
   document.querySelectorAll("[data-ltab]").forEach(b => b.onclick = () => { lib.tab = b.dataset.ltab; lib.limit = 60; renderLib(); });
   $("#libList").querySelectorAll("[data-pick]").forEach(b => b.onclick = () => openFoodDetail(b.dataset.pick));
   $("#libList").querySelectorAll("[data-star]").forEach(b => b.onclick = () => { toggleFav(b.dataset.star); renderLib(); });
+  $("#libList").querySelectorAll("[data-edit]").forEach(b => b.onclick = () => openFoodForm(findFood(b.dataset.edit)));
 }
 const libBuscar = adiar(renderLib, 110);
 $("#libSearch").oninput = e => { lib.q = e.target.value; lib.limit = 60; libBuscar(); };
@@ -2287,7 +2302,7 @@ function openFoodDetail(id){
           S.biblioteca.proprios = S.biblioteca.proprios.filter(x => x.id !== f.id); Store.save("biblioteca"); closeSheet(); renderLib(); toast("Alimento excluído");
         }, "danger"]]);
     }, "danger"]);
-    acts.push(["Editar", () => openFoodForm(f)]);
+    acts.push(["✎ Editar", () => openFoodForm(f), "primary"]);
   } else if (f.tipo === "comunidade") {
     acts.push(["Corrigir", () => openFoodForm(null, saved => { if (saved) comunidadeEnviarAlimento(saved, f.origem); closeSheet(); renderLib(); },
       { nome: f.nome, ean: "", per100: Object.assign({}, f.per100), porcoes: (f.porcoes || []).slice(), fonte: "Comunidade, corrigido por você" })]);
@@ -2562,27 +2577,32 @@ async function lerRotuloParaForm(dadosAtuais, reabrir){
 function openFoodForm(f, after, preset, ocr){
   const isFix = f && f.tipo === "taco";
   const src = f || preset || null;
-  const v = src ? src.per100 : {};
   const por = src && src.porcoes && src.porcoes[0];
+  // editando algo que tem porção: mostra os valores da porção, como no rótulo
+  let base = !ocr && f && por && por.g > 0 ? "porcao" : "100";
+  const arred = (k, x) => x == null ? x : Math.round(x * (k === "kcal" || k === "na" ? 1 : 10)) / (k === "kcal" || k === "na" ? 1 : 10);
+  const v = !src ? {} : base === "porcao" ? Object.fromEntries(NUTRI.map(([k]) => [k, arred(k, src.per100[k] == null ? null : src.per100[k] * por.g / 100)])) : src.per100;
   const fld = (k, l, step = "0.1") => `<label for="ff-${k}">${l}<input class="field num ${ocr && ocr.campos.includes(k) ? ((ocr.conferir || []).includes(k) ? "auto conferir" : "auto") : ""}" id="ff-${k}" type="number" min="0" step="${step}" inputmode="decimal" value="${v[k] ?? ""}"></label>`;
   sheet(isFix ? "Corrigir alimento da TACO" : f ? "Editar alimento" : "Novo alimento",
     `
     ${isFix ? "" : `<button class="btn ${ocr ? "" : "primary"}" id="ffOcr" type="button" style="justify-content:center;min-height:50px">${ocr ? "Ler outra foto da tabela" : "Ler tabela nutricional com a câmera"}</button>`}
     ${ocr ? `<div class="notice" style="margin:0"><p>Preenchi ${ocr.campos.length} ${ocr.campos.length === 1 ? "campo" : "campos"} pela foto${ocr.formatoNovo ? " (coluna de 100 g)" : ocr.porcao ? `, convertendo da porção de ${fmt(ocr.porcao)} g para 100 g` : ""}. <b>Confira cada valor com o rótulo</b> antes de salvar.${(ocr.conferir || []).length ? ` Os campos em vermelho não bateram entre si (calorias × macros): olhe esses com atenção.` : ""}</p></div>` : ""}
-    <label for="ff-nome">Nome<input class="field" id="ff-nome" value="${esc(src ? src.nome : "")}" ${isFix ? "disabled" : ""} placeholder="Ex.: Pão de forma integral marca X"></label>
-    <p class="small muted" style="margin:0">Valores por 100 g (veja no rótulo a coluna “100 g”, ou converta a partir da porção).</p>
-    <div class="grid2">${fld("kcal","Calorias (kcal)","1")}${fld("p","Proteína (g)")}${fld("c","Carboidrato (g)")}${fld("g","Gordura (g)")}${fld("fib","Fibra (g)")}${fld("na","Sódio (mg)","1")}</div>
-    <div class="grid2"><label for="ff-pn">Porção (opcional)<input class="field" id="ff-pn" value="${esc(por ? por.nome : "")}" placeholder="Ex.: 1 fatia, 1 scoop"></label>
+    <label for="ff-nome">Nome<input class="field" id="ff-nome" value="${esc(src ? src.nome : "")}" ${isFix ? "disabled" : ""} placeholder="Ex.: Pão integral"></label>
+    <div class="grid2"><label for="ff-pn">Porção<input class="field" id="ff-pn" value="${esc(por ? por.nome : "")}" placeholder="Ex.: 1 scoop"></label>
       <label for="ff-pg">Peso da porção (g)<input class="field num" id="ff-pg" type="number" min="0" step="0.1" inputmode="decimal" value="${por ? por.g : ""}"></label></div>
+    <label>Os valores abaixo são<div class="seg" id="ff-base" style="display:flex"><button type="button" data-base="porcao" aria-pressed="${base === "porcao"}" id="ff-bp">Da porção</button><button type="button" data-base="100" aria-pressed="${base === "100"}">De 100 g</button></div></label>
+    <div class="grid2">${fld("kcal","Calorias (kcal)","1")}${fld("p","Proteína (g)")}${fld("c","Carboidrato (g)")}${fld("g","Gordura (g)")}${fld("fib","Fibra (g)")}${fld("na","Sódio (mg)","1")}</div>
     ${isFix ? "" : `<label for="ff-ean">Código de barras (opcional)<input class="field num" id="ff-ean" inputmode="numeric" value="${esc(src && src.ean || "")}" placeholder="Ex.: 7891000100103"></label>`}
-    ${isFix ? "" : `<label for="ff-obs">Observações (opcional)<textarea class="field" id="ff-obs" rows="2" style="font:inherit;resize:vertical" placeholder="Ex.: sabor chocolate, comprar no mercado X, usar 2 dosadores">${esc(src && src.obs || "")}</textarea></label>`}
-    <label for="ff-fonte">${isFix ? "Motivo da correção" : "Fonte dos dados"}<input class="field" id="ff-fonte" value="${esc(src ? (isFix ? (src.nota || "") : (src.fonte || "")) : "")}" placeholder="${isFix ? "Ex.: rótulo do produto que compro" : "Ex.: rótulo, site do fabricante"}"></label>`,
+    ${isFix ? "" : `<label for="ff-obs">Observações (opcional)<textarea class="field" id="ff-obs" rows="2" style="font:inherit;resize:vertical" placeholder="Ex.: sabor chocolate">${esc(src && src.obs || "")}</textarea></label>`}
+    <label for="ff-fonte">${isFix ? "Motivo da correção" : "Fonte dos dados"}<input class="field" id="ff-fonte" value="${esc(src ? (isFix ? (src.nota || "") : (src.fonte || "")) : "")}" placeholder="${isFix ? "Ex.: rótulo novo" : "Ex.: rótulo"}"></label>`,
     [["Cancelar", closeSheet], ["Salvar", () => {
       const nome = isFix ? f.nome : $("#ff-nome").value.trim();
       if (!nome) return toast("Dê um nome ao alimento");
-      const per100 = {}; NUTRI.forEach(([k]) => { const el = $("#ff-" + k); per100[k] = el ? (el.value === "" ? null : +el.value) : (f ? f.per100[k] ?? null : null); });
-      if (per100.kcal == null) per100.kcal = (per100.p || 0) * 4 + (per100.c || 0) * 4 + (per100.g || 0) * 9;
       const pn = $("#ff-pn").value.trim(), pg = +$("#ff-pg").value;
+      if (base === "porcao" && !(pg > 0)) { $("#ff-pg").focus(); return toast("Informe o peso da porção em gramas"); }
+      const fator = base === "porcao" ? 100 / pg : 1; // guarda sempre por 100 g
+      const per100 = {}; NUTRI.forEach(([k]) => { const el = $("#ff-" + k); per100[k] = el ? (el.value === "" ? null : +el.value * fator) : (f ? f.per100[k] ?? null : null); });
+      if (per100.kcal == null) per100.kcal = (per100.p || 0) * 4 + (per100.c || 0) * 4 + (per100.g || 0) * 9;
       const porcoes = pn && pg ? [{ nome: pn, g: pg }] : [];
       const ean = isFix ? null : ($("#ff-ean").value.replace(/\D/g, "") || null);
       const obs = isFix ? "" : $("#ff-obs").value.trim();
@@ -2593,7 +2613,10 @@ function openFoodForm(f, after, preset, ocr){
       else { saved = { id: "u" + uid(), nome, cat: "Meus alimentos", per100, porcoes, ean, obs, fonte: $("#ff-fonte").value.trim() }; S.biblioteca.proprios.unshift(saved); }
       Store.save("biblioteca"); toast("Alimento salvo");
       if (after) after(saved && Object.assign({ tipo: "proprio" }, saved)); else { closeSheet(); renderLib(); }
-    }, "primary"]], after || null);
+    }, "primary"]], after ? () => after() : null);
+  const segB = $("#ff-base"), rotBase = () => { const g = +$("#ff-pg").value; $("#ff-bp").textContent = g > 0 ? `Da porção (${fmt(g, g % 1 ? 1 : 0)} g)` : "Da porção"; };
+  segB.querySelectorAll("button").forEach(b => b.onclick = () => { base = b.dataset.base; segB.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); if (base === "porcao" && !(+$("#ff-pg").value > 0)) $("#ff-pg").focus(); });
+  $("#ff-pg").addEventListener("input", rotBase); rotBase();
   // calorias calculadas pelos macros (4 kcal/g de proteína e carbo, 9 kcal/g de gordura), até a pessoa digitar outro valor
   const kc = $("#ff-kcal"), mac = () => (+$("#ff-p").value || 0) * 4 + (+$("#ff-c").value || 0) * 4 + (+$("#ff-g").value || 0) * 9;
   let kcAuto = kc.value === "" || Math.abs(+kc.value - mac()) <= 2;
@@ -2605,8 +2628,9 @@ function openFoodForm(f, after, preset, ocr){
   const bo = $("#ffOcr");
   if (bo) bo.onclick = () => {
     const atual = { nome: $("#ff-nome").value, obs: ($("#ff-obs") || {}).value || "", ean: ($("#ff-ean") || {}).value || (src && src.ean) || "", fonte: $("#ff-fonte").value, per100: {}, porcoes: [] };
-    NUTRI.forEach(([k]) => { const el = $("#ff-" + k); atual.per100[k] = el ? (el.value === "" ? null : +el.value) : (v[k] ?? null); });
     const pn = $("#ff-pn").value.trim(), pg = +$("#ff-pg").value; if (pn && pg) atual.porcoes = [{ nome: pn, g: pg }];
+    const fat = base === "porcao" && pg > 0 ? 100 / pg : 1;
+    NUTRI.forEach(([k]) => { const el = $("#ff-" + k); atual.per100[k] = el ? (el.value === "" ? null : +el.value * fat) : (src && src.per100[k] != null ? src.per100[k] : null); });
     lerRotuloParaForm(atual, (dados, info) => openFoodForm(f && f.tipo !== "taco" ? Object.assign({}, f, dados) : null, after, dados, info));
   };
 }
@@ -2615,10 +2639,10 @@ function openRecipeForm(r){
   const draw = () => {
     const per = recipePer100(draft), y = recipeYield(draft), tot = draft.itens.length ? scaled(per, y) : null;
     sheet(r ? "Editar receita" : "Nova receita",
-      `<label for="rc-n">Nome da receita<input class="field" id="rc-n" value="${esc(draft.nome)}" placeholder="Ex.: Strogonoff de frango da casa"></label>
+      `<label for="rc-n">Nome da receita<input class="field" id="rc-n" value="${esc(draft.nome)}" placeholder="Ex.: Strogonoff"></label>
        <h3>Ingredientes</h3>
        <ul class="list">${draft.itens.map((i, ix) => { const f = findFoodRaw(i.id) || i.snap; return `<li class="fi"><div class="grow"><div class="t">${esc(f ? f.nome : "Alimento removido")}</div></div><input class="field num" style="width:90px" type="number" min="0" value="${i.g}" data-ig="${ix}" aria-label="Gramas"><span class="small muted">g</span><button class="star" style="color:var(--muted)" data-irm="${ix}" aria-label="Remover ingrediente">✕</button></li>`; }).join("") || `<li class="empty">Busque abaixo e adicione os ingredientes com o peso cru.</li>`}</ul>
-       <input class="search" id="rc-q" type="search" placeholder="Adicionar ingrediente..." aria-label="Buscar ingrediente">
+       <input class="search" id="rc-q" type="search" placeholder="Buscar ingrediente" aria-label="Buscar ingrediente">
        <ul class="list" id="rc-res"></ul>
        <div class="grid2"><label for="rc-pf">Peso final pronto (g)<input class="field num" id="rc-pf" type="number" min="0" value="${draft.pesoFinal || ""}" placeholder="${fmt(draft.itens.reduce((a, i) => a + i.g, 0))} (soma)"></label>
          <label for="rc-po">Rende quantas porções<input class="field num" id="rc-po" type="number" min="1" value="${draft.porcoes || ""}"></label></div>
@@ -3034,7 +3058,7 @@ function openScanner(ctx){
      <div class="row wrap">
        <label class="btn ${canLive || NATIVO ? "" : "primary"}" for="scanPhoto" style="flex-direction:row;font-size:1rem;color:inherit">${canLive ? "Usar uma foto" : "Fotografar código"}<input id="scanPhoto" type="file" accept="image/*" capture="environment" hidden></label>
      </div>
-     <div class="row"><input class="field num grow" id="scanType" inputmode="numeric" placeholder="Ou digite os números do código" aria-label="Digitar código de barras"><button class="btn" id="scanGo">Buscar</button></div>`,
+     <div class="row"><input class="field num grow" id="scanType" inputmode="numeric" placeholder="Ou digite o código" aria-label="Digitar código de barras"><button class="btn" id="scanGo">Buscar</button></div>`,
     [], scanCtx === "diario" ? () => { stopLive(); renderAddList(); } : null);
   loadOffLocal();
   const msg = t => { const m = $("#scanMsg"); if (m) m.textContent = t; };
@@ -3092,7 +3116,7 @@ async function showScanResult(code){
 function vincularCodigo(code, voltar){ // liga um código de barras a um alimento que já existe
   let q = "";
   sheet("Adicionar a alimento existente", `<p class="small muted" style="margin:0">Escolha o alimento.</p>
-    <input class="search" id="vcQ" type="search" placeholder="Buscar alimento..." aria-label="Buscar alimento"><ul class="list" id="vcRes"></ul>`, [["Voltar", voltar]], voltar);
+    <input class="search" id="vcQ" type="search" placeholder="Buscar alimento" aria-label="Buscar alimento"><ul class="list" id="vcRes"></ul>`, [["Voltar", voltar]], voltar);
   const lista = () => {
     const todos = allFoods().filter(f => f.tipo !== "receita");
     const res = q ? searchFoods(q, todos).slice(0, 40) : todos.filter(f => f.tipo === "proprio" || S.biblioteca.favoritos.includes(f.id)).slice(0, 40);
@@ -3561,7 +3585,7 @@ function dispEditar(d){
   d = d || { id: "m" + uid(), nome: "", tipo: "cozinha", obs: "", auto: false };
   sheet(novo ? "Adicionar dispositivo" : "Editar dispositivo", `
     <label for="dvTipo">Tipo<select class="field" id="dvTipo">${Object.entries(DISP_TIPOS).map(([k, [n]]) => `<option value="${k}" ${d.tipo === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
-    <label for="dvNome">Nome ou modelo<input class="field" id="dvNome" maxlength="40" value="${esc(d.nome)}" placeholder="Ex.: Galaxy Watch 6, Mi Band 8, balança Fitdays"></label>
+    <label for="dvNome">Nome ou modelo<input class="field" id="dvNome" maxlength="40" value="${esc(d.nome)}" placeholder="Ex.: Galaxy Watch 6"></label>
     ${d.auto ? "" : `<label for="dvObs">Observação<input class="field" id="dvObs" maxlength="60" value="${esc(d.obs || "")}" placeholder="Opcional"></label>`}`,
     [[d.auto ? "Ocultar" : (novo ? "Cancelar" : "Remover"), () => {
       if (d.auto) cfg.ajustes[d.id] = Object.assign(cfg.ajustes[d.id] || {}, { oculto: true });
