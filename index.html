@@ -290,8 +290,6 @@ button.mrow:hover{background:var(--sunk)}
 .wk-day[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
 .wk-day[aria-pressed="true"] b,.wk-day[aria-pressed="true"] small{color:var(--accent-ink)}
 .wk-day[aria-pressed="true"].has i{background:var(--accent-ink)}
-.qs-row{display:flex;gap:8px;align-items:stretch}.qs-row .quick-search{flex:1}
-.qs-cam{flex:0 0 52px;border:1px solid var(--line);background:var(--surface);color:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .agua-card{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,#2f8fe0 14%,var(--surface));border:1px solid color-mix(in srgb,#2f8fe0 40%,var(--line));cursor:pointer}
 .agua-card .gota{flex:0 0 42px;height:42px;border-radius:50%;background:#2f8fe0;color:#fff;display:flex;align-items:center;justify-content:center}
 .agua-card .info{flex:1;min-width:0}.agua-card .info b{font-size:1.05rem}.agua-card .bar{display:block;height:7px;border-radius:9px;background:color-mix(in srgb,var(--agua) 22%,transparent);margin-top:6px;overflow:hidden}
@@ -303,10 +301,6 @@ button.mrow:hover{background:var(--sunk)}
 .ia-item .g{width:84px}.ia-item .k{grid-column:2/-1;font-size:.85rem;color:var(--muted)}
 .comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.comp-grid div{border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .comp-grid b{display:block;font-size:1.25rem}.comp-grid span{font-size:.8rem;color:var(--muted)}
-.quick-search{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:14px;padding:13px 14px;font:inherit;font-size:1rem;cursor:pointer;text-align:left}
-.quick-search span{flex:1}
-.quick-search em{font-style:normal;font-size:.8rem;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px}
-.quick-search:hover{border-color:var(--muted)}
 #ringBtn{cursor:pointer;border-radius:50%}
 .wcard{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .wcard p{margin:0;flex:1;min-width:140px}
@@ -645,8 +639,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       </div>
       <div class="week" id="weekStrip"></div>
       <p class="greet" id="greet"></p>
-      <div class="qs-row"><button class="quick-search" id="quickSearch"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>O que você comeu?</span><em id="qsMeal"></em></button><button class="qs-cam" id="qsFoto" aria-label="Fotografar o prato"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button></div>
-      <div id="adminNotice"></div>
       <div id="goalNotice"></div>
       <div class="card" id="resumoCard">
         <div class="summary">
@@ -840,7 +832,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-09T20:18:13Z";
+const BIB_EMBUTIDA = "2026-11-10T14:50:46Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -1570,24 +1562,10 @@ function renderGoalNotice(target){
     Store.save("perfil"); renderAll();
   });
 }
-function renderAdminNotice(){
-  const el = $("#adminNotice"); if (!el) return;
-  const hoje = iso(new Date()), vistas = pref.get("admCardVistos", []);
-  const msgs = (ADM_REMOTO.mensagens || []).filter(m => m && m.ativa !== false && m.card && !vistas.includes(m.id) && (!m.expira || m.expira >= hoje));
-  if (!msgs.length) { el.innerHTML = ""; return; }
-  el.innerHTML = msgs.map(m => `<div class="dica" style="margin-bottom:8px;align-items:flex-start"><div class="t">${m.subtitulo ? `<span class="tag ok" style="margin-bottom:4px">${esc(m.subtitulo)}</span> ` : ""}<b>${esc(m.titulo)}</b><span>${esc(m.corpo)}</span></div>${m.botao ? `<button class="btn sm primary" data-adm-go="${esc(m.id)}">${esc(m.botao)}</button>` : ""}<button class="icon-btn" data-adm-x="${esc(m.id)}" aria-label="Fechar aviso">✕</button></div>`).join("");
-  el.querySelectorAll("[data-adm-x]").forEach(b => b.onclick = () => { const v = pref.get("admCardVistos", []); if (!v.includes(b.dataset.admX)) v.push(b.dataset.admX); pref.set("admCardVistos", v); renderAdminNotice(); });
-  el.querySelectorAll("[data-adm-go]").forEach(b => b.onclick = () => {
-    const m = msgs.find(x => String(x.id) === b.dataset.admGo);
-    if (m && m.rota) { if (/^https?:\/\//i.test(m.rota)) window.open(m.rota, "_blank", "noopener"); else location.hash = "#" + m.rota.replace(/^#/, ""); }
-  });
-}
 function renderDiary(){
-  try { renderAdminNotice(); } catch(e){}
   try { renderAguaCard(); } catch(e){}
   atualizarHoje();
   renderWeek(); renderWeightCard();
-  $("#qsMeal").textContent = "no " + nomeRef(mealByHour()).toLowerCase();
   renderGoalNotice($("#goalNotice"));
   const t = dayTotals(day), mg = macroGoals();
   const g = mg ? mg.kcal : null;
@@ -4036,8 +4014,6 @@ document.querySelectorAll("[data-hoje]").forEach(b => b.onclick = () => {
   if ((location.hash || "#diario") !== "#diario") location.hash = "#diario"; else renderDiary();
   atualizarHoje(); vibrar(8);
 });
-$("#quickSearch").onclick = () => openAdd(mealByHour());
-$("#qsFoto").onclick = () => fotoPrato(mealByHour());
 document.addEventListener("click", e => { if (!e.target.closest("#formulaTroca")) return;
   S.perfil.formula = S.perfil.formula === "katch" ? "mifflin" : "katch"; Store.save("perfil"); renderProfile(); renderDiary();
   toast(S.perfil.formula === "katch" ? "Usando Katch-McArdle: aplique a nova meta no aviso" : "Usando Mifflin–St Jeor"); });
