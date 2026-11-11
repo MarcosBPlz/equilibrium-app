@@ -76,7 +76,7 @@ html,body{height:100%;margin:0}
 html{font-size:100%}
 html.letra-maior{font-size:112.5%}
 body{background:var(--bg);color:var(--ink);font:1rem/1.45 var(--body);-webkit-font-smoothing:antialiased}
-button,input,select{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
 h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:0}
 h3{font-family:var(--body);font-weight:700}
 h1{font-size:2rem} h2{font-size:1.35rem} h3{font-size:1rem}
@@ -183,6 +183,8 @@ main{padding:28px 24px 110px;max-width:808px;width:100%;margin:0 auto;display:fl
 .sheet-h{display:flex;align-items:center;gap:8px;padding:14px 14px 10px 18px;border-bottom:1px solid var(--line)}
 .sheet-h h2{flex:1}
 .sheet-b{padding:14px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.sheet-b>*{flex-shrink:0}
+#sheetFoot.foot-ic .btn{flex-direction:column;gap:3px;padding:8px 6px;min-height:58px;font-size:.85rem}
 .sheet-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 
 .search{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--sunk)}
@@ -302,7 +304,14 @@ button.mrow:hover{background:var(--sunk)}
 .qgrid .destaque svg{width:24px;height:24px;flex:0 0 24px;margin:0;color:var(--on-accent,#fff)!important;stroke:currentColor}.qgrid .destaque{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:center;gap:10px;background:var(--accent);color:var(--on-accent,#fff);font-weight:800}
 .ia-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .ia-item select,.ia-item input[type=number]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;max-width:100%}
-.ia-item .g{width:84px}.ia-item .k{grid-column:2/-1;font-size:.85rem;color:var(--muted)}
+.saiba>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:700}
+.saiba>summary::-webkit-details-marker,.saiba-mini>summary::-webkit-details-marker{display:none}
+.saiba>summary::after{content:"";flex:0 0 9px;height:9px;border-right:2.2px solid var(--muted);border-bottom:2.2px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .15s}
+.saiba[open]>summary::after{transform:rotate(-135deg) translateY(-2px)}
+.saiba-mini>summary{cursor:pointer;list-style:none;font-size:.85rem;font-weight:700;color:var(--accent);margin-top:8px;display:inline-block}
+.ia-fix{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.ia-fix .ag-err{margin:0}
+.ia-item .g{width:64px}.ia-item label{flex-direction:row !important;align-items:center}.ia-item .k{grid-column:2/-1;font-size:.85rem;color:var(--muted)}
 .comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.comp-grid div{border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .comp-grid b{display:block;font-size:1.25rem}.comp-grid span{font-size:.8rem;color:var(--muted)}
 #ringBtn{cursor:pointer;border-radius:50%}
@@ -321,6 +330,14 @@ button.mrow:hover{background:var(--sunk)}
 .item .kc{min-width:44px;text-align:right}
 .meal-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .meal-chips .tab{white-space:nowrap}
+#perfSeg,#sexSeg,#objSeg{display:flex;flex-wrap:nowrap}
+#perfSeg button,#sexSeg button,#objSeg button{flex:1 1 0;min-width:0;padding:8px 4px;font-size:.9rem;white-space:nowrap}
+#sexSeg button{font-size:.82rem;padding:8px 2px}
+@media (max-width:420px){.grid2:has(#sexSeg){grid-template-columns:1fr}}
+.onb-g3{grid-template-columns:repeat(3,minmax(0,1fr)) !important}
+.ref-li{flex-wrap:wrap}
+.ref-li input[data-rnome]{flex:1 1 150px;min-width:150px}
+@media (max-width:359px){.mini-mac{gap:8px}.mini-mac span em{display:none}#perfSeg button,#sexSeg button,#objSeg button{font-size:.8rem;padding:8px 2px}}
 .qty-row{display:flex;align-items:center;gap:8px}
 .qty-row input{width:84px;text-align:center}
 .qty-row button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:1.3rem;cursor:pointer}
@@ -600,6 +617,8 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
 .ag-agua{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line);cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 .ag-agua .gota{flex:0 0 36px;height:36px;border-radius:50%;background:var(--sunk);color:var(--agua);display:flex;align-items:center;justify-content:center}
 .ag-agua .gota svg{width:20px;height:20px}
+.ag-agua-out{flex:0 0 38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--sunk);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.ag-agua-out svg{width:18px;height:18px}
 .ag-agua .inf{flex:1;min-width:0;font-size:.85rem;font-weight:800}
 .ag-agua .inf span{color:var(--muted);font-weight:500}
 .ag-copos{display:flex;gap:3px;margin-top:6px}.ag-copos i{flex:1;height:6px;border-radius:4px;background:var(--track)}.ag-copos i.on{background:var(--agua)}
@@ -609,6 +628,7 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
 .ag-kcal b{display:block;font-family:var(--display);font-weight:400;font-size:2.4rem;color:var(--cal)}
 .ag-kcal > span{display:block;font-size:.78rem;color:var(--muted);font-weight:700;margin-top:4px}
 .ag-kcal.acima b,.ag-kcal .acima{color:var(--over)}
+.ag-kcal a{color:var(--accent);font-weight:800}
 .ag-box{position:relative;flex:none;width:clamp(190px, min(82vw, calc(100dvh - 450px - var(--ad-h, 0px))), 330px);aspect-ratio:1;margin:0 auto}
 .ag-box > svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .ag-box > svg circle{transition:stroke-dashoffset .7s ease}
@@ -655,6 +675,8 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
 .ag-big.sec{background:transparent;color:var(--ink);border:1.5px solid var(--pill-bd);padding:12.5px 14px;margin-top:-4px}
 .ag-big.sec svg{color:var(--accent)}
 .ag-err{font-size:.82rem;color:var(--over);font-weight:700;margin-top:-6px}
+.ag-nm{all:unset;cursor:pointer;flex:1;min-width:0;display:flex;flex-direction:column}
+.ag-mini.ok{background:var(--accent);color:var(--accent-ink)}
 .ag-lbl{font-size:.7rem;font-weight:800;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin:2px 0 -2px}
 .ag-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
 .ag-row .nm{flex:1;min-width:0}.ag-row .nm b{display:block;font-size:.88rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-row .nm small{font-size:.74rem;color:var(--muted);font-weight:700}
@@ -726,10 +748,11 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
     <!-- AGORA: tela inicial de registro rápido -->
     <section class="page" id="p-agora" aria-labelledby="agOla">
       <div class="ag-ola"><small id="agData"></small><h1 id="agOla">Olá!</h1></div>
-      <div class="ag-agua" id="agAgua" role="button" tabindex="0" aria-label="Água: toque para adicionar 250 ml, segure para outras quantidades">
+      <div class="ag-agua" id="agAgua" role="button" tabindex="0" aria-label="Água: toque para adicionar 250 ml">
         <span class="gota"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.4c3.2 4.2 6.6 8 6.6 11.8a6.6 6.6 0 0 1-13.2 0C5.4 10.4 8.8 6.6 12 2.4z"/></svg></span>
         <div class="inf">Água <span id="agAguaTxt"></span><div class="ag-copos" id="agCopos"></div></div>
-        <div class="mais"><b>+250</b><small>segure p/ mais</small></div>
+        <div class="mais"><b>+250</b><small>ml</small></div>
+        <button class="ag-agua-out" id="agAguaOut" type="button" aria-label="Outras quantidades de água"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
       </div>
       <div class="ag-centro">
         <div class="ag-kcal" id="agKcal"><b id="agKcalN">0</b><span id="agKcalSub"></span></div>
@@ -868,8 +891,9 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
       </div>
       <div class="card" id="listasCard"></div>
       <div class="card" id="dataCard"></div>
-      <div class="card"><label class="switch-row" for="comunidadeSw"><span><b>Base colaborativa</b><br><span class="small muted">Mostra na busca os alimentos cadastrados por outros usuários e compartilha os que você cadastrar pelo código de barras, pela foto do prato ou pela foto da tabela. Só vão código, nome, marca e tabela nutricional; nada sobre você.</span></span><input type="checkbox" id="comunidadeSw"></label></div>
-      <details class="card" id="notifBox"><summary style="cursor:pointer;font-weight:700">Notificações e lembretes</summary><div id="notifCard" style="margin-top:12px"></div></details>
+      <div class="card"><label class="switch-row" for="comunidadeSw"><span><b>Base colaborativa</b><br><span class="small muted">Alimentos cadastrados por outros usuários</span></span><input type="checkbox" id="comunidadeSw"></label>
+        <details class="saiba-mini"><summary>Saiba mais</summary><p class="small muted" style="margin:6px 0 0">Mostra na busca os alimentos cadastrados por outros usuários e compartilha os que você cadastrar pelo código de barras, pela foto do prato ou pela foto da tabela. Só vão código, nome, marca e tabela nutricional; nada sobre você.</p></details></div>
+      <details class="card saiba" id="notifBox"><summary>Notificações e lembretes</summary><div id="notifCard" style="margin-top:12px"></div></details>
       <div class="card"><h2>Sobre</h2><p class="hint" style="margin:0">Equilibrium · alimentos da Tabela TACO (NEPA/Unicamp), preparações do IBGE (POF 2008-2009) e produtos do Open Food Facts (ODbL). As metas são estimativas e não substituem a orientação de um nutricionista ou médico. <a href="https://marcosbplz.github.io/equilibrium-app/privacidade.html" target="_blank" rel="noopener">Política de privacidade</a></p></div>
       <div class="card"><h2>Configuração inicial</h2><p class="hint" style="margin:0 0 10px">Refaz as três telas de boas-vindas e recalcula a meta.</p><button class="btn" id="redoOnb" style="margin-top:12px">Rever a configuração inicial</button></div>
       </div>
@@ -968,7 +992,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-11T15:26:00Z";
+const BIB_EMBUTIDA = "2026-11-11T17:56:51Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -1191,6 +1215,14 @@ function sourceText(f){
 function scaled(per100, grams){
   const o = {}; NUTRI.forEach(([k]) => { const v = per100[k]; o[k] = v == null ? null : v * grams / 100; }); return o;
 }
+// o que o brasileiro mais registra quando digita só a palavra (vem antes das preparações menos comuns)
+const BUSCA_COMUNS = {
+  arroz: ["arroz tipo 1 cozido", "arroz branco cozido", "arroz integral cozido"], feijao: ["feijao carioca cozido", "feijao preto cozido"],
+  frango: ["frango peito sem pele grelhado", "frango peito sem pele cozido", "frango coxa sem pele cozida"], batata: ["batata inglesa cozida", "batata inglesa frita", "batata doce cozida"],
+  carne: ["carne bovina patinho sem gordura grelhado", "carne bovina acem moido cozido", "carne bovina contra-file sem gordura grelhado"],
+  ovo: ["ovo de galinha inteiro cozido", "ovo de galinha inteiro frito"], banana: ["banana prata crua", "banana nanica crua"], pao: ["pao trigo frances", "pao trigo forma integral", "pao de queijo assado"],
+  cafe: ["cafe infusao"], queijo: ["queijo mozarela", "queijo minas frescal"], mandioca: ["mandioca cozida", "mandioca frita"], tomate: ["tomate com semente cru"]
+};
 function searchFoods(q, list){
   const dig = String(q).replace(/\D/g, "");
   if (dig.length >= 8 && dig.length === String(q).trim().length) return list.filter(f => f.ean === dig);
@@ -1203,7 +1235,10 @@ function searchFoods(q, list){
   const cruDepois = !terms.some(t => t.startsWith("cru")) && achados.some(f => PRONTO.test(normNome(f.nome))); // quem não pediu "cru" quase sempre comeu pronto (fruta crua continua na frente)
   return achados
     .map(f => { const n = f.busca || normNome(f.nome); let s = 0; if (cruDepois && f.cat !== "Frutas e derivados" && CRU.test(normNome(f.nome))) s += 1; if (n.startsWith(terms[0])) s -= 3; if (favs.has(f.id)) s -= 2; else if (recs.has(f.id)) s -= 1.5; if (f.tipo !== "taco") s -= 1; s += normNome(f.nome).length / 200; return [s, f]; }) // desempate pelo nome: os sinônimos da busca não empurram o item para baixo
-    .sort((a, b) => a[0] - b[0]).map(x => x[1]);
+    .map(([sc, f]) => { const c = BUSCA_COMUNS[norm(q).trim()]; if (c) { const nn = normNome(f.nome).replace(/-/g, " "), i = c.findIndex(x => nn.startsWith(x.replace(/-/g, " "))); if (i >= 0) sc -= 10 - i; } return [sc, f]; })
+    .sort((a, b) => a[0] - b[0]).map(x => x[1])
+    .filter((f, i, arr) => { if (f.tipo !== "taco") return true; const k = normNome(f.nome).replace(/[^a-z0-9]+/g, " ").trim(); // mesmo alimento na TACO e no IBGE: fica só o primeiro
+      return !arr.slice(0, i).some(g => g.tipo === "taco" && normNome(g.nome).replace(/[^a-z0-9]+/g, " ").trim() === k); });
 }
 function toggleFav(id){
   const fv = S.biblioteca.favoritos, i = fv.indexOf(id);
@@ -1868,7 +1903,7 @@ function openOnboarding(passo = 1){
     sheet("Bem-vindo ao Equilibrium", `${barra}<p style="margin:0">Vamos calcular sua meta diária em três passos rápidos.</p><p class="hint" style="margin:0">As metas são estimativas por fórmula e não substituem a orientação de um nutricionista ou médico.</p>
       <label for="ob-nome">Seu nome (opcional)<input class="field" id="ob-nome" value="${esc(p.nome || "")}"></label>
       <label>Sexo (usado na fórmula)<div class="seg" id="ob-sexo"><button type="button" data-v="f" aria-pressed="${p.sexo === "f"}">Feminino</button><button type="button" data-v="m" aria-pressed="${p.sexo === "m"}">Masculino</button></div></label>
-      <div class="grid3"><label for="ob-idade">Idade<input class="field num" id="ob-idade" type="number" inputmode="numeric" value="${p.idade || ""}"></label>
+      <div class="grid3 onb-g3"><label for="ob-idade">Idade<input class="field num" id="ob-idade" type="number" inputmode="numeric" value="${p.idade || ""}"></label>
       <label for="ob-peso">Peso (kg)<input class="field num" id="ob-peso" type="number" step="0.1" inputmode="decimal" value="${p.peso || ""}"></label>
       <label for="ob-alt">Altura (cm)<input class="field num" id="ob-alt" type="number" inputmode="numeric" value="${p.altura || ""}"></label></div>`,
       [["Pular", () => { p.onboarded = true; Store.save("perfil"); closeSheet(); }], ["Continuar", () => {
@@ -1981,7 +2016,7 @@ function renderDiary(){
         <div class="menu"><button class="icon-btn" data-menu="${m}" aria-label="Opções de ${nm}" aria-haspopup="true">⋯</button>
           <div class="pop" id="pop-${m}">
             <button data-mact="copy" data-m="${m}">Copiar ${nm.toLowerCase()} do dia anterior</button>
-            <button data-mact="save" data-m="${m}" ${items.length ? "" : "disabled"}>Salvar como refeição pronta</button>
+            <button data-mact="save" data-m="${m}" ${items.length ? "" : "disabled"}>Salvar como prato feito</button>
             <button data-mact="clear" data-m="${m}" ${items.length ? "" : "disabled"}>Limpar esta refeição</button>
           </div></div></div>
       <ul class="items">${items.map(e => `<li class="item" data-entry="${e.id}" data-m="${m}" tabindex="0">
@@ -2039,15 +2074,17 @@ function mealAction(act, m){
     saveDay(day); renderDiary(); toast(`${src.length} ${src.length > 1 ? "itens copiados" : "item copiado"}`);
   }
   if (act === "save") {
-    const items = dayData(day)[m];
-    sheet(`Salvar refeição pronta`, `<label for="rmName">Nome da refeição<input class="field" id="rmName" value="${esc(nm + " de sempre")}"></label>
-      <p class="small muted" style="margin:0">${items.length} itens · ${fmt(mealTotal(items))} kcal. Depois é só escolher em “Refeições prontas” ao adicionar.</p>`,
+    const items = (dayData(day) || {})[m] || [];
+    if (!items.length) return toast(`Nada registrado ${refCom("em", m)} para salvar`);
+    sheet(`Salvar prato feito`, `<label for="rmName">Nome do prato<input class="field" id="rmName" value="${esc(nm + " de sempre")}"></label>
+      <p class="small muted" style="margin:0">${items.length} itens · ${fmt(mealTotal(items))} kcal. Depois é só escolher em “Pratos feitos” ao adicionar.</p>`,
       [["Cancelar", closeSheet], ["Salvar", () => {
         S.biblioteca.refeicoes.unshift({ id: uid(), nome: $("#rmName").value.trim() || nm, itens: clone(items) });
-        Store.save("biblioteca"); closeSheet(); toast("Refeição salva");
+        Store.save("biblioteca"); closeSheet(); toast("Prato salvo");
       }, "primary"]]);
   }
   if (act === "clear") {
+    if (!((dayData(day) || {})[m] || []).length) return toast(`Nada registrado ${refCom("em", m)}`);
     sheet("Limpar refeição", `<p style="margin:0">Remover todos os itens ${refCom("de", m)} de ${dateLabel(day).toLowerCase()}?</p>`,
       [["Cancelar", closeSheet], ["Limpar", () => { dayData(day)[m] = []; saveDay(day); closeSheet(); renderDiary(); }, "primary"]]);
   }
@@ -2058,7 +2095,7 @@ let sheetStack = [];
 function sheet(title, body, actions = [], onBack){
   $("#sheetTitle").textContent = title;
   $("#sheetBody").innerHTML = body;
-  const f = $("#sheetFoot"); f.innerHTML = "";
+  const f = $("#sheetFoot"); f.innerHTML = ""; f.classList.remove("foot-ic");
   actions.forEach(([lbl, fn, cls]) => { const b = document.createElement("button"); b.className = "btn " + (cls || ""); b.textContent = lbl; b.onclick = fn; f.appendChild(b); });
   f.hidden = !actions.length;
   $("#sheetBack").hidden = !onBack; $("#sheetBack").onclick = onBack || null;
@@ -2073,13 +2110,17 @@ $("#overlay").addEventListener("mousedown", e => { if (e.target.id === "overlay"
 let addState = { meal: "almoco", tab: "recentes", q: "" };
 function openAdd(meal, q, tab){ addState.meal = meal || mealByHour(); addState.q = q || ""; addState.tab = tab || (bibliotecaPessoal(addState.meal).length ? "pessoal" : "todos"); renderAddList(); }
 function renderAddList(){
-  const tabs = [["pessoal","Minha biblioteca"],["recentes","Recentes"],["favoritos","Favoritos"],["fastfood","Fast food"],["refeicoes","Refeições prontas"],["todos","Todos"]];
+  const tabs = [["pessoal","Minha biblioteca"],["recentes","Recentes"],["favoritos","Favoritos"],["fastfood","Fast food"],["refeicoes","Pratos feitos"],["todos","Todos"]];
   sheet(`Adicionar ${refCom("a", addState.meal)}`,
     `<div class="meal-chips">${MEALS.map(([k, nm]) => `<button class="tab" data-addmeal="${k}" aria-pressed="${addState.meal === k}">${nm}</button>`).join("")}</div>
      <input class="search" id="addQ" type="search" placeholder="Buscar alimento" value="${esc(addState.q)}" aria-label="Buscar alimento">
      <div class="tabs">${tabs.map(([k, l]) => `<button class="tab" data-tab="${k}" aria-pressed="${addState.tab === k && !addState.q}">${l}</button>`).join("")}</div>
      <ul class="list" id="addList"></ul>`,
-    [["Escanear código de barras", () => openScanner("diario")], ["Adição rápida (kcal/macros)", openQuick], ["Criar alimento ou receita", openCriar]]);
+    [["Código", () => openScanner("diario")], ["Rápida", openQuick], ["Criar", openCriar]]);
+  const IC = ['<path d="M4 6v12M7 6v12M11 6v12M14 6v12M17 6v12M20 6v12"/>', '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', '<path d="M12 5v14M5 12h14"/>'],
+    DESC = ["Escanear código de barras", "Adição rápida de calorias e macros", "Criar alimento ou receita"];
+  $("#sheetFoot").classList.add("foot-ic");
+  $("#sheetFoot").querySelectorAll("button").forEach((b, i) => { b.setAttribute("aria-label", DESC[i]); b.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[i]}</svg><span>${esc(b.textContent)}</span>`; });
   const q = $("#addQ");
   document.querySelectorAll("[data-addmeal]").forEach(b => b.onclick = () => { addState.meal = b.dataset.addmeal; renderAddList(); }); // a ordem da biblioteca pessoal muda com a refeição
   const preencher = adiar(fillAddList, 110);
@@ -2124,8 +2165,8 @@ function fillAddList(){
       : `<li class="empty">Sua biblioteca começa vazia. Os alimentos que você registrar no diário e os que você cadastrar aparecem aqui.</li>`;
   } else if (addState.tab === "refeicoes") {
     const r = S.biblioteca.refeicoes;
-    html = r.length ? r.map(m => `<li class="fi"><button class="pick" data-meal-pick="${m.id}"><div class="t">${esc(m.nome)}</div><div class="s num">${m.itens.length} itens · ${fmt(mealTotal(m.itens))} kcal</div></button><button class="star" data-del-meal="${m.id}" aria-label="Excluir refeição pronta" style="color:var(--muted)">✕</button></li>`).join("")
-      : `<li class="empty">Nenhuma refeição pronta ainda. No diário, use ⋯ › “Salvar como refeição pronta”.</li>`;
+    html = r.length ? r.map(m => `<li class="fi"><button class="pick" data-meal-pick="${m.id}"><div class="t">${esc(m.nome)}</div><div class="s num">${m.itens.length} ${m.itens.length === 1 ? "item" : "itens"} · ${fmt(mealTotal(m.itens))} kcal</div><div class="uso" style="color:var(--muted)">${esc(m.itens.map(e => String(e.nome).replace(/ \(estimativa por (foto|texto)\)$/, "")).join(" · "))}</div></button><button class="star" data-del-meal="${m.id}" aria-label="Excluir prato feito" style="color:var(--muted)">✕</button></li>`).join("")
+      : `<li class="empty">Nenhum prato feito ainda. Salve um ao registrar pela foto ou, no diário, em ⋯ › “Salvar como prato feito”.</li>`;
   } else {
     const especial = addState.tab === "fastfood" ? foods.filter(f => f.tipo === "rede") : null;
     const ids = addState.tab === "recentes" ? S.biblioteca.recentes : addState.tab === "favoritos" ? S.biblioteca.favoritos : null;
@@ -2142,7 +2183,7 @@ function fillAddList(){
   ul.querySelectorAll("[data-meal-pick]").forEach(b => b.onclick = () => {
     const m = S.biblioteca.refeicoes.find(x => x.id === b.dataset.mealPick);
     const dd = dayData(day, true); lista(dd, addState.meal).push(...m.itens.map(e => Object.assign(clone(e), { id: uid() })));
-    saveDay(day); closeSheet(); renderDiary(); toast(`${m.nome} adicionada`);
+    saveDay(day); closeSheet(); renderDiary(); toast(`${m.nome} adicionado`);
   });
   ul.querySelectorAll("[data-del-meal]").forEach(b => b.onclick = () => { S.biblioteca.refeicoes = S.biblioteca.refeicoes.filter(x => x.id !== b.dataset.delMeal); Store.save("biblioteca"); fillAddList(); });
 }
@@ -2591,10 +2632,12 @@ function openFoodForm(f, after, preset, ocr){
     <div class="grid2"><label for="ff-pn">Porção<input class="field" id="ff-pn" value="${esc(por ? por.nome : "")}" placeholder="Ex.: 1 scoop"></label>
       <label for="ff-pg">Peso da porção (g)<input class="field num" id="ff-pg" type="number" min="0" step="0.1" inputmode="decimal" value="${por ? por.g : ""}"></label></div>
     <label>Os valores abaixo são<div class="seg" id="ff-base" style="display:flex"><button type="button" data-base="porcao" aria-pressed="${base === "porcao"}" id="ff-bp">Da porção</button><button type="button" data-base="100" aria-pressed="${base === "100"}">De 100 g</button></div></label>
-    <div class="grid2">${fld("kcal","Calorias (kcal)","1")}${fld("p","Proteína (g)")}${fld("c","Carboidrato (g)")}${fld("g","Gordura (g)")}${fld("fib","Fibra (g)")}${fld("na","Sódio (mg)","1")}</div>
+    <div class="grid2">${fld("kcal","Calorias (kcal)","1")}${fld("p","Proteína (g)")}${fld("c","Carboidrato (g)")}${fld("g","Gordura (g)")}</div>
+    <details class="saiba ff-mais" ${src && (src.per100.fib != null || src.per100.na != null || src.ean || src.obs || src.fonte || src.nota) || (ocr && ocr.campos.some(k => k === "fib" || k === "na")) ? "open" : ""}><summary>Mais detalhes</summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+    <div class="grid2">${fld("fib","Fibra (g)")}${fld("na","Sódio (mg)","1")}</div>
     ${isFix ? "" : `<label for="ff-ean">Código de barras (opcional)<input class="field num" id="ff-ean" inputmode="numeric" value="${esc(src && src.ean || "")}" placeholder="Ex.: 7891000100103"></label>`}
     ${isFix ? "" : `<label for="ff-obs">Observações (opcional)<textarea class="field" id="ff-obs" rows="2" style="font:inherit;resize:vertical" placeholder="Ex.: sabor chocolate">${esc(src && src.obs || "")}</textarea></label>`}
-    <label for="ff-fonte">${isFix ? "Motivo da correção" : "Fonte dos dados"}<input class="field" id="ff-fonte" value="${esc(src ? (isFix ? (src.nota || "") : (src.fonte || "")) : "")}" placeholder="${isFix ? "Ex.: rótulo novo" : "Ex.: rótulo"}"></label>`,
+    <label for="ff-fonte">${isFix ? "Motivo da correção" : "Fonte dos dados"}<input class="field" id="ff-fonte" value="${esc(src ? (isFix ? (src.nota || "") : (src.fonte || "")) : "")}" placeholder="${isFix ? "Ex.: rótulo novo" : "Ex.: rótulo"}"></label></div></details>`,
     [["Cancelar", closeSheet], ["Salvar", () => {
       const nome = isFix ? f.nome : $("#ff-nome").value.trim();
       if (!nome) return toast("Dê um nome ao alimento");
@@ -2681,7 +2724,8 @@ function renderProfile(){
   document.querySelectorAll("#objSeg button").forEach(b => b.setAttribute("aria-pressed", p.obj === b.dataset.v));
 
   const c = calc();
-  $("#calcCard").innerHTML = `<h2>Como a meta é calculada</h2>` + (c ? `
+  const calcAberto = $("#calcCard").querySelector("details")?.open;
+  $("#calcCard").innerHTML = `<details class="saiba" ${calcAberto ? "open" : ""}><summary><h2 style="margin:0">Como a meta é calculada</h2></summary><div style="margin-top:12px">` + (c ? `
     <div class="calc num">
       ${c.usaKatch ? `<div class="eq"><span>Gasto em repouso (Katch-McArdle)<br><span class="small muted">370 + 21,6 × ${fmt(c.comp.magra, 1)} kg de massa magra (${fmt(c.comp.gord, 1)}% de gordura pela balança)</span></span><b>${fmt(c.ger)} kcal</b></div>` :
       `<div class="eq"><span>Gasto em repouso (Mifflin–St Jeor)<br><span class="small muted">10 × ${fmt(p.peso, 1)} kg + 6,25 × ${fmt(p.altura)} cm − 5 × ${fmt(p.idade)} anos ${p.sexo === "m" ? "+ 5" : "− 161"}</span></span><b>${fmt(c.ger)} kcal</b></div>`}
@@ -2691,7 +2735,7 @@ function renderProfile(){
       <div class="eq"><span>Meta para ${p.obj === "manter" ? "manter o peso" : p.obj + " peso"}<br><span class="small muted">${p.obj === "manter" ? "igual ao GET" : `GET ${c.pick.pct < 0 ? "−" : "+"} ${Math.abs(c.pick.pct * 100)}% (${c.pick.nome.toLowerCase()}), arredondado a 10 kcal`}</span></span><b>${fmt(c.sugerida)} kcal</b></div>
     </div>
     <p class="small muted" style="margin:10px 0 0">São estimativas. Se o peso médio não mudar como esperado em 3 a 4 semanas, ajuste a atividade ou a meta.</p>`
-    : `<p class="muted" style="margin:0">Preencha sexo, idade, peso e altura acima para ver o cálculo passo a passo.</p>`);
+    : `<p class="muted" style="margin:0">Preencha sexo, idade, peso e altura acima para ver o cálculo passo a passo.</p>`) + `</div></details>`;
 
   $("#optCards").innerHTML = c ? c.opts.map((o, i) => `<button class="opt" data-int="${i}" aria-pressed="${Math.min(p.intens, c.opts.length - 1) === i}"><span>${o.nome}${o.pct ? ` · ${o.pct < 0 ? "−" : "+"}${Math.abs(o.pct * 100)}%` : ""}</span><b class="num">${fmt(o.kcal)}</b><span class="num">kcal/dia · ${o.pct ? `${o.pct < 0 ? "−" : "+"}${fmt(Math.abs(c.get - o.kcal))} kcal do GET` : "sem déficit"}</span></button>`).join("")
     : `<p class="muted" style="margin:0;grid-column:1/-1">As opções aparecem depois que o perfil estiver completo.</p>`;
@@ -3029,6 +3073,7 @@ async function startLive(video, onCode, onFail, onTorch){
 
 /* App Android (Capacitor): leitor nativo do Google, sem precisar da câmera da página */
 const NATIVO = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+if (!NATIVO) { const ab = document.querySelector('#progSeg [data-prog="atividade"]'); if (ab) { ab.remove(); $("#progSeg").hidden = true; } } // atividade vem do Health Connect: fora do Android não há dados
 async function scanNativo(){
   const BS = window.Capacitor.Plugins.BarcodeScanner;
   if (!BS) return toast("Leitor nativo indisponível. Use a foto ou digite os números.");
@@ -3056,7 +3101,7 @@ function openScanner(ctx){
      <p class="small" id="scanMsg" style="margin:0">${canLive ? "Abrindo a câmera… Aponte para o código de barras, dentro do quadro." : "Tire uma foto nítida do código de barras, de perto e sem reflexo. No celular, o botão abre a câmera."}</p>
      ${NATIVO ? `<button class="btn primary" id="scanNat" style="justify-content:center;min-height:56px;font-size:1.05rem">Ler com a câmera</button>` : ""}
      <div class="row wrap">
-       <label class="btn ${canLive || NATIVO ? "" : "primary"}" for="scanPhoto" style="flex-direction:row;font-size:1rem;color:inherit">${canLive ? "Usar uma foto" : "Fotografar código"}<input id="scanPhoto" type="file" accept="image/*" capture="environment" hidden></label>
+       <label class="btn ${canLive || NATIVO ? "" : "primary"}" for="scanPhoto" style="flex-direction:row;font-size:1rem;color:${canLive || NATIVO ? "var(--ink)" : "var(--accent-ink)"}">${canLive ? "Usar uma foto" : "Fotografar código"}<input id="scanPhoto" type="file" accept="image/*" capture="environment" hidden></label>
      </div>
      <div class="row"><input class="field num grow" id="scanType" inputmode="numeric" placeholder="Ou digite o código" aria-label="Digitar código de barras"><button class="btn" id="scanGo">Buscar</button></div>`,
     [], scanCtx === "diario" ? () => { stopLive(); renderAddList(); } : null);
@@ -3079,7 +3124,7 @@ function openScanner(ctx){
     if (m) m.innerHTML = noClaude
       ? `A câmera ao vivo não abre dentro do Claude. Use “Usar uma foto” (no celular, abre a câmera) ou abra o app pelo site, onde a leitura é ao vivo: <a href="https://marcosbplz.github.io/equilibrium-app/" target="_blank" rel="noopener">marcosbplz.github.io/equilibrium-app</a>`
       : "Não deu para abrir a câmera. Confira se o navegador tem permissão para usar a câmera, ou use uma foto ou digite os números.";
-    const lbl = document.querySelector('label[for="scanPhoto"]'); if (lbl) lbl.classList.add("primary");
+    const lbl = document.querySelector('label[for="scanPhoto"]'); if (lbl) { lbl.classList.add("primary"); lbl.style.color = "var(--accent-ink)"; }
   }, toggle => {
     const tb = $("#scanTorch"); if (!tb) return;
     tb.hidden = false;
@@ -3334,7 +3379,7 @@ function renderDataCard(){
   const nDays = Object.values(S.meses).reduce((a, m) => a + Object.keys(m.dias).length, 0);
   $("#dataCard").innerHTML = `<h2>Seus dados</h2>
     <p style="margin:0 0 6px">${Store.db ? "Os dados ficam no espaço privado deste app na sua conta Claude e acompanham você em outros aparelhos. Só você tem acesso, e nada é enviado a outros serviços." : (window.claude && window.claude.use ? "Os dados estão guardados só neste navegador. Abra o app pela sua conta Claude para guardá-los na conta e usar em outros aparelhos." : "Os dados ficam só neste navegador. Use Exportar para ter um backup ou levar para outro aparelho, e Importar para trazer de volta.")}</p>
-    <p class="small muted" style="margin:0 0 12px">${nDays} dias no diário · ${S.peso.entradas.length} pesagens · ${S.biblioteca.proprios.length} alimentos seus · ${S.biblioteca.receitas.length} receitas</p>
+    <p class="small muted" style="margin:0 0 12px">${nDays} ${nDays === 1 ? "dia" : "dias"} no diário · ${S.peso.entradas.length} ${S.peso.entradas.length === 1 ? "pesagem" : "pesagens"} · ${S.biblioteca.proprios.length} ${S.biblioteca.proprios.length === 1 ? "alimento seu" : "alimentos seus"} · ${S.biblioteca.receitas.length} ${S.biblioteca.receitas.length === 1 ? "receita" : "receitas"}</p>
     <div class="row wrap">
       <button class="btn" id="expJson">Exportar tudo (JSON)</button>
       <button class="btn" id="expCsv">Exportar diário (CSV)</button>
@@ -3394,7 +3439,7 @@ function renderRefEditor(){
       <h2>Refeições do dia</h2>
       <p class="hint" style="margin:6px 0 12px">Escolha quantas refeições você faz, o nome de cada uma e a partir de que horas ela começa.</p>
       <div class="qty-row" style="margin-bottom:12px"><b style="flex:1">Refeições por dia</b><button type="button" id="refMenos" aria-label="Menos uma refeição">−</button><input class="field num" id="refQtd" value="${r.length}" readonly aria-label="Número de refeições"><button type="button" id="refMais" aria-label="Mais uma refeição">+</button></div>
-      <ul class="list">${r.map((x, i) => `<li class="fi" style="gap:8px">
+      <ul class="list">${r.map((x, i) => `<li class="fi ref-li" style="gap:8px">
         <span class="num muted" style="width:18px">${i + 1}</span>
         <input class="field grow" data-rnome="${i}" value="${esc(x.nome)}" aria-label="Nome da refeição ${i + 1}" maxlength="30">
         <select class="field num" data-rhora="${i}" style="width:84px" aria-label="Começa às">${Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${Math.floor(x.hora ?? 0) === h ? "selected" : ""}>${String(h).padStart(2, "0")}h</option>`).join("")}</select>
@@ -3537,15 +3582,15 @@ function renderDispositivos(){
           <button class="icon-btn" data-dedit="${esc(d.id)}" aria-label="Editar ${esc(d.nome)}">✎</button></li>`).join("")}</ul>`).join("")
         : `<p class="muted" style="margin:10px 0 0">${s.ligado ? "Nenhum aparelho enviou dados ao Health Connect nos últimos 30 dias. Confira no app do aparelho se a sincronização com o Health Connect está ligada e toque em “Procurar e atualizar”." : (H ? "Nenhum dispositivo ainda. Conecte ao Health Connect ou adicione à mão." : "Nenhum dispositivo ainda.")}</p>`}
     </div>
-    <div class="card">
-      <h2>Como vincular cada tipo</h2>
-      <ul class="list small" style="margin-top:6px">
+    <details class="card saiba">
+      <summary><h2 style="margin:0">Como vincular cada tipo</h2></summary>
+      <ul class="list small" style="margin-top:10px">
         <li class="fi" style="display:block"><b>Relógios e pulseiras</b> · no app do aparelho (Samsung Health, Mi Fitness, Zepp, Fitbit, Garmin Connect, Huawei Saúde), ative a sincronização com o Health Connect.</li>
         <li class="fi" style="display:block"><b>Anéis</b> · Oura, Ultrahuman e RingConn têm a opção Health Connect nas configurações do app.</li>
         <li class="fi" style="display:block"><b>Balança corporal</b> · no Fitdays (ou Renpho, eufyLife, Withings), ligue a integração com Health Connect, Google Fit ou Samsung Health. O peso de cada pesagem entra sozinho no Progresso.</li>
         <li class="fi" style="display:block"><b>Balança de alimentos</b> · ainda não existe um padrão do Android para elas enviarem o peso dos alimentos. Cadastre a sua aqui e digite os gramas que ela mostrar ao registrar a refeição.</li>
       </ul>
-    </div>`;
+    </details>`;
   const b = $("#hcBtn"); if (b) b.onclick = async () => {
     if (!s.ligado) return saudeConectar();
     b.disabled = true; b.textContent = "Procurando…";
@@ -3875,6 +3920,21 @@ Para cada item informe:
 Se o texto não descrever comida ou bebida, devolva itens vazio. Não invente itens que não foram citados.
 
 Texto: `;
+const IA_PROMPT_CORRIGIR = `Você é nutricionista. Abaixo está, em JSON, a lista de alimentos identificados numa refeição e, depois, uma correção escrita por quem comeu. Devolva a lista COMPLETA já corrigida, no mesmo formato.
+Regras:
+- Altere somente o que a correção pedir: trocar o alimento, o modo de preparo ou a quantidade, remover um item ou acrescentar um item.
+- Copie os demais itens exatamente como estão, com o mesmo nome e os mesmos gramas.
+- Ao trocar o alimento ou o modo de preparo, atualize "nome" e "busca" e recalcule kcal100, p100, c100 e g100 para o alimento como foi descrito (ex.: batata feita na air fryer sem óleo tem muito menos gordura que a batata frita em óleo).
+- Mantenha os gramas do item corrigido, a menos que a correção fale de quantidade.
+- Se a correção não tiver relação com a comida da lista, devolva a lista sem alterações.
+
+Lista atual: `;
+const IA_CORRECOES_MAX = 3; // correções por análise (cada uma é uma chamada ao Gemini)
+async function iaCorrigirItens(atuais, correcao, foto){
+  const parts = [{ text: IA_PROMPT_CORRIGIR + JSON.stringify({ itens: atuais }) + "\n\nCorreção: " + String(correcao).slice(0, 200) }];
+  if (foto) { const img = await reduzirFoto(foto, 768); parts.push({ inlineData: { mimeType: "image/jpeg", data: img.split(",")[1] } }); }
+  return iaGerar(parts);
+}
 async function iaAnalisarPrato(dataUrl){
   const img = await reduzirFoto(dataUrl, 1024);
   return iaGerar([{ text: IA_PROMPT }, { inlineData: { mimeType: "image/jpeg", data: img.split(",")[1] } }]);
@@ -3933,7 +3993,7 @@ async function fotoPrato(m){
 }
 function revisarPrato(m, foto, itens, frase){ // foto = dataURL (prato) ou null quando veio do registro por texto
   const todos = allFoods().filter(f => f.tipo !== "receita"), geral = todos.filter(f => f.tipo !== "rede"), redes = todos.filter(f => f.tipo === "rede");
-  const linhas = itens.map(it => {
+  const montar = (it, corrigido) => {
     let opcoes = [];
     if (it.rede) { // lanche de rede: usa a tabela oficial (por unidade)
       const rn = normNome(it.rede).replace(/[^a-z ]/g, "").split(" ")[0];
@@ -3946,13 +4006,17 @@ function revisarPrato(m, foto, itens, frase){ // foto = dataURL (prato) ou null 
       if (cm && !opcoes.includes(cm)) opcoes.push(cm);
     }
     const ia = Object.assign(emptyPer100(), { kcal: it.kcal100, p: it.p100, c: it.c100, g: it.g100 });
-    return { it, opcoes, escolha: opcoes.length ? 0 : -1, g: Math.round(it.gramas / 5) * 5, un: 1, on: true, ia };
-  });
+    // item que a pessoa corrigiu: vale a estimativa da IA para o que ela descreveu, não o primeiro achado da tabela
+    return { it, opcoes, escolha: opcoes.length && !(corrigido && !it.rede) ? 0 : -1, g: Math.round(it.gramas / 5) * 5, un: 1, on: true, ia, corrigido: !!corrigido };
+  };
+  let linhas = itens.map(it => montar(it)), fixTxt = "", fixN = 0, pratoOn = false, pratoNome = null;
+  const nomePrato = () => { const n = linhas.filter(L => L.on).map((L, i) => { const t = String(L.it.nome).trim(); return i ? t.charAt(0).toLowerCase() + t.slice(1) : t; });
+    return n.length > 1 ? n.slice(0, -1).join(", ") + " e " + n[n.length - 1] : n[0] || nomeRef(m); };
   const porUn = L => L.escolha >= 0 && L.opcoes[L.escolha].unid; // fast food por unidade: 100 = 1 unidade
   const qtd = L => porUn(L) ? L.un * 100 : L.g;
   const per = L => L.escolha >= 0 ? L.opcoes[L.escolha].per100 : L.ia;
   const adicionar = () => {
-    const dd = dayData(day, true), alvo = lista(dd, m), novos = [];
+    const dd = dayData(day, true), alvo = lista(dd, m), novos = [], entradas = [];
     linhas.filter(L => L.on && qtd(L) > 0).forEach(L => {
       let f = L.escolha >= 0 ? L.opcoes[L.escolha] : null;
       if (!f) { // estimativa vira um alimento seu, para poder editar depois
@@ -3960,11 +4024,35 @@ function revisarPrato(m, foto, itens, frase){ // foto = dataURL (prato) ou null 
         S.biblioteca.proprios.unshift(salvo); Store.save("biblioteca"); f = Object.assign({ tipo: "proprio" }, salvo);
         if (foto) comunidadeEnviarAlimento(salvo, "foto"); // entra também na biblioteca comunitária
       }
-      const e = porUn(L) ? makeEntry(f, L.un * 100, L.un === 1 ? "1 unidade" : `${L.un} unidades`) : makeEntry(f, L.g); alvo.push(e); novos.push(e.id); pushRecent(f.id);
+      const e = porUn(L) ? makeEntry(f, L.un * 100, L.un === 1 ? "1 unidade" : `${L.un} unidades`) : makeEntry(f, L.g); alvo.push(e); novos.push(e.id); entradas.push(e); pushRecent(f.id);
     });
     if (!novos.length) return toast("Nenhum item marcado");
+    // prato feito = atalho com os itens; os alimentos continuam separados na biblioteca
+    if (pratoOn) { S.biblioteca.refeicoes.unshift({ id: uid(), nome: (pratoNome || nomePrato()).trim() || nomePrato(), itens: clone(entradas) }); Store.save("biblioteca"); }
     const dFoto = day; saveDay(dFoto); closeSheet(); renderDiary(); vibrar();
-    toast(`${novos.length} ${novos.length > 1 ? "itens adicionados" : "item adicionado"}`, { label: "Desfazer", fn: () => { const l = (dayData(dFoto) || {})[m] || []; for (let i = l.length - 1; i >= 0; i--) if (novos.includes(l[i].id)) l.splice(i, 1); saveDay(dFoto); renderDiary(); } });
+    toast(`${novos.length} ${novos.length > 1 ? "itens adicionados" : "item adicionado"}${pratoOn ? " · prato salvo" : ""}`, { label: "Desfazer", fn: () => { const l = (dayData(dFoto) || {})[m] || []; for (let i = l.length - 1; i >= 0; i--) if (novos.includes(l[i].id)) l.splice(i, 1); saveDay(dFoto); renderDiary(); } });
+  };
+  const chaveIt = x => normNome(x.nome) + "|" + Math.round(x.kcal100 || 0) + "|" + Math.round(x.g100 || 0);
+  const corrigir = async () => {
+    const campo = $("#iaFixQ"), btn = $("#iaFixGo"), err = $("#iaFixErr"), q = campo.value.trim();
+    const avisar = t => { err.textContent = t; err.hidden = false; };
+    if (!q) return campo.focus();
+    if (fixN >= IA_CORRECOES_MAX) return avisar("Limite de correções desta análise. Ajuste os itens à mão.");
+    if (navigator.onLine === false) return avisar("Sem internet: a correção precisa de conexão.");
+    const ativos = linhas.filter(L => L.on && qtd(L) > 0), porChave = new Map();
+    const atuais = ativos.map(L => { const p = per(L), x = { nome: L.it.nome, busca: L.it.busca, gramas: porUn(L) ? Math.round((L.it.gramas || 100) * L.un) : L.g,
+      kcal100: Math.round(p.kcal || 0), p100: +(p.p || 0).toFixed(1), c100: +(p.c || 0).toFixed(1), g100: +(p.g || 0).toFixed(1), confianca: L.it.confianca || "media", rede: L.it.rede || "" };
+      porChave.set(chaveIt(x), L); return x; });
+    fixTxt = q; err.hidden = true; btn.disabled = campo.disabled = true; btn.textContent = "Corrigindo…";
+    let novos = null, falha = "";
+    try { novos = await iaCorrigirItens(atuais, q, foto); } catch(e){ falha = String(e && e.message); }
+    if ($("#iaFixGo") !== btn) return; // a folha foi fechada ou trocada enquanto esperava
+    if (!novos || !novos.length) { btn.disabled = campo.disabled = false; btn.textContent = "Corrigir";
+      return avisar(falha === "limite" || falha === "ocupado" || falha === "demorou" || falha === "sem conexão" ? iaMsgErro(falha).replace("entender a frase", "a correção") : "Não consegui aplicar essa correção agora."); }
+    let mudou = 0;
+    linhas = novos.map(it => { const igual = porChave.get(chaveIt(it)); if (igual) { if (!porUn(igual)) igual.g = Math.round(it.gramas / 5) * 5 || igual.g; return igual; } mudou++; return montar(it, true); });
+    if (!mudou && novos.length === atuais.length) { draw(); $("#iaFixErr").textContent = "A IA não achou o que mudar. Descreva de outro jeito."; $("#iaFixErr").hidden = false; return; }
+    fixN++; fixTxt = ""; draw(); vibrar(15); toast("Correção aplicada");
   };
   const draw = () => {
     const tot = linhas.filter(L => L.on).reduce((a, L) => { const n = scaled(per(L), qtd(L)); ["kcal", "p", "c", "g"].forEach(k => a[k] += n[k] || 0); return a; }, { kcal: 0, p: 0, c: 0, g: 0 });
@@ -3975,12 +4063,21 @@ function revisarPrato(m, foto, itens, frase){ // foto = dataURL (prato) ou null 
       <p class="small muted" style="margin:0">Troque o alimento da tabela se precisar. Itens desmarcados não entram.${foto && comunidadeAtiva() ? " Os itens em “Estimativa da foto” também entram na biblioteca comunitária (só nome e tabela nutricional)." : ""}</p>
       ${linhas.map((L, i) => { const n = scaled(per(L), qtd(L)); return `<div class="ia-item">
         <input type="checkbox" data-ion="${i}" ${L.on ? "checked" : ""} aria-label="Incluir ${esc(L.it.nome)}">
-        <div style="min-width:0"><b>${esc(L.it.nome)}</b>${L.it.confianca === "baixa" ? ` <span class="badge fix">confira</span>` : ""}<br>
+        <div style="min-width:0"><b>${esc(L.it.nome)}</b>${L.corrigido ? ` <span class="badge user">corrigido</span>` : L.it.confianca === "baixa" ? ` <span class="badge fix">confira</span>` : ""}<br>
           <select data-iop="${i}" aria-label="Alimento da tabela">${L.opcoes.map((f, j) => `<option value="${j}" ${L.escolha === j ? "selected" : ""}>${esc(f.nome)}${f.tipo === "comunidade" ? " (comunidade)" : ""}</option>`).join("")}<option value="-1" ${L.escolha < 0 ? "selected" : ""}>${foto ? "Estimativa da foto" : "Estimativa da IA"}</option></select></div>
         ${porUn(L) ? `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="1" step="1" value="${L.un}" data-iu="${i}" style="width:60px" aria-label="Unidades de ${esc(L.it.nome)}">un</label>`
           : `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="0" step="5" value="${L.g}" data-ig="${i}" aria-label="Gramas de ${esc(L.it.nome)}">g</label>`}
-        <div class="k num">${fmt(n.kcal)} kcal · P ${fmt(n.p, 1)} · C ${fmt(n.c, 1)} · G ${fmt(n.g, 1)} · ${L.escolha >= 0 ? sourceLabel(L.opcoes[L.escolha]) : `<span class="badge user">Estimativa</span>`}</div></div>`; }).join("")}`,
+        <div class="k num">${fmt(n.kcal)} kcal · P ${fmt(n.p, 1)} · C ${fmt(n.c, 1)} · G ${fmt(n.g, 1)} · ${L.escolha >= 0 ? sourceLabel(L.opcoes[L.escolha]) : `<span class="badge user">Estimativa</span>`}</div></div>`; }).join("")}
+      <div class="ia-fix"><label for="iaFixQ" style="font-weight:700">Corrigir com a IA</label>
+        <div class="row"><input class="field grow" id="iaFixQ" maxlength="200" enterkeyhint="send" placeholder="Ex.: era de air fryer" value="${esc(fixTxt)}" style="min-width:0"><button class="btn" id="iaFixGo" type="button">Corrigir</button></div>
+        <div class="ag-err" id="iaFixErr" hidden></div></div>
+      <div class="ia-fix"><label class="switch-row" for="iaPrato"><span><b>Salvar como prato feito</b><br><span class="small muted">Para registrar tudo de novo com um toque</span></span><input type="checkbox" id="iaPrato" ${pratoOn ? "checked" : ""}></label>
+        <input class="field" id="iaPratoNome" maxlength="60" aria-label="Nome do prato" placeholder="Nome do prato" value="${esc(pratoNome ?? nomePrato())}" ${pratoOn ? "" : "hidden"}></div>`,
       [[foto ? "Refazer foto" : "Escrever de novo", () => foto ? fotoPrato(m) : (closeSheet(), agoraTextoAbrir(frase))], [`Adicionar ${refCom("a", m)}`, adicionar, "primary"]], closeSheet);
+    $("#iaPrato").onchange = e => { pratoOn = e.target.checked; $("#iaPratoNome").hidden = !pratoOn; if (pratoOn) $("#iaPratoNome").focus(); };
+    $("#iaPratoNome").oninput = e => { pratoNome = e.target.value; };
+    $("#iaFixGo").onclick = corrigir; $("#iaFixQ").oninput = e => { fixTxt = e.target.value; $("#iaFixErr").hidden = true; };
+    $("#iaFixQ").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); corrigir(); } };
     document.querySelectorAll("[data-ion]").forEach(c => c.onchange = () => { linhas[+c.dataset.ion].on = c.checked; draw(); });
     document.querySelectorAll("[data-iop]").forEach(s2 => s2.onchange = () => { linhas[+s2.dataset.iop].escolha = +s2.value; draw(); });
     document.querySelectorAll("[data-ig]").forEach(g => g.onchange = () => { linhas[+g.dataset.ig].g = Math.max(0, +g.value || 0); draw(); });
@@ -4497,14 +4594,33 @@ $("#agTxtX").onclick = () => agFecharTexto();
 $("#agRef").onclick = agTrocarRef; $("#agRef2").onclick = agTrocarRef;
 function agLista(){
   const q = $("#agFrase").value.trim(), el = $("#agLista");
-  const ult = q.split(/[,;+\n]|\s+e\s+/).pop().trim();
+  const ult = q.split(/[,;+\n]|\s+e\s+/).pop().trim().replace(/^(\d+([.,]\d+)?|um|uma|dois|duas|três|tres|meio|meia)\s+/i, "");
   let res = [], titulo = "";
-  if (!q) { res = (S.biblioteca.recentes || []).map(id => findFood(id)).filter(Boolean).slice(0, 5); titulo = "Recentes"; }
+  if (!q) return agListaVazia();
   else if (ult.length >= 2) { const r0 = searchFoods(ult, allFoods()); res = r0.filter(f => f.tipo !== "rede").concat(r0.filter(f => f.tipo === "rede")).slice(0, 6); titulo = "Na sua base"; } // alimento comum antes de lanche de rede
   el.innerHTML = res.length ? `<div class="ag-lbl">${titulo}</div>` + res.map(f => `<div class="ag-row"><div class="nm"><b>${esc(f.nome)}</b><small class="num">${fmt(f.per100.kcal)} kcal por ${f.unid ? "unidade" : "100 g"}</small></div><button class="ag-mini" type="button" data-agadd="${esc(f.id)}" aria-label="Adicionar ${esc(f.nome)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>`).join("") : "";
   el.querySelectorAll("[data-agadd]").forEach(b => b.onclick = () => { const f = findFood(b.dataset.agadd); if (!f) return; const m = agRefAtual(); agFecharTexto(() => { agIrParaHoje(); addState.meal = m; openQty(f); }); });
 }
-// biblioteca completa do app (abas, favoritos, fast food, refeições prontas), já buscando o último item digitado
+// campo vazio: o que a pessoa costuma comer nesta refeição e os pratos feitos, com um toque para registrar
+function agListaVazia(){
+  const el = $("#agLista"), m = agRefAtual(), nm = nomeRef(m).toLowerCase();
+  let comum = bibliotecaPessoal(m).filter(x => x.n > 0).slice(0, 5).map(x => x.f), titulo = `Costuma comer ${refCom("em", m).replace(/^(no|na) /, x => x)}`;
+  if (!comum.length) { comum = (S.biblioteca.recentes || []).map(id => findFood(id)).filter(Boolean).slice(0, 5); titulo = "Recentes"; }
+  const pratos = S.biblioteca.refeicoes.slice(0, 3), mais = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
+  const linha = (attr, id, nome, sub, rot) => `<div class="ag-row"><button class="nm ag-nm" type="button" ${attr}-ver="${esc(id)}"><b>${esc(nome)}</b><small class="num">${sub}</small></button><button class="ag-mini" type="button" ${attr}="${esc(id)}" aria-label="${rot}">${mais}</button></div>`;
+  el.innerHTML = (pratos.length ? `<div class="ag-lbl">Pratos feitos</div>` + pratos.map(p => linha("data-agprato", p.id, p.nome, `${p.itens.length} ${p.itens.length === 1 ? "item" : "itens"} · ${fmt(mealTotal(p.itens))} kcal`, `Registrar ${p.nome}`)).join("") : "")
+    + (comum.length ? `<div class="ag-lbl">${titulo}</div>` + comum.map(f => { const pg = gramasPadrao(f), n = scaled(f.per100, f.unid ? 100 * pg.qtd : pg.g);
+        return linha("data-agum", f.id, f.nome.replace(/ \(estimativa por (foto|texto)\)$/, ""), `${f.unid ? pg.qtd + " un" : fmt(pg.g) + " g"} · ${fmt(n.kcal)} kcal`, `Adicionar ${f.nome}`); }).join("") : "");
+  const marcar = b => { b.classList.add("ok"); b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`; };
+  el.querySelectorAll("[data-agum]").forEach(b => b.onclick = () => { const f = findFood(b.dataset.agum); if (!f) return; agIrParaHoje(); addState.meal = agRefAtual(); adicionarDireto(f); marcar(b); });
+  el.querySelectorAll("[data-agum-ver]").forEach(b => b.onclick = () => { const f = findFood(b.dataset.agumVer); if (!f) return; const mm = agRefAtual(); agFecharTexto(() => { agIrParaHoje(); addState.meal = mm; openQty(f); }); });
+  const registrarPrato = (id, b) => { const p = S.biblioteca.refeicoes.find(x => x.id === id); if (!p) return; agIrParaHoje(); const mm = agRefAtual(), dA = day, novos = p.itens.map(e => Object.assign(clone(e), { id: uid() }));
+    lista(dayData(dA, true), mm).push(...novos); saveDay(dA); vibrar(); renderDiary(); if (b) marcar(b);
+    toast(`✓ ${p.nome} · ${fmt(mealTotal(novos))} kcal`, { label: "Desfazer", fn: () => { const l = (dayData(dA) || {})[mm] || []; const ids = new Set(novos.map(e => e.id)); for (let i = l.length - 1; i >= 0; i--) if (ids.has(l[i].id)) l.splice(i, 1); saveDay(dA); renderDiary(); } }); };
+  el.querySelectorAll("[data-agprato]").forEach(b => b.onclick = () => registrarPrato(b.dataset.agprato, b));
+  el.querySelectorAll("[data-agprato-ver]").forEach(b => b.onclick = () => registrarPrato(b.dataset.agpratoVer, b.parentNode.querySelector("[data-agprato]")));
+}
+// biblioteca completa do app (abas, favoritos, fast food, pratos feitos), já buscando o último item digitado
 $("#agBiblio").onclick = () => {
   const termo = $("#agFrase").value.trim().split(/[,;+\n]|\s+e\s+/).pop().trim().replace(/^(\d+([.,]\d+)?|um|uma|dois|duas|três|tres|meio|meia)\s+/i, ""), m = agRefAtual();
   agFecharTexto(() => { agIrParaHoje(); openAdd(m, termo); });
@@ -4543,7 +4659,10 @@ $("#agEntender").onclick = () => {
   const el = $("#agAgua"); let t = null, longo = false;
   const somar = () => { const d = agHoje(), dd = dayData(d, true); dd.agua = (dd.agua || 0) + 250; saveDay(d); vibrar(15); renderDiary();
     toast(`+250 ml · ${fmt(dd.agua / 1000, 2)} L hoje`, { label: "Desfazer", fn: () => { dd.agua = Math.max(0, (dd.agua || 0) - 250); saveDay(d); renderDiary(); } }); };
-  el.addEventListener("pointerdown", () => { longo = false; clearTimeout(t); t = setTimeout(() => { longo = true; vibrar(30); agIrParaHoje(); openAgua(); }, 500); });
+  const out = $("#agAguaOut"), doOut = e => e.target.closest("#agAguaOut");
+  out.onclick = e => { e.stopPropagation(); agIrParaHoje(); openAgua(); };
+  out.addEventListener("keydown", e => e.stopPropagation());
+  el.addEventListener("pointerdown", e => { if (doOut(e)) return; longo = false; clearTimeout(t); t = setTimeout(() => { longo = true; vibrar(30); agIrParaHoje(); openAgua(); }, 500); });
   ["pointerup", "pointerleave", "pointercancel"].forEach(ev => el.addEventListener(ev, () => clearTimeout(t)));
   el.addEventListener("click", () => { if (longo) { longo = false; return; } somar(); });
   el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); somar(); } });
