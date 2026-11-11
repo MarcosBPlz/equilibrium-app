@@ -968,7 +968,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-10T21:04:26Z";
+const BIB_EMBUTIDA = "2026-11-11T14:40:25Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -4135,6 +4135,16 @@ function renderNotifCard(){
 }
 /* ---------- sincronização em tempo real com o Painel Admin (Firebase Firestore) ---------- */
 let admSincRodando = false;
+// destino de uma notificação do admin: link externo (Google Play, site…) ou tela do app
+function abrirDestinoPush(extra){
+  const url = extra && extra.url;
+  if (url && /^https:\/\//i.test(url)) {
+    // no app Android, sair do WebView vira um Intent: link do Google Play abre direto na Play Store
+    if (NATIVO) location.href = url; else window.open(url, "_blank", "noopener");
+    return;
+  }
+  day = iso(new Date()); location.hash = "#" + ((extra && extra.rota) || "diario"); renderAll();
+}
 async function dispararPushAdmin(m){
   const hashId = 5000 + (Array.from(String(m.id || "")).reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0) & 0xfff);
   const LN = NOTIF();
@@ -4144,14 +4154,18 @@ async function dispararPushAdmin(m){
       if (pm.display !== "granted") pm = await LN.requestPermissions();
       if (pm.display === "granted") {
         // sem "schedule": o Android mostra na hora; com horário agendado ele vira alarme inexato e pode atrasar vários minutos
-        await LN.schedule({ notifications: [{ id: hashId, title: m.titulo || "Equilibrium", body: m.corpo || "", extra: { rota: m.rota || "diario" } }] });
+        const n = { id: hashId, title: m.titulo || "Equilibrium", body: m.corpo || "", extra: { rota: m.rota || "diario", url: m.url || "" } };
+        if (m.botao) { // botão de ação na própria notificação (ex.: "Atualizar agora")
+          try { await LN.registerActionTypes({ types: [{ id: "adm" + hashId, actions: [{ id: "abrir", title: String(m.botao).slice(0, 24), foreground: true }] }] }); n.actionTypeId = "adm" + hashId; } catch(e){}
+        }
+        await LN.schedule({ notifications: [n] });
         return;
       }
     } catch(e){}
   }
   if ("Notification" in window) {
     try {
-      if (Notification.permission === "granted") new Notification(m.titulo || "Equilibrium", { body: m.corpo || "", icon: "icone-180.png" });
+      if (Notification.permission === "granted") { const n = new Notification(m.titulo || "Equilibrium", { body: m.corpo || "", icon: "icone-180.png" }); n.onclick = () => { window.focus(); abrirDestinoPush({ rota: m.rota, url: m.url }); }; }
     } catch(e){}
   }
 }
@@ -4205,7 +4219,7 @@ setInterval(() => { if (!document.hidden) adminSincronizar(); }, 45000);
 
 (() => {
   const LN = NOTIF(); if (!LN) return;
-  try { LN.addListener("localNotificationActionPerformed", ev => { const r = ev && ev.notification && ev.notification.extra && ev.notification.extra.rota; day = iso(new Date()); location.hash = "#" + (r || "diario"); renderAll(); }); } catch(e){}
+  try { LN.addListener("localNotificationActionPerformed", ev => { if (ev && ev.actionId === "dismiss") return; abrirDestinoPush(ev && ev.notification && ev.notification.extra); }); } catch(e){}
   document.addEventListener("visibilitychange", () => { if (!document.hidden) notifAgendarDepois(); });
   setTimeout(bibAtualizar, 5000);
   let ultBib = Date.now();
