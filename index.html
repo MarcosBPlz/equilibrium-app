@@ -669,6 +669,9 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
 .ag-txc h2{margin:0;font-family:var(--display);font-weight:400;font-size:1.75rem;line-height:1.1}
 .ag-ta{box-sizing:border-box;display:block;width:100%;min-height:96px;resize:none;background:var(--surface);color:var(--ink);border:1.5px solid var(--pill-bd);border-radius:18px;padding:14px 16px;font:500 16px/1.45 var(--body)}
 .ag-ta::placeholder{color:var(--muted)}
+.ag-tawrap{position:relative}.ag-tawrap .ag-ta{padding-right:62px}
+.ag-mic{position:absolute;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink,#fff);display:flex;align-items:center;justify-content:center;cursor:pointer}.ag-mic svg{width:22px;height:22px}
+.ag-mic.on{animation:agMicP 1.1s ease-in-out infinite}@keyframes agMicP{50%{transform:scale(1.12);box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 25%,transparent)}}
 .ag-ta:focus{outline:2px solid var(--accent);outline-offset:1px}
 .ag-big{all:unset;box-sizing:border-box;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px;width:100%;padding:14px;border-radius:16px;font-weight:800;font-size:.95rem;background:var(--accent);color:var(--accent-ink)}
 .ag-big svg{width:18px;height:18px}
@@ -919,7 +922,8 @@ main #p-agora{max-width:520px;margin:0 auto;width:100%}
       <button class="ag-ref" id="agRef2" type="button" style="position:static;transform:none;box-shadow:none" aria-label="Trocar refeição"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="agRefNome"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     </div>
     <h2 id="agTxtH">O que você comeu?</h2>
-    <textarea class="ag-ta" id="agFrase" rows="3" maxlength="400" placeholder="Ex.: 2 ovos e 1 pão" aria-labelledby="agTxtH"></textarea>
+    <div class="ag-tawrap"><textarea class="ag-ta" id="agFrase" rows="3" maxlength="400" placeholder="Ex.: 2 ovos e 1 pão" aria-labelledby="agTxtH"></textarea>
+      <button class="ag-mic" id="agMic" type="button" aria-label="Falar o que você comeu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>
     <button class="ag-big" id="agEntender" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Entender a frase</button>
     <button class="ag-big sec" id="agBiblio" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>Buscar na biblioteca</button>
     <div class="ag-err" id="agErr" hidden></div>
@@ -992,7 +996,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-16T17:02:33Z";
+const BIB_EMBUTIDA = "2026-11-20T11:13:03Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -1433,6 +1437,11 @@ const UNIDADES = [
   [/^pao, trigo, frances/, [["1 unidade", 50]]],
   [/^pao, trigo, forma/, [["1 fatia", 25]]]
 ];
+// líquidos: registrados em ml. Produtos com rótulo vêm por 100 ml (1 ml = 1 g); na TACO usa a densidade.
+const LIQ_SIM = /\b(leite|suco|refrigerante|bebida|agua de coco|caldo de cana|cerveja|vinho|kefir|cha|cafe|isotonico|energetico|nectar|refresco|achocolatado|iogurte liquido|agua|chopp|drink|vitamina|shake)\b/;
+const LIQ_NAO = /\bpo\b|em po|condensad|creme de leite|doce de leite|queijo|requeijao|pudim|bolo|biscoito|bolacha|\bchocolate\b|\bpao\b|farinha|torrad|moid|folha|sorvete|mousse|cereal|barra|tablete|capsula/;
+function ehLiquido(f){ if (!f) return false; if (f.liquido != null) return !!f.liquido; if (f.unid) return false; const n = norm(f.nome || ""); return LIQ_SIM.test(n.split(",")[0]) && !LIQ_NAO.test(n); } // a bebida tem que ser o alimento principal (não "canjica, com leite")
+function mlDens(f){ return f && f.tipo === "taco" ? ((densidadeDe(f.nomeTaco || f.nome) || [0, 1])[1]) : 1; }
 function densidadeDe(nome){ const n = norm(nome); return DENS.find(([re]) => re.test(n)) || null; }
 function medidasEstimadas(f){
   const out = [], n = norm(f.nomeTaco || f.nome);
@@ -2015,6 +2024,8 @@ function renderDiary(){
       <div class="meal-h"><button class="meal-toggle" data-toggle-meal="${m}" aria-expanded="${!recolhidas.includes(m)}"><svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg><span class="mh-wrap"><span class="mh">${nm}${items.length ? `<span class="feito" aria-label="registrado">✓</span>` : ""}</span><span class="meal-sum num">${items.length ? `<span class="kt">${fmt(tot.kcal)} kcal</span>${macHtml(tot)}` : "Nada registrado"}</span></span></button>
         <div class="menu"><button class="icon-btn" data-menu="${m}" aria-label="Opções de ${nm}" aria-haspopup="true">⋯</button>
           <div class="pop" id="pop-${m}">
+            <button data-mact="clip" data-m="${m}" ${items.length ? "" : "disabled"}>Copiar ${nm.toLowerCase()}</button>
+            ${copiaRef() ? `<button data-mact="paste" data-m="${m}">Colar ${esc(copiaRef().nome.toLowerCase())} (${copiaRef().itens.length} ${copiaRef().itens.length > 1 ? "itens" : "item"})</button>` : ""}
             <button data-mact="copy" data-m="${m}">Copiar ${nm.toLowerCase()} do dia anterior</button>
             <button data-mact="save" data-m="${m}" ${items.length ? "" : "disabled"}>Salvar como prato feito</button>
             <button data-mact="clear" data-m="${m}" ${items.length ? "" : "disabled"}>Limpar esta refeição</button>
@@ -2032,6 +2043,7 @@ function qtdTexto(e){ // "1 porção · 30 g", "150 g", "2 unidades"
   const por = e.porcao ? String(e.porcao).replace(/\s*\([^)]*\d+\s*(g|ml)[^)]*\)/i, "").trim() : "";
   if (!e.g) return por || "Adição rápida";
   if (e.un) return por || "1 unidade";
+  if (e.med && e.med.ml) return por || `${fmt(e.g)} ml`;
   return por && !/^\d+([.,]\d+)?\s*g$/.test(por) ? `${por} · ${fmt(e.g)} g` : `${fmt(e.g)} g`;
 }
 function ajustarItem(m, id, dir){
@@ -2063,8 +2075,21 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && e.target.matches("[data-entry]")) openEntry(e.target.dataset.m, e.target.dataset.entry);
   if (e.key === "Escape" && $("#overlay").classList.contains("on")) closeSheet();
 });
+function copiaRef(){ const c = pref.get("copiaRefeicao", null); return c && Array.isArray(c.itens) && c.itens.length ? c : null; }
+function colarRefeicao(m){
+  const c = copiaRef(); if (!c) return toast("Nada copiado");
+  const dC = day, novos = c.itens.map(e => Object.assign(clone(e), { id: uid() })), ids = novos.map(e => e.id);
+  lista(dayData(dC, true), m).push(...novos); saveDay(dC); renderDiary(); vibrar();
+  toast(`${novos.length} ${novos.length > 1 ? "itens colados" : "item colado"} ${refCom("em", m)}`, { label: "Desfazer", fn: () => { const l = (dayData(dC) || {})[m] || []; for (let i = l.length - 1; i >= 0; i--) if (ids.includes(l[i].id)) l.splice(i, 1); saveDay(dC); renderDiary(); } });
+}
 function mealAction(act, m){
   const nm = nomeRef(m);
+  if (act === "clip") {
+    const items = (dayData(day) || {})[m] || []; if (!items.length) return;
+    pref.set("copiaRefeicao", { nome: nm, data: day, itens: clone(items) }); renderDiary(); vibrar();
+    return toast(`${nm} copiado. No ⋯ de outra refeição, toque em Colar.`);
+  }
+  if (act === "paste") return colarRefeicao(m);
   if (act === "copy") {
     const prev = dayData(addDays(day, -1));
     const src = prev && prev[m] || [];
@@ -2148,7 +2173,7 @@ function foodRow(f, plus, nota){
   const r = refLinha(f), n = r.g === 100 ? f.per100 : scaled(f.per100, r.g);
   return `<li class="fi"><button class="pick" data-pick="${f.id}"><div class="t">${esc(f.nome)}</div><div class="s num">${sourceLabel(f)}<b class="k">${fmt(n.kcal)}</b> kcal · ${r.txt}</div>${macHtml(n)}${nota ? `<div class="uso">${esc(nota)}</div>` : ""}</button>
     ${podeEditar(f) ? `<button class="edit" data-edit="${f.id}" aria-label="Editar ${esc(f.nome)}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>` : ""}
-    <button class="star" data-star="${f.id}" aria-pressed="${fav}" aria-label="${fav ? "Remover dos favoritos" : "Favoritar"}">★</button>${plus ? `<button class="plus" data-plus="${f.id}" aria-label="Adicionar ${f.unid ? pg.qtd + " unidade" : fmt(pg.g) + " g"}">+<small>${f.unid ? pg.qtd + " un" : fmt(pg.g) + " g"}</small></button>` : ""}</li>`;
+    <button class="star" data-star="${f.id}" aria-pressed="${fav}" aria-label="${fav ? "Remover dos favoritos" : "Favoritar"}">★</button>${plus ? `<button class="plus" data-plus="${f.id}" aria-label="Adicionar ${f.unid ? pg.qtd + " unidade" : pg.ml ? fmt(pg.ml) + " ml" : fmt(pg.g) + " g"}">+<small>${f.unid ? pg.qtd + " un" : pg.ml ? fmt(pg.ml) + " ml" : fmt(pg.g) + " g"}</small></button>` : ""}</li>`;
 }
 function fillAddList(){
   const ul = $("#addList"); if (!ul) return;
@@ -2195,7 +2220,7 @@ function qtyBody(f, grams, medNome, qtd){
     <div class="qty-row" id="qQtdRow" ${sel < 0 && medNome !== "ml" ? "hidden" : ""}><span class="small muted" style="flex:1" id="qQtdLbl">Quantas?</span><button type="button" id="qMenos" aria-label="Menos">−</button><input class="field num" id="qQtd" type="number" min="0.5" step="0.5" inputmode="decimal" value="${qtd || 1}" aria-label="Quantidade da medida"><button type="button" id="qMais" aria-label="Mais">+</button></div>
     <label for="qPg" id="qPgRow" hidden>Peso da porção (g)<input class="field num" id="qPg" type="number" min="0" step="0.1" inputmode="decimal"></label>
     <p class="hint" id="qHint" hidden>Medida nivelada, valor aproximado. <a href="#biblioteca" id="qVerMed">Ver como medir</a></p>
-    <label for="qG" ${f.unid ? "hidden" : ""}>Total em gramas<input class="field num" id="qG" type="number" min="0" step="1" inputmode="decimal" value="${grams}"></label>
+    <label for="qG" ${f.unid ? "hidden" : ""}><span id="qGLbl">Total em gramas</span><input class="field num" id="qG" type="number" min="0" step="1" inputmode="decimal" value="${grams}"></label>
     <div class="chips" id="qChips" ${f.unid ? "hidden" : ""}>${[-10, 10, 50].map(d => `<button class="tab" data-dg="${d}">${d > 0 ? "+" : "−"}${Math.abs(d)} g</button>`).join("")}${[50,100,150,200].map(g => `<button class="tab" data-g="${g}">${g} g</button>`).join("")}</div>
     <div class="nutri num" id="qN"></div>
     <div class="row wrap" style="gap:6px" ${f.unid ? "hidden" : ""}><button class="btn ghost sm" id="qSalvaMed" type="button">Salvar como minha medida</button>${f.id && !f.snap && !f.unid ? `<button class="btn ghost sm" id="qDet" type="button">${f.tipo === "taco" ? "Corrigir valores" : "Editar ou excluir"}</button>` : ""}</div>
@@ -2203,14 +2228,15 @@ function qtyBody(f, grams, medNome, qtd){
 }
 function wireQty(f, reabrir){
   const gi = $("#qG"), ps = $("#qP"), qi = $("#qQtd"), pg = $("#qPg"), ms = medidasDe(f);
-  const dML = (densidadeDe(f.nomeTaco || f.nome) || [0, 1])[1];
+  const dML = ehLiquido(f) ? mlDens(f) : (densidadeDe(f.nomeTaco || f.nome) || [0, 1])[1];
   const med = () => ps.value === "" ? null : ps.value === "ml" ? { nome: "ml", g: dML, tipo: "ml", ml: true } : ms[+ps.value];
   const passo = () => ps.value === "ml" ? 50 : null;
   const upd = () => {
     const m = med();
     $("#qQtdRow").hidden = !m; $("#qChips").hidden = !!m; $("#qPgRow").hidden = !m || !!m.ml || !!f.unid; $("#qHint").hidden = !(m && (m.tipo === "estimada" || m.ml));
     $("#qQtdLbl").textContent = m && m.ml ? "Quantos ml?" : "Quantas?";
-    if (m && m.ml) $("#qHint").innerHTML = `1 ml ≈ ${fmt(dML, 2)} g${dML === 1 ? " (densidade da água; para outros alimentos é aproximado)" : " (aproximado)"}.`;
+    $("#qGLbl").textContent = m && m.ml ? "Equivale a (g)" : "Total em gramas";
+    if (m && m.ml) $("#qHint").innerHTML = ehLiquido(f) ? (dML === 1 ? "Líquido: valores do rótulo por 100 ml." : `Líquido: 1 ml ≈ ${fmt(dML, 2)} g.`) : `1 ml ≈ ${fmt(dML, 2)} g${dML === 1 ? " (densidade da água; para outros alimentos é aproximado)" : " (aproximado)"}.`;
     const n = scaled(f.per100, Number(gi.value) || 0);
     $("#qN").innerHTML = [["kcal","kcal"],["p","proteína g"],["c","carbo g"],["g","gordura g"]].map(([k, l]) => `<div><b>${fmt(n[k], k === "kcal" ? 0 : 1)}</b><span>${l}</span></div>`).join("");
     $("#qT").innerHTML = NUTRI.map(([k, nm, u]) => `<tr><td>${nm}</td><td>${fmt(n[k], u === "kcal" ? 0 : 1)} ${n[k] == null ? "" : u}</td></tr>`).join("");
@@ -2253,7 +2279,8 @@ function wireQty(f, reabrir){
 function openQty(f, gForcado){
   const ms = medidasDe(f), ult = (S.biblioteca.ultimasG || {})[f.id];
   const def = gForcado || (ult && !f.unid) ? null : ms.find(m => m.tipo === "sua" || m.tipo === "rotulo" || m.tipo === "unidade") || null;
-  sheet(f.nome, qtyBody(f, gForcado || (def ? def.g : ult || 100), def ? def.nome : null, 1), [...(podeEditar(f) ? [["✎ Editar", () => openFoodForm(f, () => { const nf = findFood(f.id); nf ? openQty(nf) : renderAddList(); })]] : []), [`Adicionar ${refCom("a", addState.meal)}`, () => {
+  const liq = ehLiquido(f) && !gForcado, mlIni = liq ? Math.round((ult || 200 * mlDens(f)) / mlDens(f)) : 0;
+  sheet(f.nome, qtyBody(f, liq ? Math.round(mlIni * mlDens(f) * 10) / 10 : gForcado || (def ? def.g : ult || 100), liq ? "ml" : def ? def.nome : null, liq ? mlIni : 1), [...(podeEditar(f) ? [["✎ Editar", () => openFoodForm(f, () => { const nf = findFood(f.id); nf ? openQty(nf) : renderAddList(); })]] : []), [`Adicionar ${refCom("a", addState.meal)}`, () => {
     const v = read(); if (!v.g) return toast("Informe a quantidade");
     const dAdd = day, mAdd = addState.meal, novo = makeEntry(f, v.g, v.porcao, v.med);
     lista(dayData(dAdd, true), mAdd).push(novo); saveDay(dAdd); pushRecent(f.id); lembrarGramas(f, v.g); vibrar();
@@ -2262,7 +2289,8 @@ function openQty(f, gForcado){
     } });
   }, "primary"]], renderAddList);
   const read = wireQty(f, () => openQty(f));
-  setTimeout(() => { const g = $("#qG"); if (!def && g) g.select(); }, 40);
+  if (liq) $("#qQtd").step = 10;
+  setTimeout(() => { const g = liq ? $("#qQtd") : $("#qG"); if ((liq || !def) && g) g.select(); }, 40);
 }
 function openEntry(m, id){
   const dd = dayData(day), e = dd[m].find(x => x.id === id); if (!e) return;
@@ -2636,6 +2664,7 @@ function openFoodForm(f, after, preset, ocr){
     <details class="saiba ff-mais" ${src && (src.per100.fib != null || src.per100.na != null || src.ean || src.obs || src.fonte || src.nota) || (ocr && ocr.campos.some(k => k === "fib" || k === "na")) ? "open" : ""}><summary>Mais detalhes</summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
     <div class="grid2">${fld("fib","Fibra (g)")}${fld("na","Sódio (mg)","1")}</div>
     ${isFix ? "" : `<label for="ff-ean">Código de barras (opcional)<input class="field num" id="ff-ean" inputmode="numeric" value="${esc(src && src.ean || "")}" placeholder="Ex.: 7891000100103"></label>`}
+    ${isFix ? "" : `<label class="switch-row" for="ff-liq"><span><b>É líquido</b><br><span class="small muted">Registra em ml (leite, suco, bebidas)</span></span><input type="checkbox" id="ff-liq" ${ehLiquido(src) ? "checked" : ""}></label>`}
     ${isFix ? "" : `<label for="ff-obs">Observações (opcional)<textarea class="field" id="ff-obs" rows="2" style="font:inherit;resize:vertical" placeholder="Ex.: sabor chocolate">${esc(src && src.obs || "")}</textarea></label>`}
     <label for="ff-fonte">${isFix ? "Motivo da correção" : "Fonte dos dados"}<input class="field" id="ff-fonte" value="${esc(src ? (isFix ? (src.nota || "") : (src.fonte || "")) : "")}" placeholder="${isFix ? "Ex.: rótulo novo" : "Ex.: rótulo"}"></label></div></details>`,
     [["Cancelar", closeSheet], ["Salvar", () => {
@@ -2649,11 +2678,12 @@ function openFoodForm(f, after, preset, ocr){
       const porcoes = pn && pg ? [{ nome: pn, g: pg }] : [];
       const ean = isFix ? null : ($("#ff-ean").value.replace(/\D/g, "") || null);
       const obs = isFix ? "" : $("#ff-obs").value.trim();
+      const liquido = isFix ? undefined : $("#ff-liq").checked;
       if (!pn && pg) porcoes.push({ nome: "1 porção", g: pg });
       let saved;
       if (isFix) S.biblioteca.correcoes[f.id] = { per100, porcoes, nota: $("#ff-fonte").value.trim() };
-      else if (f) { saved = S.biblioteca.proprios.find(x => x.id === f.id); Object.assign(saved, { nome, per100, porcoes, ean, obs, fonte: $("#ff-fonte").value.trim(), off: false }); }
-      else { saved = { id: "u" + uid(), nome, cat: "Meus alimentos", per100, porcoes, ean, obs, fonte: $("#ff-fonte").value.trim() }; S.biblioteca.proprios.unshift(saved); }
+      else if (f) { saved = S.biblioteca.proprios.find(x => x.id === f.id); Object.assign(saved, { nome, per100, porcoes, ean, obs, liquido, fonte: $("#ff-fonte").value.trim(), off: false }); }
+      else { saved = { id: "u" + uid(), nome, cat: "Meus alimentos", per100, porcoes, ean, obs, liquido, fonte: $("#ff-fonte").value.trim() }; S.biblioteca.proprios.unshift(saved); }
       Store.save("biblioteca"); toast("Alimento salvo");
       if (after) after(saved && Object.assign({ tipo: "proprio" }, saved)); else { closeSheet(); renderLib(); }
     }, "primary"]], after ? () => after() : null);
@@ -3794,6 +3824,7 @@ function gramasPadrao(f){ // última quantidade usada; senão a medida do rótul
   if (f.unid) return { g: 100, qtd: 1, porcao: null, med: null };
   let u = UG()[f.id];
   if (!u) { const hoje = iso(new Date()); for (let i = 0; i < 30 && !u; i++) { const dd = dayData(addDays(hoje, -i)) || {}; chavesDia(dd).forEach(k => dd[k].forEach(e => { if (!u && e.ref === f.id && e.g && !e.un) u = e.g; })); } }
+  if (ehLiquido(f)) { const d = mlDens(f), ml = Math.round((u || 200 * d) / d); return { g: Math.round(ml * d * 10) / 10, ml, porcao: `${fmt(ml)} ml`, med: { nome: "ml", g: d, qtd: ml, ml: true } }; } // líquido: em ml
   if (u) return { g: u, porcao: null, med: null };
   const m = medidasDe(f).find(x => x.tipo === "sua" || x.tipo === "rotulo" || x.tipo === "unidade");
   return m ? { g: m.g, porcao: porcaoTexto({ nome: m.nome, g: m.g, qtd: 1 }), med: { nome: m.nome, g: m.g, qtd: 1 } } : { g: 100, porcao: null, med: null };
@@ -3802,7 +3833,7 @@ function adicionarDireto(f){
   if (!f) return;
   const pg = gramasPadrao(f), e = makeEntry(f, pg.g, f.unid ? null : pg.porcao, f.unid ? null : pg.med), m = addState.meal, dA = day;
   lista(dayData(dA, true), m).push(e); saveDay(dA); pushRecent(f.id); lembrarGramas(f, pg.g); vibrar(); renderDiary();
-  toast(`✓ ${f.nome.split(",").slice(0, 2).join(",").replace(/ \(.*$/, "")} · ${f.unid ? "1 un" : fmt(pg.g) + " g"} · ${fmt(e.n.kcal)} kcal`, { label: "Desfazer", fn: () => { const l = (dayData(dA) || {})[m] || []; const i = l.findIndex(x => x.id === e.id); if (i >= 0) { l.splice(i, 1); saveDay(dA); renderDiary(); } } });
+  toast(`✓ ${f.nome.split(",").slice(0, 2).join(",").replace(/ \(.*$/, "")} · ${f.unid ? "1 un" : pg.ml ? fmt(pg.ml) + " ml" : fmt(pg.g) + " g"} · ${fmt(e.n.kcal)} kcal`, { label: "Desfazer", fn: () => { const l = (dayData(dA) || {})[m] || []; const i = l.findIndex(x => x.id === e.id); if (i >= 0) { l.splice(i, 1); saveDay(dA); renderDiary(); } } });
 }
 function proximaPendente(dd){ // primeira refeição sem registro cujo horário já chegou (ou a próxima)
   const h = new Date().getHours() + new Date().getMinutes() / 60, r = refeicoes();
@@ -3861,6 +3892,7 @@ function abrirRapido(m){
       <button data-qa="busca">${ICO_R.busca}Buscar</button><button data-qa="cod">${ICO_R.cod}Código de barras</button><button data-qa="foto">${ICO_R.foto}Foto da tabela</button>
       <button data-qa="fav">${ICO_R.fav}Favoritos</button><button data-qa="ff">${ICO_R.ff}Fast food</button><button data-qa="agua"><span style="color:var(--agua);display:flex">${ICO.agua.replace('<svg', '<svg width="24" height="24"')}</span>Água</button>
     </div>
+    ${copiaRef() ? `<button class="rep" data-qa="colar"><span class="t">Colar ${esc(copiaRef().nome.toLowerCase())} copiado<small>${resumo(copiaRef().itens)}</small></span><span class="pill">+ ${fmt(mealTotal(copiaRef().itens))} kcal</span></button>` : ""}
     ${ontem.length ? `<button class="rep" data-qa="ontem"><span class="t">Repetir ${nm.toLowerCase()} de ontem<small>${resumo(ontem)}</small></span><span class="pill">+ ${fmt(mealTotal(ontem))} kcal</span></button>` : ""}
     ${comum && !mesmo ? `<button class="rep" data-qa="comum"><span class="t">${refFem(m) ? "Sua" : "Seu"} ${nm.toLowerCase()} mais comum<small>${resumo(comum)}</small></span><span class="pill">+ ${fmt(mealTotal(comum))} kcal</span></button>` : ""}
     <button class="btn ghost sm" data-qa="quick" style="align-self:flex-start">Adição rápida de kcal e macros</button>`, []);
@@ -3877,6 +3909,7 @@ function abrirRapido(m){
     else if (v === "fav") openAdd(m, "", "favoritos");
     else if (v === "ff") openAdd(m, "", "fastfood");
     else if (v === "agua") openAgua();
+    else if (v === "colar") { closeSheet(); colarRefeicao(m); }
     else if (v === "ontem") copiar(ontem, `${nm} de ontem repetido`);
     else if (v === "comum") copiar(comum, `${nm} adicionado`);
     else if (v === "quick") openQuick();
@@ -3903,7 +3936,7 @@ Para cada item informe:
 Se a foto não for de comida, devolva itens vazio. Não invente itens que não aparecem.`;
 const IA_SCHEMA = { type: "OBJECT", properties: { itens: { type: "ARRAY", items: { type: "OBJECT", properties: {
   nome: { type: "STRING" }, busca: { type: "STRING" }, gramas: { type: "NUMBER" }, kcal100: { type: "NUMBER" }, p100: { type: "NUMBER" }, c100: { type: "NUMBER" }, g100: { type: "NUMBER" },
-  confianca: { type: "STRING", enum: ["alta", "media", "baixa"] }, rede: { type: "STRING" } }, required: ["nome", "busca", "gramas", "kcal100", "p100", "c100", "g100"] } } }, required: ["itens"] };
+  confianca: { type: "STRING", enum: ["alta", "media", "baixa"] }, rede: { type: "STRING" }, liquido: { type: "BOOLEAN" } }, required: ["nome", "busca", "gramas", "kcal100", "p100", "c100", "g100"] } } }, required: ["itens"] };
 function reduzirFoto(dataUrl, lado){
   return new Promise(res => { const im = new Image(); im.onload = () => { const k = Math.min(1, lado / Math.max(im.width, im.height)); const c = document.createElement("canvas");
     c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL("image/jpeg", .82)); };
@@ -3917,6 +3950,8 @@ Para cada item informe:
 - kcal100, p100, c100, g100: calorias e gramas de proteína, carboidrato e gordura por 100 g do alimento como foi descrito.
 - confianca: alta se a quantidade foi dita, media se precisou estimar, baixa se o alimento é vago.
 - rede: se o item for um lanche identificável de rede de fast food (McDonald's, Burger King, Subway, KFC, Habib's, Giraffas, Popeyes, Pizza Hut), escreva o nome da rede; senão deixe vazio. Nesse caso use em "nome" e "busca" o nome do produto como a rede vende e em "gramas" o peso de uma unidade.
+- liquido: true para bebidas (leite, suco, café, refrigerante...). Nesse caso "gramas" é o volume em ml: use exatamente o ml que a pessoa disse (copo = 200 ml, lata = 350 ml, caixinha = 200 ml se não disser).
+- Se a pessoa disse gramas, use exatamente esse valor. Se citou a marca, coloque a marca em "nome" e em "busca".
 Se o texto não descrever comida ou bebida, devolva itens vazio. Não invente itens que não foram citados.
 
 Texto: `;
@@ -3984,10 +4019,13 @@ async function fotoPrato(m){
   let foto;
   try { foto = await fotografarRotulo({ dataUrl: true, titulo: "Fotografar o prato", dica: "Enquadre o prato inteiro, de cima ou levemente inclinado, com boa luz. Deixe os talheres à vista: ajudam a estimar o tamanho." }); } catch(e){ foto = null; }
   if (!foto || typeof foto !== "string") return;
+  analisarFoto(m, foto);
+}
+async function analisarFoto(m, foto){
   sheet("Analisando o prato…", `<div class="scan-box" style="aspect-ratio:4/3"><img src="${foto}" alt="" style="width:100%;height:100%;object-fit:cover"></div><p class="muted" style="margin:0">Identificando os alimentos e estimando as porções. Leva alguns segundos.</p>`, []);
   let itens;
   try { itens = await iaAnalisarPrato(foto); iaContar(); }
-  catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "ocupado" ? "O serviço de análise do Google está sobrecarregado agora. Tente de novo em alguns minutos." : msg === "demorou" ? "A análise demorou mais que o normal e foi interrompida. Tente de novo; costuma levar menos de 15 segundos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>`, [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]]); }
+  catch(e){ const msg = String(e.message); return sheet("Foto do prato", `<p style="margin:0">${msg === "limite" ? "O limite gratuito de análises por foto foi atingido agora. Tente de novo em alguns minutos." : msg === "ocupado" ? "O serviço de análise do Google está sobrecarregado agora. Tente de novo em alguns minutos." : msg === "demorou" ? "A análise demorou mais que o normal e foi interrompida. Tente de novo; costuma levar menos de 15 segundos." : msg === "sem conexão" ? "Sem internet: a análise por foto precisa de conexão." : "Não consegui analisar a foto agora."}</p>${msg === "limite" ? "" : `<p class="small muted" style="margin:0">A foto continua guardada: não precisa fotografar de novo.</p>`}`, msg === "limite" ? [["Buscar manualmente", () => openAdd(m)], ["Fechar", closeSheet, "primary"]] : [["Fechar", closeSheet], ["Tentar de novo com esta foto", () => analisarFoto(m, foto), "primary"]]); }
   if (!itens.length) return sheet("Foto do prato", `<p style="margin:0">Não identifiquei comida nessa foto. Tente de novo com o prato inteiro enquadrado e boa luz.</p>`, [["Tentar de novo", () => fotoPrato(m), "primary"], ["Fechar", closeSheet]]);
   revisarPrato(m, foto, itens);
 }
@@ -4000,31 +4038,38 @@ function revisarPrato(m, foto, itens, frase){ // foto = dataURL (prato) ou null 
       opcoes = searchFoods(it.busca, redes.filter(f => normNome(f.rede).includes(rn))).slice(0, 5);
       if (!opcoes.length) opcoes = searchFoods(it.nome, redes).slice(0, 5);
     }
-    if (!opcoes.length) opcoes = searchFoods(it.busca, geral).slice(0, 5);
+    if (!opcoes.length) { // primeiro o que a pessoa já cadastrou/escaneou (pelo nome com a marca), depois a base geral
+      const rec = new Set(S.biblioteca.recentes || []), meus = geral.filter(f => f.tipo === "proprio" || rec.has(f.id)), vistos = new Set();
+      opcoes = [...searchFoods(it.nome, meus), ...searchFoods(it.busca, meus), ...searchFoods(it.nome, geral), ...searchFoods(it.busca, geral)]
+        .filter(f => !vistos.has(f.id) && vistos.add(f.id)).slice(0, it.liquido ? 12 : 5);
+      if (it.liquido) opcoes = [...opcoes.filter(ehLiquido), ...opcoes.filter(f => !ehLiquido(f))].slice(0, 5); // bebida: nunca cair na versão em pó
+    }
     if (!it.rede) { // alguém já cadastrou esse alimento pela foto: oferece o da comunidade também
       const cm = geral.find(f => f.tipo === "comunidade" && f.id === "cm-" + chaveAlimento(it.nome));
       if (cm && !opcoes.includes(cm)) opcoes.push(cm);
     }
     const ia = Object.assign(emptyPer100(), { kcal: it.kcal100, p: it.p100, c: it.c100, g: it.g100 });
     // item que a pessoa corrigiu: vale a estimativa da IA para o que ela descreveu, não o primeiro achado da tabela
-    return { it, opcoes, escolha: opcoes.length && !(corrigido && !it.rede) ? 0 : -1, g: Math.round(it.gramas / 5) * 5, un: 1, on: true, ia, corrigido: !!corrigido };
+    const semLiq = it.liquido && !it.rede && !opcoes.some(ehLiquido); // só achou versão em pó ou prato: usa a estimativa da bebida
+    return { it, opcoes, escolha: opcoes.length && !(corrigido && !it.rede) && !semLiq ? 0 : -1, g: Math.round(it.gramas / 5) * 5, un: 1, on: true, ia, corrigido: !!corrigido };
   };
   let linhas = itens.map(it => montar(it)), fixTxt = "", fixN = 0, pratoOn = false, pratoNome = null;
   const nomePrato = () => { const n = linhas.filter(L => L.on).map((L, i) => { const t = String(L.it.nome).trim(); return i ? t.charAt(0).toLowerCase() + t.slice(1) : t; });
     return n.length > 1 ? n.slice(0, -1).join(", ") + " e " + n[n.length - 1] : n[0] || nomeRef(m); };
   const porUn = L => L.escolha >= 0 && L.opcoes[L.escolha].unid; // fast food por unidade: 100 = 1 unidade
-  const qtd = L => porUn(L) ? L.un * 100 : L.g;
+  const liqL = L => !porUn(L) && (L.escolha >= 0 ? ehLiquido(L.opcoes[L.escolha]) : !!L.it.liquido);
+  const qtd = L => porUn(L) ? L.un * 100 : liqL(L) ? L.g * (L.escolha >= 0 ? mlDens(L.opcoes[L.escolha]) : 1) : L.g;
   const per = L => L.escolha >= 0 ? L.opcoes[L.escolha].per100 : L.ia;
   const adicionar = () => {
     const dd = dayData(day, true), alvo = lista(dd, m), novos = [], entradas = [];
     linhas.filter(L => L.on && qtd(L) > 0).forEach(L => {
       let f = L.escolha >= 0 ? L.opcoes[L.escolha] : null;
       if (!f) { // estimativa vira um alimento seu, para poder editar depois
-        const salvo = { id: "u" + uid(), nome: L.it.nome + (foto ? " (estimativa por foto)" : " (estimativa por texto)"), cat: foto ? "Estimativas por foto" : "Estimativas por texto", per100: L.ia, porcoes: [], fonte: foto ? "Estimativa por foto (Gemini)" : "Estimativa por texto (Gemini)" };
+        const salvo = { id: "u" + uid(), nome: L.it.nome + (foto ? " (estimativa por foto)" : " (estimativa por texto)"), cat: foto ? "Estimativas por foto" : "Estimativas por texto", per100: L.ia, porcoes: [], liquido: liqL(L) || undefined, fonte: foto ? "Estimativa por foto (Gemini)" : "Estimativa por texto (Gemini)" };
         S.biblioteca.proprios.unshift(salvo); Store.save("biblioteca"); f = Object.assign({ tipo: "proprio" }, salvo);
         if (foto) comunidadeEnviarAlimento(salvo, "foto"); // entra também na biblioteca comunitária
       }
-      const e = porUn(L) ? makeEntry(f, L.un * 100, L.un === 1 ? "1 unidade" : `${L.un} unidades`) : makeEntry(f, L.g); alvo.push(e); novos.push(e.id); entradas.push(e); pushRecent(f.id);
+      const e = porUn(L) ? makeEntry(f, L.un * 100, L.un === 1 ? "1 unidade" : `${L.un} unidades`) : liqL(L) ? makeEntry(f, qtd(L), `${fmt(L.g)} ml`, { nome: "ml", g: qtd(L) / L.g, qtd: L.g, ml: true }) : makeEntry(f, L.g); alvo.push(e); novos.push(e.id); entradas.push(e); pushRecent(f.id);
     });
     if (!novos.length) return toast("Nenhum item marcado");
     // prato feito = atalho com os itens; os alimentos continuam separados na biblioteca
@@ -4066,7 +4111,7 @@ function revisarPrato(m, foto, itens, frase){ // foto = dataURL (prato) ou null 
         <div style="min-width:0"><b>${esc(L.it.nome)}</b>${L.corrigido ? ` <span class="badge user">corrigido</span>` : L.it.confianca === "baixa" ? ` <span class="badge fix">confira</span>` : ""}<br>
           <select data-iop="${i}" aria-label="Alimento da tabela">${L.opcoes.map((f, j) => `<option value="${j}" ${L.escolha === j ? "selected" : ""}>${esc(f.nome)}${f.tipo === "comunidade" ? " (comunidade)" : ""}</option>`).join("")}<option value="-1" ${L.escolha < 0 ? "selected" : ""}>${foto ? "Estimativa da foto" : "Estimativa da IA"}</option></select></div>
         ${porUn(L) ? `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="1" step="1" value="${L.un}" data-iu="${i}" style="width:60px" aria-label="Unidades de ${esc(L.it.nome)}">un</label>`
-          : `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="0" step="5" value="${L.g}" data-ig="${i}" aria-label="Gramas de ${esc(L.it.nome)}">g</label>`}
+          : `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><input class="g num" type="number" inputmode="numeric" min="0" step="5" value="${L.g}" data-ig="${i}" aria-label="${liqL(L) ? "Mililitros" : "Gramas"} de ${esc(L.it.nome)}">${liqL(L) ? "ml" : "g"}</label>`}
         <div class="k num">${fmt(n.kcal)} kcal · P ${fmt(n.p, 1)} · C ${fmt(n.c, 1)} · G ${fmt(n.g, 1)} · ${L.escolha >= 0 ? sourceLabel(L.opcoes[L.escolha]) : `<span class="badge user">Estimativa</span>`}</div></div>`; }).join("")}
       <div class="ia-fix"><label for="iaFixQ" style="font-weight:700">Corrigir com a IA</label>
         <div class="row"><input class="field grow" id="iaFixQ" maxlength="200" enterkeyhint="send" placeholder="Ex.: era de air fryer" value="${esc(fixTxt)}" style="min-width:0"><button class="btn" id="iaFixGo" type="button">Corrigir</button></div>
@@ -4588,7 +4633,7 @@ function agoraTextoAbrir(frase){
   $("#agFrase").value = frase || ""; $("#agErr").hidden = true; agLista();
   agAbrir($("#agTxt"), -180, agMetade, () => { try { $("#agFrase").focus({ preventScroll: true }); } catch(e){} });
 }
-const agFecharTexto = fim => agFechar($("#agTxt"), -180, agMetade, fim);
+const agFecharTexto = fim => { pararDitado(); agFechar($("#agTxt"), -180, agMetade, fim); };
 $("#agTexto").onclick = () => agoraTextoAbrir("");
 $("#agTxtX").onclick = () => agFecharTexto();
 $("#agRef").onclick = agTrocarRef; $("#agRef2").onclick = agTrocarRef;
@@ -4610,7 +4655,7 @@ function agListaVazia(){
   const linha = (attr, id, nome, sub, rot) => `<div class="ag-row"><button class="nm ag-nm" type="button" ${attr}-ver="${esc(id)}"><b>${esc(nome)}</b><small class="num">${sub}</small></button><button class="ag-mini" type="button" ${attr}="${esc(id)}" aria-label="${rot}">${mais}</button></div>`;
   el.innerHTML = (pratos.length ? `<div class="ag-lbl">Pratos feitos</div>` + pratos.map(p => linha("data-agprato", p.id, p.nome, `${p.itens.length} ${p.itens.length === 1 ? "item" : "itens"} · ${fmt(mealTotal(p.itens))} kcal`, `Registrar ${p.nome}`)).join("") : "")
     + (comum.length ? `<div class="ag-lbl">${titulo}</div>` + comum.map(f => { const pg = gramasPadrao(f), n = scaled(f.per100, f.unid ? 100 * pg.qtd : pg.g);
-        return linha("data-agum", f.id, f.nome.replace(/ \(estimativa por (foto|texto)\)$/, ""), `${f.unid ? pg.qtd + " un" : fmt(pg.g) + " g"} · ${fmt(n.kcal)} kcal`, `Adicionar ${f.nome}`); }).join("") : "");
+        return linha("data-agum", f.id, f.nome.replace(/ \(estimativa por (foto|texto)\)$/, ""), `${f.unid ? pg.qtd + " un" : pg.ml ? fmt(pg.ml) + " ml" : fmt(pg.g) + " g"} · ${fmt(n.kcal)} kcal`, `Adicionar ${f.nome}`); }).join("") : "");
   const marcar = b => { b.classList.add("ok"); b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`; };
   el.querySelectorAll("[data-agum]").forEach(b => b.onclick = () => { const f = findFood(b.dataset.agum); if (!f) return; agIrParaHoje(); addState.meal = agRefAtual(); adicionarDireto(f); marcar(b); });
   el.querySelectorAll("[data-agum-ver]").forEach(b => b.onclick = () => { const f = findFood(b.dataset.agumVer); if (!f) return; const mm = agRefAtual(); agFecharTexto(() => { agIrParaHoje(); addState.meal = mm; openQty(f); }); });
@@ -4625,6 +4670,38 @@ $("#agBiblio").onclick = () => {
   const termo = $("#agFrase").value.trim().split(/[,;+\n]|\s+e\s+/).pop().trim().replace(/^(\d+([.,]\d+)?|um|uma|dois|duas|três|tres|meio|meia)\s+/i, ""), m = agRefAtual();
   agFecharTexto(() => { agIrParaHoje(); openAdd(m, termo); });
 };
+/* ditado: no app Android usa o reconhecimento de voz do Google (plugin nativo); no navegador, o do Chrome (também Google) */
+let ditadoParar = null;
+function pararDitado(){ if (ditadoParar) { try { ditadoParar(); } catch(e){} ditadoParar = null; } $("#agMic").classList.remove("on"); }
+async function ditar(){
+  if (ditadoParar) return pararDitado();
+  const ta = $("#agFrase"), btn = $("#agMic"), err = $("#agErr");
+  const aviso = t => { err.textContent = t || ""; err.hidden = !t; };
+  const base = () => { const v = ta.value.trim(); return v ? v + (/[.,;]$/.test(v) ? " " : ", ") : ""; };
+  const pronto = () => { ta.dispatchEvent(new Event("input")); };
+  const SR = NATIVO && window.Capacitor.Plugins.SpeechRecognition;
+  if (SR) {
+    try {
+      const av = await SR.available(); if (av && av.available === false) return aviso("Reconhecimento de voz indisponível neste celular. Use o microfone do teclado.");
+      const perm = await SR.requestPermissions(); const st = perm && (perm.speechRecognition || perm.microphone);
+      if (st && st !== "granted") return aviso("Permita o uso do microfone para falar.");
+      aviso(""); btn.classList.add("on"); ditadoParar = () => { try { SR.stop(); } catch(e){} };
+      const r = await SR.start({ language: "pt-BR", maxResults: 1, partialResults: false, popup: true, prompt: "Fale o que você comeu" });
+      const t = r && r.matches && r.matches[0]; if (t) { ta.value = base() + t.trim(); pronto(); }
+    } catch(e){ if (!/cancel|no match|no_match|didn't understand/i.test(String(e && (e.message || e)))) aviso("Não entendi. Toque no microfone e fale de novo."); }
+    ditadoParar = null; btn.classList.remove("on"); return;
+  }
+  const W = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!W || NATIVO) return aviso("Para falar, use o microfone do teclado (Gboard): é o mesmo reconhecimento do Google.");
+  const rec = new W(); rec.lang = "pt-BR"; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
+  const ini = base(); let final = "";
+  rec.onresult = ev => { let parcial = ""; for (let i = ev.resultIndex; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) final += t + " "; else parcial += t; }
+    ta.value = (ini + final + parcial).trim(); pronto(); };
+  rec.onerror = ev => aviso(ev.error === "not-allowed" ? "Permita o uso do microfone para falar." : ev.error === "no-speech" ? "Não ouvi nada. Toque e fale de novo." : ev.error === "aborted" ? "" : "Não consegui usar o microfone aqui. Use o microfone do teclado.");
+  rec.onend = () => { ditadoParar = null; btn.classList.remove("on"); };
+  ditadoParar = () => rec.stop(); aviso(""); btn.classList.add("on"); rec.start();
+}
+$("#agMic").onclick = ditar;
 let agBuscaT = null;
 $("#agFrase").oninput = () => { $("#agErr").hidden = true; clearTimeout(agBuscaT); agBuscaT = setTimeout(agLista, 160); };
 function iaMsgErro(msg){
