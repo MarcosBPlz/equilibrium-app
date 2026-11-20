@@ -1001,7 +1001,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-20T11:36:31Z";
+const BIB_EMBUTIDA = "2026-11-20T12:24:03Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -3774,10 +3774,11 @@ async function renderAtividade(){
 
 /* ---------- anúncios (só no app Android): banner fixo no rodapé + tela cheia na troca de tela ---------- */
 const ANUNCIO = {
-  // IDs de teste do Google. Trocar pelos IDs reais do AdMob antes de publicar na loja.
-  teste: true,
-  banner: "ca-app-pub-3940256099942544/9214589741",
-  telaCheia: "ca-app-pub-3940256099942544/1033173712",
+  // IDs reais do AdMob (app Equilibrium: Calorias e Macros). Para testar, use teste: true e os IDs de exemplo do Google
+  // (banner ca-app-pub-3940256099942544/9214589741, tela cheia ca-app-pub-3940256099942544/1033173712).
+  teste: false,
+  banner: "ca-app-pub-7857523206918256/7442390526",    // Banner rodape
+  telaCheia: "ca-app-pub-7857523206918256/9002884206", // Tela cheia troca de tela
   intervalo: 3 * 60 * 1000, // o primeiro sai na primeira troca de tela; depois, pelo menos 3 minutos entre um e outro
   folga: 12,                // espaço (px) entre o banner e a barra de navegação: longe o bastante para evitar clique acidental
   ativo: false, bannerOk: false, telaCheiaPronta: false, carregando: false, ultimo: 0, escondido: false
