@@ -958,6 +958,11 @@ const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-$
 const parseIso = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
 const addDays = (s, n) => { const d = parseIso(s); d.setDate(d.getDate() + n); return iso(d); };
 const clone = o => JSON.parse(JSON.stringify(o));
+function confirmar(chave, msg){ // segundo toque em até 6 s confirma (evita diálogos do navegador)
+  const agora = Date.now();
+  if (confirmar.k === chave && agora - confirmar.t < 6000) { confirmar.k = null; return true; }
+  confirmar.k = chave; confirmar.t = agora; toast(msg + " Toque de novo para confirmar."); return false;
+}
 function toast(msg, act){
   const t = $("#toast"), b = $("#toastAct");
   $("#toastMsg").textContent = msg;
@@ -996,7 +1001,7 @@ const OBJ = {
 
 /* ---------- biblioteca remota: atualiza TACO e redes sem nova versão do app ---------- */
 const BIB_URL = "https://marcosbplz.github.io/equilibrium-app/";
-const BIB_EMBUTIDA = "2026-11-20T11:13:03Z";
+const BIB_EMBUTIDA = "2026-11-20T11:36:31Z";
 const BIB_BAIXADA = (() => { try { const b = JSON.parse(localStorage.getItem("equilibrium.bibRemota") || "null"); return b && b.gerado > BIB_EMBUTIDA && b.taco && Array.isArray(b.redes) ? b : null; } catch(e){ return null; } })();
 /* ---------- TACO ---------- */
 function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; vírgulas dentro de parênteses ficam
@@ -1007,18 +1012,70 @@ function nomeLimpo(s){ // "Arroz, tipo 1, cozido" vira "Arroz tipo 1 cozido"; v�
   return p.join(" ").replace(/\s{2,}/g, " ").trim();
 }
 function nomeItem(e){ return /^t\d+$/.test(e.ref || "") ? nomeLimpo(e.nome) : e.nome; } // itens antigos da TACO no diário aparecem com o nome novo
+// nomes regionais e populares: a busca acha o alimento da TACO por qualquer um deles
+const SINONIMOS = [
+  [/^(mandioca|aipim|macaxeira)/, "mandioca aipim macaxeira"],
+  [/^(tangerina|mexerica)/, "tangerina mexerica bergamota mimosa ponca"],
+  [/^(abobora|jerimum)/, "abobora jerimum"],
+  [/mandioquinha|batata,? baroa/, "mandioquinha batata baroa batata salsa"],
+  [/batata.?inglesa/, "batata inglesa"],
+  [/^(inhame|cara,)/, "inhame cara"],
+  [/^abacaxi/, "ananas"],
+  [/^banana,? nanica/, "banana dagua caturra"],
+  [/^banana,? da terra/, "banana comprida banana de fritar"],
+  [/^limao,? tahiti/, "limao taiti"],
+  [/arroz,? tipo 1|arroz branco/, "arroz branco"],
+  [/feijao,? (roxo|rajado)/, "feijao vermelho"],
+  [/feijao,? fradinho/, "feijao de corda feijao macacar feijao caupi"],
+  [/^vagem/, "feijao vagem"],
+  [/^grao.de.bico/, "grao de bico"],
+  [/^soja,? queijo/, "tofu"],
+  [/^(macarrao|lasanha)/, "massa"],
+  [/^macarrao,? trigo/, "espaguete talharim penne parafuso"],
+  [/^milho,? amido/, "maisena amido de milho"],
+  [/^milho,? fuba/, "fuba"],
+  [/^farinha,? de milho/, "flocao farinha de milho"],
+  [/^cuscuz,? de milho/, "cuscuz nordestino"],
+  [/^canjica/, "munguza mungunza chica"],
+  [/^curau/, "canjica de milho verde"],
+  [/^tapioca/, "beiju goma"],
+  [/^farinha,? de mandioca/, "farinha de mesa"],
+  [/^pao,? trigo,? frances/, "pao de sal cacetinho carioquinha pao careca"],
+  [/^pao,? (trigo|aveia|milho|gluten),? forma/, "pao de forma"],
+  [/^(bolacha|biscoito)/, "biscoito bolacha"],
+  [/cream cracker/, "agua e sal"],
+  [/^queijo,? mozarela/, "mucarela mussarela muzzarela mozzarella"],
+  [/^queijo,? minas,? frescal/, "queijo branco"],
+  [/^queijo,? prato/, "queijo lanche"],
+  [/^soja,? queijo|^queijo,? ricota/, "ricota"],
+  [/^carne,? bovina/, "boi"],
+  [/^carne,? bovina,? (contra.file|file|picanha|alcatra|maminha|patinho|coxao mole).*grelhad/, "bife"],
+  [/^carne,? bovina,? acem,? moido/, "carne moida"],
+  [/^carne,? bovina,? coxao mole/, "cha de dentro polpa"],
+  [/^carne,? bovina,? coxao duro/, "cha de fora"],
+  [/^carne,? bovina,? file mingnon/, "file mignon"],
+  [/^carne,? bovina,? contra.file/, "contrafile bife ancho"],
+  [/^carne,? bovina,? (charque|seca)/, "charque carne seca jaba carne de sol"],
+  [/^porco/, "suino carne de porco"],
+  [/^frango/, "galinha"],
+  [/^linguica/, "linguica calabresa"],
+  [/^toucinho/, "bacon"],
+  [/^chuchu/, "machucho"],
+  [/^salsa,? crua/, "salsinha cheiro verde"],
+  [/^cana,? aguardente/, "cachaca pinga caninha"],
+  [/^cha,? mate/, "chimarrao terere erva mate"],
+  [/^refrigerante,? tipo cola/, "coca"],
+  [/^cafe,? infusao/, "cafe preto cafe coado"],
+  [/^iogurte/, "yogurte"]
+];
 function montarTaco(raw){
   return raw.rows.map(r => {
     const per100 = {}; raw.keys.forEach((k, i) => per100[k] = r[3 + i]);
     const f = { id: "t" + r[0], taco: r[0], nome: nomeLimpo(r[1]), nomeTaco: r[1], cat: raw.cats[r[2]], per100, tipo: "taco" }; // nomeTaco: nome original da tabela, usado nas medidas caseiras
     if (r[16] === "ibge") f.ibge = true;
     const n = normNome(r[1]), extra = [];
-    if (/^(mandioca|aipim|macaxeira)/.test(n)) extra.push("mandioca aipim macaxeira");
-    if (/arroz,? tipo 1|arroz branco/.test(n)) extra.push("arroz branco");
-    if (/feijao,? (roxo|rajado)/.test(n)) extra.push("feijao vermelho");
-    if (/mandioquinha|batata,? baroa/.test(n)) extra.push("mandioquinha batata baroa batata salsa");
-    if (/abobora|jerimum/.test(n)) extra.push("abobora jerimum");
-    if (/batata.?inglesa/.test(n)) extra.push("batata inglesa");
+    SINONIMOS.forEach(([re, palavras]) => { if (re.test(n)) extra.push(palavras); });
+    if (f.cat === "Pescados e frutos do mar") extra.push("peixe");
     if (extra.length) f.busca = n + " " + extra.join(" ");
     return f;
   });
@@ -1227,10 +1284,11 @@ const BUSCA_COMUNS = {
   ovo: ["ovo de galinha inteiro cozido", "ovo de galinha inteiro frito"], banana: ["banana prata crua", "banana nanica crua"], pao: ["pao trigo frances", "pao trigo forma integral", "pao de queijo assado"],
   cafe: ["cafe infusao"], queijo: ["queijo mozarela", "queijo minas frescal"], mandioca: ["mandioca cozida", "mandioca frita"], tomate: ["tomate com semente cru"]
 };
+const BUSCA_STOP = new Set(["de","da","do","das","dos","com","e","em","no","na","ao","a","o"]);
 function searchFoods(q, list){
   const dig = String(q).replace(/\D/g, "");
   if (dig.length >= 8 && dig.length === String(q).trim().length) return list.filter(f => f.ean === dig);
-  const terms = norm(q).split(/[\s,]+/).filter(Boolean)
+  const terms = norm(q).split(/[\s,]+/).filter(t => t && !BUSCA_STOP.has(t))
     .map(t => t.length > 4 ? t.replace(/(o|a|os|as)$/, "") : t); // cozido acha cozida, frito acha frita
   if (!terms.length) return list;
   const favs = new Set(S.biblioteca.favoritos), recs = new Set(S.biblioteca.recentes || []);
@@ -1395,7 +1453,7 @@ function openAgua(){
       <div class="row"><input class="field num grow" id="aguaMl" type="number" inputmode="numeric" placeholder="Outro (ml)" aria-label="Quantidade em ml"><button class="btn" id="aguaAdd">Adicionar</button></div>`,
       [["Tirar 250 ml", () => { dd.agua = Math.max(0, dd.agua - 250); saveDay(day); renderDiary(); draw(); }], ["Pronto", () => closeSheet(), "primary"]]);
     document.querySelectorAll("[data-ml]").forEach(b => b.onclick = () => { dd.agua += +b.dataset.ml; saveDay(day); renderDiary(); draw(); });
-    $("#aguaAdd").onclick = () => { const v = +$("#aguaMl").value; if (v > 0) { dd.agua += v; saveDay(day); renderDiary(); draw(); } };
+    $("#aguaAdd").onclick = () => { const v = +$("#aguaMl").value; if (v > 3000 && !confirmar("agua" + v, `${fmt(v / 1000, 1)} L de uma vez é bastante.`)) return; if (v > 0) { dd.agua += v; saveDay(day); renderDiary(); draw(); } };
   };
   draw();
 }
@@ -2282,6 +2340,7 @@ function openQty(f, gForcado){
   const liq = ehLiquido(f) && !gForcado, mlIni = liq ? Math.round((ult || 200 * mlDens(f)) / mlDens(f)) : 0;
   sheet(f.nome, qtyBody(f, liq ? Math.round(mlIni * mlDens(f) * 10) / 10 : gForcado || (def ? def.g : ult || 100), liq ? "ml" : def ? def.nome : null, liq ? mlIni : 1), [...(podeEditar(f) ? [["✎ Editar", () => openFoodForm(f, () => { const nf = findFood(f.id); nf ? openQty(nf) : renderAddList(); })]] : []), [`Adicionar ${refCom("a", addState.meal)}`, () => {
     const v = read(); if (!v.g) return toast("Informe a quantidade");
+    if (v.g > 1000 && !f.unid && !confirmar("qtd" + v.g, `${fmt(v.g)} g é bastante.`)) return;
     const dAdd = day, mAdd = addState.meal, novo = makeEntry(f, v.g, v.porcao, v.med);
     lista(dayData(dAdd, true), mAdd).push(novo); saveDay(dAdd); pushRecent(f.id); lembrarGramas(f, v.g); vibrar();
     closeSheet(); renderDiary(); toast(`${f.nome.split(",")[0]} adicionado ${refCom("a", mAdd)}`, { label: "Desfazer", fn: () => {
@@ -2300,7 +2359,7 @@ function openEntry(m, id){
   const snapF = Object.assign({}, f, { snap: true, per100: Object.fromEntries(NUTRI.map(([k]) => [k, e.n[k] == null ? null : e.n[k] * 100 / e.g])) });
   sheet(nomeItem(e), qtyBody(snapF, e.g, e.med ? e.med.nome : null, e.med ? e.med.qtd : 1), [
     ["Remover", () => { closeSheet(); removerItem(m, id); }, "danger"],
-    ["Salvar", () => { const v = read(); if (!v.g) return toast("Informe a quantidade"); e.g = v.g; e.porcao = v.porcao; e.med = v.med; e.n = scaled(snapF.per100, v.g); saveDay(day); closeSheet(); renderDiary(); }, "primary"]]);
+    ["Salvar", () => { const v = read(); if (!v.g) return toast("Informe a quantidade"); if (v.g > 1000 && !e.un && !confirmar("qtd" + v.g, `${fmt(v.g)} g é bastante.`)) return; lembrarGramas(f, v.g); e.g = v.g; e.porcao = v.porcao; e.med = v.med; e.n = scaled(snapF.per100, v.g); saveDay(day); closeSheet(); renderDiary(); }, "primary"]]);
   const read = wireQty(snapF, () => openEntry(m, id));
 }
 function openQuick(entry, mealKey){
@@ -2316,7 +2375,9 @@ function openQuick(entry, mealKey){
      ["Salvar", () => {
       const P = +$("#qkP").value || 0, C = +$("#qkC").value || 0, G = +$("#qkG").value || 0;
       let K = $("#qkK").value === "" ? P * 4 + C * 4 + G * 9 : +$("#qkK").value;
+      if (K < 0 || P < 0 || C < 0 || G < 0) return toast("Valores não podem ser negativos");
       if (!K && !P && !C && !G) return toast("Informe calorias ou macros");
+      if (K > 3000 && !confirmar("qk" + K, `${fmt(K)} kcal numa adição é bastante.`)) return;
       const n = {}; NUTRI.forEach(([k]) => n[k] = null); Object.assign(n, { kcal: K, p: P, c: C, g: G, fib: 0 });
       if (e) { e.nome = $("#qkN").value.trim() || "Adição rápida"; e.n = n; }
       else lista(dayData(day, true), addState.meal).push({ id: uid(), ref: null, nome: $("#qkN").value.trim() || "Adição rápida", g: 0, porcao: null, fonte: "Manual", n });
@@ -2675,6 +2736,11 @@ function openFoodForm(f, after, preset, ocr){
       const fator = base === "porcao" ? 100 / pg : 1; // guarda sempre por 100 g
       const per100 = {}; NUTRI.forEach(([k]) => { const el = $("#ff-" + k); per100[k] = el ? (el.value === "" ? null : +el.value * fator) : (f ? f.per100[k] ?? null : null); });
       if (per100.kcal == null) per100.kcal = (per100.p || 0) * 4 + (per100.c || 0) * 4 + (per100.g || 0) * 9;
+      if (NUTRI.some(([k]) => per100[k] != null && per100[k] < 0)) return toast("Valores não podem ser negativos");
+      if ((per100.p || 0) + (per100.c || 0) + (per100.g || 0) > 100.5) return toast("Proteína + carbo + gordura passam de 100 g em 100 g. Confira o rótulo");
+      const kMac = (per100.p || 0) * 4 + (per100.c || 0) * 4 + (per100.g || 0) * 9;
+      if (per100.kcal > 900 && !confirmar("ffk", `${fmt(per100.kcal)} kcal por 100 g é mais que óleo puro.`)) return;
+      if (kMac > 20 && Math.abs(per100.kcal - kMac) / kMac > .3 && !confirmar("ffm", `As calorias (${fmt(per100.kcal)}) não batem com os macros (≈ ${fmt(kMac)}).`)) return;
       const porcoes = pn && pg ? [{ nome: pn, g: pg }] : [];
       const ean = isFix ? null : ($("#ff-ean").value.replace(/\D/g, "") || null);
       const obs = isFix ? "" : $("#ff-obs").value.trim();
@@ -2684,7 +2750,14 @@ function openFoodForm(f, after, preset, ocr){
       if (isFix) S.biblioteca.correcoes[f.id] = { per100, porcoes, nota: $("#ff-fonte").value.trim() };
       else if (f) { saved = S.biblioteca.proprios.find(x => x.id === f.id); Object.assign(saved, { nome, per100, porcoes, ean, obs, liquido, fonte: $("#ff-fonte").value.trim(), off: false }); }
       else { saved = { id: "u" + uid(), nome, cat: "Meus alimentos", per100, porcoes, ean, obs, liquido, fonte: $("#ff-fonte").value.trim() }; S.biblioteca.proprios.unshift(saved); }
-      Store.save("biblioteca"); toast("Alimento salvo");
+      Store.save("biblioteca");
+      // corrigiu o alimento: os registros do diário com ele passam a usar os valores novos
+      let nAtual = 0;
+      if (f && f.id) Object.keys(S.meses).forEach(mes => { let mudou = false;
+        Object.values(S.meses[mes].dias || {}).forEach(dd => chavesDia(dd).forEach(m => dd[m].forEach(e => { if (e.ref === f.id && e.g && !e.un) { e.n = scaled(per100, e.g); nAtual++; mudou = true; } })));
+        if (mudou) Store.save("diario-" + mes); });
+      if (nAtual) renderDiary();
+      toast(nAtual ? `Alimento salvo · ${nAtual} ${nAtual > 1 ? "registros atualizados" : "registro atualizado"}` : "Alimento salvo");
       if (after) after(saved && Object.assign({ tipo: "proprio" }, saved)); else { closeSheet(); renderLib(); }
     }, "primary"]], after ? () => after() : null);
   const segB = $("#ff-base"), rotBase = () => { const g = +$("#ff-pg").value; $("#ff-bp").textContent = g > 0 ? `Da porção (${fmt(g, g % 1 ? 1 : 0)} g)` : "Da porção"; };
